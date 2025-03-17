@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingHorizontal: 20,
     borderTopWidth: 0,
+    elevation: 0,
   },
 });
 
