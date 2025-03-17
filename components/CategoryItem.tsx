@@ -23,15 +23,17 @@ const getStyles = (colors: any) => StyleSheet.create({
   item: {
     paddingVertical: 7,
     paddingHorizontal: 12,
-    borderWidth: 1.5,
+    borderWidth: 1,
     marginRight: 5,
     borderRadius: 4,
-    color: colors.primary,
-    borderColor: colors.primary
+    borderColor: colors.text,
+    opacity: 0.3
   },
   selectedItem: {
     backgroundColor: colors.primary,
-    color: colors.card
+    borderColor: colors.primary,
+    color: colors.card,
+    opacity: 1
   }
 })
 

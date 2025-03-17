@@ -4,8 +4,8 @@ import CategoryItem from "../components/CategoryItem";
 import { useState } from "react";
 
 enum Categories {
-  PRIORITY = 'Priorytet',
-  GROUP = 'Grupa',
+  PRIORITY = 'Priority',
+  GROUP = 'Group',
 }
 
 const HomeScreen = () => {

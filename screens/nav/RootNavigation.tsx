@@ -6,16 +6,18 @@ import GroupsScreen from "../GroupsScreen";
 import SettingsScreen from "../SettingsScreen";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import TaskViewScreen from "../TaskViewScreen";
+import { useTheme } from "@react-navigation/native";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const RootNavigation = () => {
+  const { colors } = useTheme();
 
   return (
-    <Stack.Navigator initialRouteName="RootNavigation">
-      <Stack.Screen name="RootNavigation" component={TabNavigation} options={{ headerShown: false }}/>
-      <Stack.Screen name="TaskView" component={TaskViewScreen} options={{ headerShown: false }}/>
+    <Stack.Navigator initialRouteName="RootNavigation" screenOptions={{ headerShown: false, navigationBarColor: colors.card }}>
+      <Stack.Screen name="RootNavigation" component={TabNavigation} />
+      <Stack.Screen name="TaskView" component={TaskViewScreen} />
     </Stack.Navigator>
   );
 }
@@ -32,7 +34,7 @@ const TabNavigation = () => {
             <MaterialCommunityIcons
               name={iconName}
               size={iconSize}
-              style={!focused && { opacity: 0.6 }}
+              style={!focused && { opacity: 0.5 }}
               color={color}
             />
           );
