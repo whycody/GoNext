@@ -15,7 +15,7 @@
 - [Release plan](#release-plan)
     - [Release 1](#release-1)
     - [Release 2](#release-2)
-- [Produkt Increments](#increments)
+- [Produkt Increments](#product-increments)
     - [Sprint 1](#sprint-1)
     - [Sprint 2](#sprint-2)
 
