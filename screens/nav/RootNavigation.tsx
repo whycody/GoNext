@@ -3,17 +3,31 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Text, StyleSheet } from "react-native";
 import HomeScreen from "../HomeScreen";
 import GroupsScreen from "../GroupsScreen";
+import SettingsScreen from "../SettingsScreen";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import TaskViewScreen from "../TaskViewScreen";
 
+const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const RootNavigation = () => {
 
   return (
+    <Stack.Navigator initialRouteName="RootNavigation">
+      <Stack.Screen name="RootNavigation" component={TabNavigation} options={{ headerShown: false }}/>
+      <Stack.Screen name="TaskView" component={TaskViewScreen} options={{ headerShown: false }}/>
+    </Stack.Navigator>
+  );
+}
+
+const TabNavigation = () => {
+  return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color }) => {
           const iconSize = route.name === 'Home' ? 28 : 26;
-          let iconName = route.name === 'Home' ? 'home' : 'view-grid';
+          let iconName = route.name === 'Home' ? 'home' : route.name === 'Groups' ? 'account-group' : 'account-cog';
+          if (!focused) iconName += '-outline';
           return (
             <MaterialCommunityIcons
               name={iconName}
@@ -33,6 +47,7 @@ const RootNavigation = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }}/>
       <Tab.Screen name="Groups" component={GroupsScreen} options={{ headerShown: false }}/>
+      <Tab.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }}/>
     </Tab.Navigator>
   );
 }
@@ -40,7 +55,7 @@ const RootNavigation = () => {
 const styles = StyleSheet.create({
   tabBarStyle: {
     height: 58,
-    paddingBottom: 5,
+    paddingBottom: 8,
     paddingTop: 8,
     paddingHorizontal: 20,
     borderTopWidth: 0,
