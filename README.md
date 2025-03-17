@@ -1,26 +1,26 @@
-# Nazwa aplikacji 
+# Application Title 
 
-## Spis treści
+## Contents
 
-- [Zespół](#team)
-- [Wizja i Zakres](#vision-and-scope)
-- [Wymagania](#requirements)
-    - [Diagram użycia](#use-case-diagram)
-    - [Mockup'y](#mockups)
-- [Definicja Done](#definition-of-done)
-- [Architektura i projektowanie](#architecture-and-design)
-    - [Model domeny](#domain-model)
-- [Plan ryzyków](#risk-plan)
+- [Team](#team)
+- [Vision and Scope](#vision-and-scope)
+- [Requirements](#requirements)
+    - [Use case diagram](#use-case-diagram)
+    - [Mockups](#mockups)
+- [Definition of Done](#definition-of-done)
+- [Architecture and Design](#architecture-and-design)
+    - [Domain model](#domain-model)
+- [Risk Plan](#risk-plan)
 - [Pre-Game](#pre-game)
-- [Plan Wydania](#release-plan)
-    - [Wydanie 1](#release-1)
-    - [Wydanie 2](#release-2)
-- [Pryzrosty Produktu](#increments)
+- [Release plan](#release-plan)
+    - [Release 1](#release-1)
+    - [Release 2](#release-2)
+- [Produkt Increments](#increments)
     - [Sprint 1](#sprint-1)
     - [Sprint 2](#sprint-2)
 
 
-## Zespół
+## Team
 
 - Yauheni Budzko - s217623 - s217623@sggw.edu.pl
 - Oktawian Kausz - s217601 - s217601@sggw.edu.pl
@@ -30,48 +30,48 @@
 
 ***
 
-## Wizja i Zakres
+## Vision and Scope
 
-##### Zgłoszenie wizji
+##### Vision statement
 
 <!--The app is designed to be minimalistic and user-friendly, allowing easy task management and progress tracking. Users can set schedules, monitor completion percentages, and maintain streaks for consistent habits. The app rewards task and habit completions with badges.-->
 <!-- The goal of this project is to create an app that will help them remember their resolutions, habits and budgeting goals. It will be an easy way of keeping track of your achievements providing a sense of acomplishement with every finished task. Visualizing your spending will also help with sticking to your saving goals and enable you to track your expenses. We want to help others and ourselves stick to our goals and live the best life we can. -->
-Celem projetku jest stworzenie aplikcaji mobilnej zarządzającej listą prioretytową zadań użytkownika oraz zadań grup do których użytkownik należy.
+The purpose of the project is to create a mobile application that manages the prioretary list of user tasks and tasks of groups to which the user belongs.
 
-##### Lista funkcji 
+##### Functions
 
-Funkcja1;
+Funktion1;
 
-Funkcja2;
+Funktion2;
 
-Funkcja3;
+Funktion3;
 
-##### Założenia
+##### Assumptions
 
-Założenia projektu będą wystąpiały tutaj
+The assumptions of the project will occur here
 
 ***
 
-## Wymagania
+## Requirements
 
 ### Use Case Diagram
 
 <!--![Use case diagram](imgs/Use case diagram.jpg) - wzór linku do obrazu-->
 
-Opis funkcji
+Functions' description
 
-Funkcja1:
+Function1:
 
-- Opis1.
-- Opis2.
+- Description1.
+- Description2.
 
-Funkcja2:
+Function2:
 
-- Opis1.
+- Deskription1.
 
 ***
 
-### Mockupy
+### Mockups
 
 ### User Story 1
 
@@ -90,19 +90,18 @@ Funkcja2:
 
 ***
 
-## Definicja Done
+## Definiton of Done
 
-Definicja Done jest zbiorem kriteriów które muszą być wykonane dla uznania poszczególnej User Story jako "done" czyli zrobione.
+The Definition of Done is a set of criteria that must be performed for a particular User Story to be considered “done”.
 
-1. Wszystkie zadania wykonane
-2. Zaakceptowane przez klienta  
-3. Kod scalony z gałęzią główną  
-
+1. All tasks completed
+2. US is accepted by the client  
+3. The code merged into the main branch  
 ***
 
-## Architektura i projektowanie
+## Architecture and Design
 
-#### Model Domeny
+#### Domain model
 
 <!--![Domain Model](imgs/ModelodeDominio.PNG)-->
 
@@ -110,7 +109,7 @@ Definicja Done jest zbiorem kriteriów które muszą być wykonane dla uznania p
 
 ## Risk Plan
 
-##### Próg sukcesu
+##### Success Threshold 
 
 <!---
 The project fails if:
@@ -123,26 +122,26 @@ Milestone tracking for goals is confusing or not visually represented clearly, l
 - The app is not in a working condition upon release.
 The team is not satisfied with the app and their work on the project, based on a questionare at the last meeting before final release. -->
 
-Projekt zakończy się sukcesem, jeśli:
+The project is considered to be successful if:
 <!--- By the final release date, all essential features, namely habit tracking, task and habit management and reminders, are fully implemented and pass acceptance tests without critical defects.
 Users find the app intuitive, user-friendly, and engaging, leading to positive feedback and a high level of satisfaction.
 Reminders are delivered accurately and on time, ensuring users can effectively manage their tasks and habits.
 Milestone tracking for goals is visually appealing, easy to understand, and provides users with a sense of achievement and progress. -->
 
-- Wszystkie user stories są wykonane, również jako zadania przypisane do nich.
-- Wszyscy członkowie zespołu mieli równy wkład w projekt.
-- Zespół jest zadowolony z aplikacji i swojej pracy nad projektem,
+- All user stories are completed, including assigned tasks.
+- All team members contributed equally to the project.
+- The team is satisfied with the application and their work on the project,
 
 <!-- - The interface of the app it appealing to most group members and clients. -->
 
-##### Lista ryzyków
+##### Risk List
 
 <!-- - RSK1 - PxI: 4x5=20; Inaccurate Time and Effort Estimations
   - Risk: The team lacks experience in estimating the time and effort required for tasks, leading to underestimations or overestimations, resulting in unforeseen project delays.
   - Impact: 5
   - Likelihood: 4 -->
 
-##### Działania do unikania ryzyków (PxI>=20)
+##### Actions for risk mitigations (PxI>=20)
 
 <!-- - R1 - Generative IA (LLM) can hallucinate:
     - Action: Provide users knowlegde of the limitations of generative AI and address potential inaccuracies in outputs.
@@ -153,66 +152,66 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
 
 ### Sprint 0 Plan
 
-- Cel: opis projektu
-- Dates: od 10.03 do 17.03, 1 tydzień
-- Zadania Sprint 0:
-    - Task1 – Napisać Zespół
-    - Task2 – Napisać Wizję i Zakres(Vision and Scope)
-    - Task3 – Napisać Wymagania
-    - Task4 – Napisać DoD(Definition of Done)
-    - Task5 – Napisać Architekturę i projektowanie(Achritecture and Design)
-    - Task6 – Napisać Plan Ryzyków(Risk Plan)
-    - Task7 – Napisać Pre-Gane
-    - Task8 – Napisać Plan Wydania(Release plan)
-    - Task9 – Napisać Przyrosty Produktu(Product increments)
-    - Task10 – Stworzyć Tablicę Produktu(Product Board)
-    - Task11 – Stworzyć Tablicę dla Sprintów
-    - Task12 – Stworzyć US w PB, oszacować trudność (SML), prioretyzować (MoSCoW), posortować
-    - Task13 – Stworzyć repozytorium
+- Goal: project description
+- Dates: from 10.03 to 17.03, 1 week
+- Sprint 0 Tasks:
+    - Task1 - Write the Team
+    - Task2 - Write the Vision and Scope
+    - Task3 - Write the Requirements
+    - Task4 - Write DoD
+    - Task5 - Write the Architecture and Design
+    - Task6 - Write the Risk Plan
+    - Task7 - Write the Pre-Gane
+    - Task8 - Write Release Plan
+    - Task9 - Write Product increments
+    - Task10 - Create Product Board
+    - Task11 - Create a Board for Sprints
+    - Task12 - Create US in PB, estimate difficulty(SML), prioretize(MoSCoW), sort
+    - Task13 - Create a repository
 
 ***
 
-## Plan Wydania
+## Release Plan
 
-### Wydanie 1
+### Release 1
 
-- Cel: Definiujemy najważnejsze cechy projektu które są niezbędne dla minimalnej dziłalności aplikacji: 
+- Goal: We define the most important features of the project that are necessary for the minimum operation of the application: 
 <!-- MVP - Developed US1, US3, US4, US6 with a working interface. -->
     - Funckja1
     - Funkcja2
-- Data: 16.04
-- Wydanie: V1.0
+- Date: 16.04
+- Release: V1.0
 
 ***
 
-### Wydanie 2
+### Release 2
 
 - Goal: <!-- Final release – Developed US2 and US5. The interface is aestheaticaly pleasing and intuitive. -->
-    - Funkcja3
-    - Funkcja4
-    - Funkcja5
+    - Function3
+    - Function4
+    - Function5
 - Date: 16.05
-- Wydanie: V2.0
+- Release: V2.0
 
 ***
 
-## Przyrosty Produktu
+## Product Increments
 ### Sprint 1
 
-##### Plan Sprintu
+##### Sprint Plan
 
-- Cel: <!-- Create the base architecture of the app and basic interface. -->
-    - Cel1
-    - Cel2
+- Goal: <!-- Create the base architecture of the app and basic interface. -->
+    - Goal1
+    - Goal2
 
-- Daty: od 18.03 do 04.04, 2 tygdonie
+- Date: from 18.03 to 04.04, 2 weeks
 
 - To do:
-    - US1: opis US
-    - US2: opis US
+    - US1: US description
+    - US2: US description
 
-##### Przegląd Sprintu
+##### Sprint Analysis
 
-- Analiza: Analiza wystąpi po ukończeniu sprintu
+- Analysis: Analysis will occur after the sprint finishes
 
 - Version: 0.1
