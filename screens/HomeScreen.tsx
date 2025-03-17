@@ -1,36 +1,40 @@
-import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { useTheme } from "@react-navigation/native";
+import { ScrollView, View, StyleSheet } from "react-native";
+import HomeHeader from "../components/HomeHeader";
+import CategoryItem from "../components/CategoryItem";
+import { useState } from "react";
+
+enum Categories {
+  PRIORITY = 'Priorytet',
+  GROUP = 'Grupa',
+}
 
 const HomeScreen = () => {
-  const { colors } = useTheme();
-  const styles = getStyles(colors);
+  const [selectedCategory, setSelectedCategory] = useState(Categories.GROUP);
 
   return (
     <ScrollView style={{ flex: 1 }}>
-      <View style={styles.root}>
-        <Text style={styles.header}>Let's do some <Text style={{ fontStyle: 'italic', color: colors.primary }}>stuff</Text> today</Text>
-        <Text style={styles.subheader}>Take a look on your current tasks. It's a perfect moment to do something!</Text>
+      <HomeHeader style={{ paddingHorizontal: 20, paddingVertical: 30 }}/>
+      <View style={styles.categoriesContainer}>
+        <CategoryItem
+          value={Categories.PRIORITY}
+          selected={selectedCategory}
+          onPress={() => setSelectedCategory(Categories.PRIORITY)}
+        />
+        <CategoryItem
+          value={Categories.GROUP}
+          selected={selectedCategory}
+          onPress={() => setSelectedCategory(Categories.GROUP)}
+        />
       </View>
     </ScrollView>
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  root: {
-    backgroundColor: colors.card,
+const styles = StyleSheet.create({
+  categoriesContainer: {
+    flexDirection: 'row',
     paddingHorizontal: 20,
-    paddingVertical: 30,
-  },
-  header: {
-    fontSize: 25,
-    fontWeight: "bold",
-    color: colors.text,
-    marginTop: 20,
-  },
-  subheader: {
-    fontSize: 14,
-    opacity: 0.6,
-    color: colors.text,
+    paddingVertical: 15
   }
 });
 
