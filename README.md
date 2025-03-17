@@ -90,7 +90,7 @@ Function2:
 
 ***
 
-## Definiton of Done
+## Definition of Done
 
 The Definition of Done is a set of criteria that must be performed for a particular User Story to be considered “done”.
 
