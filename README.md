@@ -58,7 +58,7 @@ Staying organized has never been easier with this intuitive to-do list app. Desi
 
 ### Use Case Diagram
 
-<!--![Use case diagram](imgs/Use case diagram.jpg) - wzór linku do obrazu-->
+![Use case diagram](imgs/use_case.png)
 
 Functions' description
 
