@@ -1,4 +1,4 @@
-# Application Title 
+# GoNext
 
 ## Contents
 
@@ -40,15 +40,17 @@ The purpose of the project is to create a mobile application that manages the pr
 
 ##### Functions
 
-Funktion1;
+Registration/Logging in;
 
-Funktion2;
+Creating tasks;
 
-Funktion3;
+Prioritising the tasks;
+
+Creating groups/Managing groups;
 
 ##### Assumptions
 
-The assumptions of the project will occur here
+Staying organized has never been easier with this intuitive to-do list app. Designed for individuals who need to manage their daily tasks efficiently, the app helps users stay on top of responsibilities, deadlines, and personal goals. Users can create and prioritize tasks to focus on what matters most. Whether it's managing work assignments, planning events, or keeping track of daily errands, the app ensures everything stays in one place. Collaboration is seamless with group task management. Users can create shared lists, assign tasks, and track progress, making teamwork more efficient. Whether coordinating with colleagues, planning trips with friends, or managing household chores, this feature simplifies organization. usWith a clean and user-friendly interface, the app reduces stress by keeping everything structured and accessible, making daily life more productive and hassle-free.
 
 ***
 
