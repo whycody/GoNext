@@ -164,6 +164,20 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
   - Risk: The team lacks experience in estimating the time and effort required for tasks, leading to underestimations or overestimations, resulting in unforeseen project delays.
   - Impact: 5
   - Likelihood: 4 -->
+  - RSK1 - PxI: 4×4=16; Unequal Contribution from Team Members
+    - Risk: Some team members may take on more responsibilities than others, causing workload imbalance and potential dissatisfaction.
+    - Impact: 4
+    - Likelihood: 4
+
+  - RSK2 - PxI: 4×3=12; Poor User Adoption Due to Non-Intuitive UI/UX
+    - Risk: If the app’s interface is not user-friendly, users may abandon it quickly.
+    - Impact: 4
+    - Likelihood: 3
+
+  - RSK3 - PxI: 5×4=20; Security Vulnerabilities
+    - Risk: Improper handling of security mechanisms could lead to security breaches, such as unauthorized access or data leaks.
+    - Impact: 5
+    - Likelihood: 4
 
 ### Actions for risk mitigations (PxI>=20)
 
@@ -171,6 +185,10 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
     - Action: Provide users knowlegde of the limitations of generative AI and address potential inaccuracies in outputs.
     - Action: Keep the LLM updated with the latest information, secure version and best practices to minimize inaccuracies.
     - Action: Provide the LLM with a structured template that includes accurate user information and other essential details. -->
+  - R3 - Security Vulnerabilities in Authentication Flow:
+    - Action: Use secure authentication practices.
+    - Action: Perform security audits and penetration testing before release.
+
 
 ## Pre-Game
 
@@ -197,10 +215,11 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
 
 ### Release 1
 
-- Goal: We define the most important features of the project that are necessary for the minimum operation of the application: 
-<!-- MVP - Developed US1, US3, US4, US6 with a working interface. -->
-    - Funckja1
-    - Funkcja2
+- Goal: We define the most important features of the project that are necessary for the minimum operation of the application: <!-- MVP - Developed US1, US3, US4, US6 with a working interface. -->
+    - Registration
+    - Logging in
+    - Creating tasks
+    - Managing tasks
 - Date: 16.04
 - Release: V1.0
 
@@ -208,10 +227,9 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
 
 ### Release 2
 
-- Goal: <!-- Final release – Developed US2 and US5. The interface is aestheaticaly pleasing and intuitive. -->
-    - Function3
-    - Function4
-    - Function5
+- Goal: Groups functionality, admin role:<!-- Final release – Developed US2 and US5. The interface is aestheaticaly pleasing and intuitive. -->
+    - Creating groups
+    - Managing groups
 - Date: 16.05
 - Release: V2.0
 
@@ -222,15 +240,18 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
 
 #### Sprint Plan
 
-- Goal: <!-- Create the base architecture of the app and basic interface. -->
-    - Goal1
-    - Goal2
+- Goal: Create the base architecture of the app and basic interface.
+
+    - Registration
+    - Logging in
+    - In-App navigation
+    - Initial task creation
 
 - Date: from 18.03 to 04.04, 2 weeks
 
 - To do:
-    - US1: US description
-    - US2: US description
+    - US1: Registration/Logging in
+    - US2: Creating tasks
 
 #### Sprint Analysis
 
