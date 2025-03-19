@@ -1,4 +1,13 @@
 # GoNext
+![GoNextLogo](imgs/GoNext.png)
+
+![Stars](https://img.shields.io/github/stars/gonext?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square)
+![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=flat-square)
+![Repo Size](https://img.shields.io/github/repo-size/whycody/gonext?style=flat-square)
+
+![Created At](https://img.shields.io/badge/created%20at-march%202025-informational?style=flat-square)
+![Release Date](https://img.shields.io/badge/release%20date-june%202025-yellow?style=flat-square)
 
 ## Contents
 
@@ -32,13 +41,13 @@
 
 ## Vision and Scope
 
-##### Vision statement
+### Vision statement
 
 <!--The app is designed to be minimalistic and user-friendly, allowing easy task management and progress tracking. Users can set schedules, monitor completion percentages, and maintain streaks for consistent habits. The app rewards task and habit completions with badges.-->
 <!-- The goal of this project is to create an app that will help them remember their resolutions, habits and budgeting goals. It will be an easy way of keeping track of your achievements providing a sense of acomplishement with every finished task. Visualizing your spending will also help with sticking to your saving goals and enable you to track your expenses. We want to help others and ourselves stick to our goals and live the best life we can. -->
 The purpose of the project is to create a mobile application that manages the prioretary list of user tasks and tasks of groups to which the user belongs.
 
-##### Functions
+### Functions
 
 Registration/Logging in;
 
@@ -48,7 +57,7 @@ Prioritising the tasks;
 
 Creating groups/Managing groups;
 
-##### Assumptions
+### Assumptions
 
 Staying organized has never been easier with this intuitive to-do list app. Designed for individuals who need to manage their daily tasks efficiently, the app helps users stay on top of responsibilities, deadlines, and personal goals. Users can create and prioritize tasks to focus on what matters most. Whether it's managing work assignments, planning events, or keeping track of daily errands, the app ensures everything stays in one place. Collaboration is seamless with group task management. Users can create shared lists, assign tasks, and track progress, making teamwork more efficient. Whether coordinating with colleagues, planning trips with friends, or managing household chores, this feature simplifies organization. usWith a clean and user-friendly interface, the app reduces stress by keeping everything structured and accessible, making daily life more productive and hassle-free.
 
@@ -60,16 +69,25 @@ Staying organized has never been easier with this intuitive to-do list app. Desi
 
 ![Use case diagram](imgs/use_case.png)
 
-Functions' description
+### Functions' description
 
-Function1:
+Registration/Logging in:
 
-- Description1.
-- Description2.
+- User Authentication: Secure login and registration process.
 
-Function2:
+Creating Tasks:
 
-- Deskription1.
+- Task Input: Users can create tasks with titles, descriptions, and deadlines.
+
+Prioritizing Tasks:
+
+- Priority Levels: Mark tasks as high, medium, or low priority.
+
+Creating Groups/Managing Groups:
+
+- Group Creation: Users can form groups for task collaboration.
+- Role Management: Assign roles such as admin, member, or viewer within groups.
+- Task Sharing: Ability to assign and track group tasks collectively.
 
 ***
 
@@ -87,14 +105,18 @@ Function2:
 
 ### User Stories
 
-- User story 1 (#19)
-- User story 2 (#20)
+- User story 1(Registration/Logging in): As a user, I want to register/log in to the application, so that I can use it for my personal purposes.
+- User story 2(Creating tasks): As a user, I want to create tasks, so that I keep track on my personal objectives.
+- User story 3(Managing tasks): As a user, I want to assign a priority level to a task, edit it, or delete it so that I have a clear overview of all task details.
+- User story 4(Creating groups): As a user, I want to create a group so that I can collaborate on tasks with other group members.
+- User story 5(Managing groups): As a group admin, I want to set other members as admins or remove them from the group so that I can maintain proper group management.
 
 ***
 
 ## Definition of Done
-
-The Definition of Done is a set of criteria that must be performed for a particular User Story to be considered “done”.
+> [!NOTE]  
+> 
+> The Definition of Done is a set of criteria that must be performed for a particular User Story to be considered “done”.
 
 1. All tasks completed
 2. US is accepted by the client  
@@ -103,7 +125,7 @@ The Definition of Done is a set of criteria that must be performed for a particu
 
 ## Architecture and Design
 
-#### Domain model
+### Domain model
 
 <!--![Domain Model](imgs/ModelodeDominio.PNG)-->
 
@@ -111,7 +133,7 @@ The Definition of Done is a set of criteria that must be performed for a particu
 
 ## Risk Plan
 
-##### Success Threshold 
+### Success Threshold 
 
 <!---
 The project fails if:
@@ -136,14 +158,14 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
 
 <!-- - The interface of the app it appealing to most group members and clients. -->
 
-##### Risk List
+### Risk List
 
 <!-- - RSK1 - PxI: 4x5=20; Inaccurate Time and Effort Estimations
   - Risk: The team lacks experience in estimating the time and effort required for tasks, leading to underestimations or overestimations, resulting in unforeseen project delays.
   - Impact: 5
   - Likelihood: 4 -->
 
-##### Actions for risk mitigations (PxI>=20)
+### Actions for risk mitigations (PxI>=20)
 
 <!-- - R1 - Generative IA (LLM) can hallucinate:
     - Action: Provide users knowlegde of the limitations of generative AI and address potential inaccuracies in outputs.
@@ -166,10 +188,8 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
     - Task7 - Write the Pre-Gane
     - Task8 - Write Release Plan
     - Task9 - Write Product increments
-    - Task10 - Create Product Board
-    - Task11 - Create a Board for Sprints
-    - Task12 - Create US in PB, estimate difficulty(SML), prioretize(MoSCoW), sort
-    - Task13 - Create a repository
+    - Task10 - Create US, estimate difficulty(SML), prioretize(MoSCoW), sort
+    - Task11 - Create a repository
 
 ***
 
@@ -200,7 +220,7 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
 ## Product Increments
 ### Sprint 1
 
-##### Sprint Plan
+#### Sprint Plan
 
 - Goal: <!-- Create the base architecture of the app and basic interface. -->
     - Goal1
@@ -212,7 +232,7 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
     - US1: US description
     - US2: US description
 
-##### Sprint Analysis
+#### Sprint Analysis
 
 - Analysis: Analysis will occur after the sprint finishes
 
