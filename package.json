@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.0.6",
+    "@react-native-community/checkbox": "^0.5.17",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
