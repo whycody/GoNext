@@ -1,16 +1,16 @@
 export type Task = {
-  id: string;
+  id: number;
   title: string;
   description: string;
   priority: 1 | 2 | 3;
   date: Date;
-  groupId: string;
+  groupId: number;
   category: string;
   isCompleted: boolean;
 }
 
 export type TaskItem = {
-  id: string;
+  id: number;
   title: string;
   description: string;
   priority: 1 | 2 | 3;
