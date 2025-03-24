@@ -1,7 +1,11 @@
-import { ScrollView, View, StyleSheet } from "react-native";
+import { ScrollView, View, StyleSheet, FlatList } from "react-native";
 import HomeHeader from "../components/HomeHeader";
 import CategoryItem from "../components/CategoryItem";
 import { useState } from "react";
+import { MARGIN_HORIZONTAL } from "../src/constants";
+import { useTaskItems } from "../hooks/useTaskItems";
+import { TaskItem } from "../types/Task";
+import TaskView from "../components/TaskView";
 
 enum Categories {
   PRIORITY = 'Priority',
@@ -10,6 +14,11 @@ enum Categories {
 
 const HomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState(Categories.GROUP);
+  const taskItems = useTaskItems();
+
+  const renderTaskItem = ({ index, item }: { index: number, item: TaskItem }) => (
+    <TaskView index={index} taskItem={item} onTaskPress={(id) => console.log(`Task ${id} pressed at index ${index}`)}/>
+  );
 
   return (
     <ScrollView style={{ flex: 1 }}>
@@ -26,6 +35,10 @@ const HomeScreen = () => {
           onPress={() => setSelectedCategory(Categories.GROUP)}
         />
       </View>
+      <FlatList
+        data={taskItems}
+        renderItem={renderTaskItem}
+      />
     </ScrollView>
   );
 }
@@ -33,7 +46,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   categoriesContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
+    paddingHorizontal: MARGIN_HORIZONTAL,
     paddingVertical: 15
   }
 });
