@@ -88,6 +88,7 @@ const HomeScreen = () => {
       <FlatList
         scrollEnabled={false}
         data={groupedTaskItems()}
+        ListFooterComponent={<View style={{ height: 150 }}/>}
         renderItem={({ item }) => (
           <View>
             <View style={styles.sectionHeaderContainer}>

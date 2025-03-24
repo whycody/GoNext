@@ -3,16 +3,19 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import RootNavigation from "./screens/nav/RootNavigation";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 export default function App() {
   return (
     <>
-      <StatusBar />
+      <StatusBar/>
       <SafeAreaProvider>
         <SafeAreaView style={styles.container}>
-          <NavigationContainer>
-            <RootNavigation/>
-          </NavigationContainer>
+          <BottomSheetModalProvider>
+            <NavigationContainer>
+              <RootNavigation/>
+            </NavigationContainer>
+          </BottomSheetModalProvider>
         </SafeAreaView>
       </SafeAreaProvider>
     </>
