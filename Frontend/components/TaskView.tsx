@@ -45,6 +45,7 @@ const TaskView = ({ index, taskItem, onTaskPress }: TaskItemProps) => {
           disableText={true}
           isChecked={taskItem.isCompleted}
           fillColor={colors.primary}
+          onPress={() => onTaskPress(id)}
           size={18}
         />
       </Pressable>

@@ -1,7 +1,7 @@
 import { ScrollView, View, StyleSheet, FlatList } from "react-native";
 import HomeHeader from "../components/HomeHeader";
 import CategoryItem from "../components/CategoryItem";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import { useTaskItems } from "../hooks/useTaskItems";
 import { TaskItem } from "../types/Task";
@@ -14,10 +14,19 @@ enum Categories {
 
 const HomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState(Categories.GROUP);
-  const taskItems = useTaskItems();
+  const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
+  const loadedTaskItems = useTaskItems();
+
+  useEffect(() => {
+    setTaskItems(loadedTaskItems);
+  }, []);
 
   const renderTaskItem = ({ index, item }: { index: number, item: TaskItem }) => (
-    <TaskView index={index} taskItem={item} onTaskPress={(id) => console.log(`Task ${id} pressed at index ${index}`)}/>
+    <TaskView index={index} taskItem={item} onTaskPress={(id) => {
+      const newTask = { ...taskItems.find(task => task.id === id) } as TaskItem;
+      newTask.isCompleted = !newTask.isCompleted;
+      setTaskItems(taskItems.map(task => task.id === id ? newTask : task));
+    }}/>
   );
 
   return (
