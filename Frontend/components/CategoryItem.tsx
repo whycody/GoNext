@@ -26,8 +26,8 @@ const getStyles = (colors: any) => StyleSheet.create({
     borderWidth: 1,
     marginRight: 5,
     borderRadius: 4,
-    borderColor: colors.text,
-    opacity: 0.3
+    color: colors.border,
+    borderColor: colors.border,
   },
   selectedItem: {
     backgroundColor: colors.primary,
