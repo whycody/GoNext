@@ -8,6 +8,7 @@ import { TaskItem } from "../types/Task";
 import TaskView from "../components/TaskView";
 import { useTheme } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { FAB } from "react-native-paper";
 
 enum Categories {
   PRIORITY = 'Priority',
@@ -59,6 +60,10 @@ const HomeScreen = () => {
       }));
   };
 
+  const handleFABPress = () => {
+
+  }
+
   const translatePriority = (priority: number) => {
     switch (priority) {
       case 3:
@@ -71,61 +76,69 @@ const HomeScreen = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <HomeHeader style={{ paddingHorizontal: 20, paddingTop: 30, paddingBottom: 15 }}/>
-      <View style={styles.categoriesContainer}>
-        <CategoryItem
-          value={Categories.PRIORITY}
-          selected={selectedCategory}
-          onPress={() => setSelectedCategory(Categories.PRIORITY)}
-        />
-        <CategoryItem
-          value={Categories.GROUP}
-          selected={selectedCategory}
-          onPress={() => setSelectedCategory(Categories.GROUP)}
-        />
-      </View>
-      <FlatList
-        scrollEnabled={false}
-        data={groupedTaskItems()}
-        ListFooterComponent={<View style={{ height: 150 }}/>}
-        renderItem={({ item }) => (
-          <View>
-            <View style={styles.sectionHeaderContainer}>
-              <MaterialCommunityIcons
-                name={selectedCategory == Categories.PRIORITY ? 'flag' : 'account-group'}
-                size={22}
-                color={colors.primary}
-                style={{ marginRight: 10 }}
-              />
-              <Text style={styles.sectionHeader}>
-                {selectedCategory == Categories.PRIORITY ? translatePriority(Number(item.title)) : item.title}
-              </Text>
-            </View>
-            {item.data.map(subItem => (
-              <View key={subItem.title}>
-                <View style={styles.subsectionHeaderContainer}>
-                  <MaterialCommunityIcons
-                    name={selectedCategory == Categories.PRIORITY ? 'account-group' : 'flag'}
-                    size={18}
-                    color={colors.text}
-                    style={{ marginRight: 10 }}
-                  />
-                  <Text style={styles.subsectionHeader}>
-                    {selectedCategory == Categories.GROUP ? translatePriority(Number(subItem.title)) : subItem.title}
-                  </Text>
-                </View>
-                <FlatList
-                  data={subItem.data}
-                  renderItem={renderTaskItem}
-                  scrollEnabled={false}
+    <>
+      <ScrollView style={{ flex: 1 }}>
+        <HomeHeader style={{ paddingHorizontal: 20, paddingTop: 30, paddingBottom: 15 }}/>
+        <View style={styles.categoriesContainer}>
+          <CategoryItem
+            value={Categories.PRIORITY}
+            selected={selectedCategory}
+            onPress={() => setSelectedCategory(Categories.PRIORITY)}
+          />
+          <CategoryItem
+            value={Categories.GROUP}
+            selected={selectedCategory}
+            onPress={() => setSelectedCategory(Categories.GROUP)}
+          />
+        </View>
+        <FlatList
+          scrollEnabled={false}
+          data={groupedTaskItems()}
+          ListFooterComponent={<View style={{ height: 150 }}/>}
+          renderItem={({ item }) => (
+            <View>
+              <View style={styles.sectionHeaderContainer}>
+                <MaterialCommunityIcons
+                  name={selectedCategory == Categories.PRIORITY ? 'flag' : 'account-group'}
+                  size={22}
+                  color={colors.primary}
+                  style={{ marginRight: 10 }}
                 />
+                <Text style={styles.sectionHeader}>
+                  {selectedCategory == Categories.PRIORITY ? translatePriority(Number(item.title)) : item.title}
+                </Text>
               </View>
-            ))}
-          </View>
-        )}
+              {item.data.map(subItem => (
+                <View key={subItem.title}>
+                  <View style={styles.subsectionHeaderContainer}>
+                    <MaterialCommunityIcons
+                      name={selectedCategory == Categories.PRIORITY ? 'account-group' : 'flag'}
+                      size={18}
+                      color={colors.text}
+                      style={{ marginRight: 10 }}
+                    />
+                    <Text style={styles.subsectionHeader}>
+                      {selectedCategory == Categories.GROUP ? translatePriority(Number(subItem.title)) : subItem.title}
+                    </Text>
+                  </View>
+                  <FlatList
+                    data={subItem.data}
+                    renderItem={renderTaskItem}
+                    scrollEnabled={false}
+                  />
+                </View>
+              ))}
+            </View>
+          )}
+        />
+      </ScrollView>
+      <FAB
+        style={{ position: 'absolute', right: 20, bottom: 20, backgroundColor: colors.background }}
+        icon="plus"
+        color={colors.primary}
+        onPress={handleFABPress}
       />
-    </ScrollView>
+    </>
   );
 }
 
