@@ -1,9 +1,10 @@
 # GoNext
-![GoNextLogo](Docs/imgs/GoNext.png)
+![GoNextLogo](/Docs/imgs/GoNext.png)
 
 ![Stars](https://img.shields.io/github/stars/gonext?style=flat-square)
 ![Version](https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square)
-![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=flat-square)
+![TypeScript](https://img.shields.io/badge/TypeScript-45.5%25-blue?style=flat-square)
+![Python](https://img.shields.io/badge/TypeScript-54.5%25-blue?style=flat-square)
 ![Repo Size](https://img.shields.io/github/repo-size/whycody/gonext?style=flat-square)
 
 ![Created At](https://img.shields.io/badge/created%20at-march%202025-informational?style=flat-square)
@@ -67,7 +68,7 @@ Staying organized has never been easier with this intuitive to-do list app. Desi
 
 ### Use Case Diagram
 
-![Use case diagram](Docs/imgs/use_case.png)
+![Use case diagram](/Docs/imgs/use_case.png)
 
 ### Functions' description
 
