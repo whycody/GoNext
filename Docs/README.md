@@ -1,5 +1,5 @@
 # GoNext
-![GoNextLogo](imgs/GoNext.png)
+![GoNextLogo](Docs/imgs/GoNext.png)
 
 ![Stars](https://img.shields.io/github/stars/gonext?style=flat-square)
 ![Version](https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square)
@@ -67,7 +67,7 @@ Staying organized has never been easier with this intuitive to-do list app. Desi
 
 ### Use Case Diagram
 
-![Use case diagram](imgs/use_case.png)
+![Use case diagram](Docs/imgs/use_case.png)
 
 ### Functions' description
 
