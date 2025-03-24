@@ -2,6 +2,7 @@ import { TaskItem } from "../types/Task";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { MARGIN_HORIZONTAL, MARGIN_VERTICAL } from "../src/constants";
+import BouncyCheckbox from "react-native-bouncy-checkbox";
 
 type TaskItemProps = {
   index: number,
@@ -16,7 +17,7 @@ const TaskView = ({ index, taskItem, onTaskPress }: TaskItemProps) => {
 
   return (
     <>
-    {index > 0 && <View style={{ height: 1 }} />}
+      {index > 0 && <View style={{ height: 1 }}/>}
       <Pressable style={styles.root} onPress={() => onTaskPress(id)}>
         <View
           style={{
@@ -27,9 +28,25 @@ const TaskView = ({ index, taskItem, onTaskPress }: TaskItemProps) => {
           }}
         />
         <View style={styles.textContainer}>
-          <Text style={styles.header} numberOfLines={1}>{title}</Text>
-          <Text style={styles.subheader} numberOfLines={1}>{description}</Text>
+          <Text
+            style={[styles.header, taskItem.isCompleted && { textDecorationLine: 'line-through' }]}
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
+          <Text
+            style={[styles.subheader, taskItem.isCompleted && { textDecorationLine: 'line-through' }]}
+            numberOfLines={1}
+          >
+            {description}
+          </Text>
         </View>
+        <BouncyCheckbox
+          disableText={true}
+          isChecked={taskItem.isCompleted}
+          fillColor={colors.primary}
+          size={18}
+        />
       </Pressable>
     </>
   );
@@ -37,6 +54,7 @@ const TaskView = ({ index, taskItem, onTaskPress }: TaskItemProps) => {
 
 const getStyles = (colors: any) => StyleSheet.create({
   root: {
+    flex: 1,
     paddingHorizontal: MARGIN_HORIZONTAL,
     paddingVertical: 15,
     alignItems: 'center',
@@ -44,6 +62,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.card
   },
   textContainer: {
+    flex: 1,
     marginLeft: MARGIN_VERTICAL / 2,
   },
   header: {

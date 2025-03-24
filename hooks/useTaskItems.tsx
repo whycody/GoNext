@@ -16,6 +16,7 @@ export const useTaskItems = () => {
         description: task.description,
         priority: task.priority,
         groupName: group ? group.name : "Nieznana grupa",
+        isCompleted: task.isCompleted,
       };
     })
   );

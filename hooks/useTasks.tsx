@@ -3,10 +3,10 @@ import { Task } from "../types/Task";
 
 export const useTasks = () => {
   const [tasks] = useState<Task[]>([
-    { id: 1, groupId: 1, title: "Zakończyć raport", priority: 1, description: "Raport kwartalny dla zarządu", date: new Date("2025-03-25T10:00:00"), category: "Dokumenty", isCompleted: false },
-    { id: 2, groupId: 1, title: "Spotkanie zespołu", priority: 2, description: "Omówienie projektu", date: new Date("2025-03-26T14:00:00"), category: "Spotkania", isCompleted: false },
+    { id: 1, groupId: 1, title: "Zakończyć raport", priority: 1, description: "Raport kwartalny dla zarządu", date: new Date("2025-03-25T10:00:00"), category: "Dokumenty", isCompleted: true },
+    { id: 2, groupId: 1, title: "Spotkanie zespołu", priority: 2, description: "Omówienie projektu", date: new Date("2025-03-26T14:00:00"), category: "Spotkania", isCompleted: true },
     { id: 3, groupId: 2, title: "Zakupy na weekend", priority: 3, description: "Lista zakupów na sobotę", date: new Date("2025-03-27T16:00:00"), category: "Zakupy", isCompleted: false },
-    { id: 4, groupId: 2, title: "Zadzwonić do mamy", priority: 1, description: "Sprawdzić, jak się czuje", date: new Date("2025-03-25T18:00:00"), category: "Rodzina", isCompleted: false },
+    { id: 4, groupId: 2, title: "Zadzwonić do mamy", priority: 1, description: "Sprawdzić, jak się czuje", date: new Date("2025-03-25T18:00:00"), category: "Rodzina", isCompleted: true },
     { id: 5, groupId: 3, title: "Rezerwacja restauracji", priority: 2, description: "Kolacja ze znajomymi", date: new Date("2025-03-28T20:00:00"), category: "Rozrywka", isCompleted: false },
     { id: 6, groupId: 3, title: "Organizacja imprezy", priority: 1, description: "Zaprosić gości", date: new Date("2025-03-29T19:00:00"), category: "Znajomi", isCompleted: false },
     { id: 7, groupId: 4, title: "Siłownia", priority: 3, description: "Trening siłowy", date: new Date("2025-03-24T07:00:00"), category: "Sport", isCompleted: true },

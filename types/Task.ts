@@ -15,4 +15,5 @@ export type TaskItem = {
   description: string;
   priority: 1 | 2 | 3;
   groupName: string;
+  isCompleted: boolean;
 };
