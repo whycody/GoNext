@@ -1,7 +1,7 @@
 import { ScrollView, View, StyleSheet, Text, FlatList } from "react-native";
 import HomeHeader from "../components/HomeHeader";
 import CategoryItem from "../components/CategoryItem";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MARGIN_HORIZONTAL, MARGIN_VERTICAL } from "../src/constants";
 import { useTaskItems } from "../hooks/useTaskItems";
 import { TaskItem } from "../types/Task";
@@ -9,6 +9,9 @@ import TaskView from "../components/TaskView";
 import { useTheme } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FAB } from "react-native-paper";
+import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
+import { BottomSheetModalRef } from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetModalProvider/types";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { getUserTodos } from "../hooks/useApi";
 
 enum Categories {
@@ -22,6 +25,7 @@ const HomeScreen = () => {
   const loadedTaskItems = useTaskItems();
   const { colors } = useTheme();
   const styles = getStyles(colors);
+  const handleTaskBottomSheetRef = useRef<BottomSheetModal>(null);
 
   const loadUserTodos = async () => {
     const todos = await getUserTodos();
@@ -68,7 +72,7 @@ const HomeScreen = () => {
   };
 
   const handleFABPress = () => {
-
+    handleTaskBottomSheetRef.current?.present();
   }
 
   const translatePriority = (priority: number) => {
@@ -84,6 +88,10 @@ const HomeScreen = () => {
 
   return (
     <>
+      <HandleTaskBottomSheet
+        ref={handleTaskBottomSheetRef}
+        onTaskAdd={() => {}}
+      />
       <ScrollView style={{ flex: 1 }}>
         <HomeHeader style={{ paddingHorizontal: 20, paddingTop: 30, paddingBottom: 15 }}/>
         <View style={styles.categoriesContainer}>
