@@ -4,6 +4,7 @@ import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@g
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
+import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 
 interface HandleTaskBottomSheetProps {
   taskId?: number,
@@ -22,8 +23,8 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
     const { colors } = useTheme();
     const styles = getStyles(colors);
 
-    const titleInputRef = useRef<TextInput>(null);
-    const descriptionInputRef = useRef<TextInput>(null);
+    const titleInputRef = useRef<SheetTextRef>(null);
+    const descriptionInputRef = useRef<SheetTextRef >(null);
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -57,7 +58,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
             {taskId ? 'Edit task' : 'Add task'}
           </Text>
 
-          <TextInput
+          <SheetText
             ref={titleInputRef}
             placeholder="Task Title"
             value={title}
@@ -65,7 +66,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
             style={{ borderBottomWidth: 1, marginBottom: 10 }}
           />
 
-          <TextInput
+          <SheetText
             ref={descriptionInputRef}
             placeholder="Task Description"
             value={description}
