@@ -1,8 +1,9 @@
-import React, { FC, forwardRef, useImperativeHandle, useRef } from "react";
+import React, { FC, useEffect, useState, forwardRef, useImperativeHandle, useRef, useCallback } from "react";
 import { useTheme } from "@react-navigation/native";
 import { View, StyleSheet, Platform, TextInput } from "react-native";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import debounce from "lodash.debounce";
 
 type SheetTextProps = {
   value: string; 
@@ -13,6 +14,7 @@ type SheetTextProps = {
 
 export type SheetTextRef = {
   focus: () => void;
+  onWordRefresh: (word: string) => void;
   clearWord: () => void;
   getWord: () => string;
 };
@@ -21,8 +23,34 @@ const SheetText = forwardRef<SheetTextRef, SheetTextProps>(
   ({ value, onChangeText, placeholder, style }, ref) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
-
+    const [focused, setFocused] = useState(false);
     const inputRef = useRef<any>(null);
+
+    const [internalWord, setInternalWord] = useState(value);
+
+    useEffect(() => {
+      setInternalWord(value);
+    }, [value]);
+  
+    useImperativeHandle(ref, () => ({
+      focus: () => inputRef.current?.focus(),
+      clearWord: () => setInternalWord(''),
+      getWord: () => internalWord,
+    }));
+  
+  
+    const debouncedOnWordChange = useCallback(debounce(onChangeText, 300), []);
+  
+    const handleTextChange = (newWord: string) => {
+      setInternalWord(newWord);
+      debouncedOnWordChange(newWord);
+    };
+  
+    const handleBlur = () => {
+      onChangeText(internalWord);
+      setFocused(false);
+    };
+  
 
     useImperativeHandle(ref, () => ({
       focus: () => inputRef.current?.focus(),
@@ -40,8 +68,9 @@ const SheetText = forwardRef<SheetTextRef, SheetTextProps>(
             autoCapitalize={"none"}
             autoCorrect={true}
             placeholder={placeholder}
-            value={value}
+            value={internalWord}
             onChangeText={onChangeText}
+            onBlur={handleBlur}
           />
         ) : (
           <TextInput
@@ -52,8 +81,10 @@ const SheetText = forwardRef<SheetTextRef, SheetTextProps>(
             autoCapitalize={"none"}
             textContentType={"none"}
             placeholder={placeholder}
-            value={value}
+            value={internalWord}
+            onFocus={() => setFocused()}
             onChangeText={onChangeText}
+            onBlur={handleBlur}
           />
         )}
       </View>
