@@ -1,101 +1,113 @@
 import React, { FC, useEffect, useState, forwardRef, useImperativeHandle, useRef, useCallback } from "react";
 import { useTheme } from "@react-navigation/native";
-import { View, StyleSheet, Platform, TextInput } from "react-native";
+import { View, StyleSheet, Platform, TextInput, FlatList, Pressable } from "react-native";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import debounce from "lodash.debounce";
 
 type SheetTextProps = {
   value: string; 
   onChangeText: (text: string) => void; 
+  onTextRefresh: (text: string) => void;
   placeholder?: string;
+  suggestions?: string[];
   style?: any;
 };
 
-export type SheetTextRef = {
-  focus: () => void;
-  onWordRefresh: (word: string) => void;
-  clearWord: () => void;
-  getWord: () => string;
-};
+const SheetText: FC<SheetTextProps> = forwardRef(({ value, onChangeText, onTextRefresh, placeholder,  suggestions, style }, ref) => {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+  const [focused, setFocused] = useState(false);
 
-const SheetText = forwardRef<SheetTextRef, SheetTextProps>(
-  ({ value, onChangeText, placeholder, style }, ref) => {
-    const { colors } = useTheme();
-    const styles = getStyles(colors);
-    const [focused, setFocused] = useState(false);
-    const inputRef = useRef<any>(null);
+  const [internalWord, setInternalWord] = useState(value);
+  const [currentSuggestions, setCurrentSuggestions] = useState<string[]>([]);
+  const inputRef = useRef<any>(null);
 
-    const [internalWord, setInternalWord] = useState(value);
+  useEffect(() => {
+    setInternalWord(value);
+  }, [value]);
 
-    useEffect(() => {
-      setInternalWord(value);
-    }, [value]);
-  
-    useImperativeHandle(ref, () => ({
-      focus: () => inputRef.current?.focus(),
-      clearWord: () => setInternalWord(''),
-      getWord: () => internalWord,
-    }));
-  
-  
-    const debouncedOnWordChange = useCallback(debounce(onChangeText, 300), []);
-  
-    const handleTextChange = (newWord: string) => {
-      setInternalWord(newWord);
-      debouncedOnWordChange(newWord);
-    };
-  
-    const handleBlur = () => {
-      onChangeText(internalWord);
-      setFocused(false);
-    };
-  
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+    clearWord: () => setInternalWord(''),
+    getWord: () => internalWord,
+  }));
 
-    useImperativeHandle(ref, () => ({
-      focus: () => inputRef.current?.focus(),
-      clearWord: () => onChangeText(""),
-      getWord: () => value,
-    }));
+  useEffect(() => {
+    const filteredSuggestions = suggestions ? suggestions.filter((suggestion) =>
+      suggestion.toLowerCase().startsWith(internalWord.toLowerCase()) && suggestion.toLowerCase() !== internalWord.toLowerCase()
+    ).slice(0, 2) : [];
 
-    return (
+    setCurrentSuggestions(filteredSuggestions);
+  }, [internalWord, suggestions]);
+
+
+  const handleTextChange = (newWord: string) => {
+    setInternalWord(newWord);
+  };
+
+  const handleBlur = () => {
+    onChangeText(internalWord);
+    setFocused(false);
+  };
+
+  const handleSuggestionPress = (suggestion: string) => {
+    setInternalWord(suggestion);
+    setCurrentSuggestions([]);
+    onChangeText(suggestion);
+  };
+
+  return (
+    <View>
       <View style={[styles.inputContainer, style]}>
-        {Platform.OS === "ios" ? (
+        {Platform.OS == 'ios' ?
           <BottomSheetTextInput
             ref={inputRef}
             style={styles.input}
             cursorColor={colors.primary}
-            autoCapitalize={"none"}
+            autoCapitalize={'none'}
             autoCorrect={true}
             placeholder={placeholder}
             value={internalWord}
-            onChangeText={onChangeText}
+            onChangeText={handleTextChange}
             onBlur={handleBlur}
-          />
-        ) : (
+          /> :
           <TextInput
             ref={inputRef}
             style={styles.input}
             cursorColor={colors.primary}
             autoCorrect={true}
-            autoCapitalize={"none"}
-            textContentType={"none"}
+            autoCapitalize={'none'}
+            textContentType={'none'}
             placeholder={placeholder}
             value={internalWord}
-            onFocus={() => setFocused()}
-            onChangeText={onChangeText}
+            onFocus={setFocused}
+            onChangeText={handleTextChange}
             onBlur={handleBlur}
           />
-        )}
+        }
       </View>
-    );
-  }
-);
+      {currentSuggestions.length > 0 && focused && (
+        <FlatList
+          data={currentSuggestions}
+          keyboardShouldPersistTaps={'always'}
+          keyExtractor={(index) => index.toString()}
+          renderItem={({ item }) => (
+            <Pressable onPress={() => handleSuggestionPress(item)}>
+              <View style={styles.suggestionItem}>
+              </View>
+            </Pressable>
+          )}
+          style={styles.suggestionsList}
+        />
+      )}
+    </View>
+  );
+});
 
 const getStyles = (colors: any) => StyleSheet.create({
   inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   input: {
     flex: 1,
@@ -105,6 +117,20 @@ const getStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.background,
     fontSize: 16,
     height: 42,
+  },
+  suggestionsList: {
+    marginTop: 10,
+    borderColor: colors.border,
+  },
+  suggestionItem: {
+    marginTop: 5,
+    backgroundColor: colors.background,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: colors.primary300,
   },
 });
 
