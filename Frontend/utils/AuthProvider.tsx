@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { Text } from 'react-native';
 import ApiHandler from './ApiHandler';
-import LoginScreen from './LoginScreen';
+import LoginScreen from "../screens/LoginScreen";
 
 const api = new ApiHandler();
 
@@ -32,7 +33,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     setIsAuthenticated(true);
   };
 
-  if (isAuthenticated === null) return <div>Ładowanie...</div>;
+  if (isAuthenticated === null) return <Text>Ładowanie...</Text>;
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, setToken }}>

@@ -55,7 +55,7 @@ const HomeScreen = () => {
         title: primaryKey,
         data: Object.keys(grouped[primaryKey]).map(secondaryKey => ({
           title: secondaryKey,
-          data: grouped[primaryKey][secondaryKey],
+          data: grouped[primaryKey][secondaryKey].sort((a, b) => a.isCompleted ? 1 : -1),
         })).sort((a, b) => b.title.localeCompare(a.title)),
       }));
   };

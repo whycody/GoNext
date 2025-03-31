@@ -4,6 +4,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import RootNavigation from "./screens/nav/RootNavigation";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import AuthProvider from "./utils/AuthProvider";
 
 export default function App() {
   return (
@@ -13,7 +14,9 @@ export default function App() {
         <SafeAreaView style={styles.container}>
           <BottomSheetModalProvider>
             <NavigationContainer>
-              <RootNavigation/>
+              <AuthProvider>
+                <RootNavigation/>
+              </AuthProvider>
             </NavigationContainer>
           </BottomSheetModalProvider>
         </SafeAreaView>
