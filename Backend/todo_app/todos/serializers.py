@@ -10,6 +10,16 @@ class ToDoSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['user', 'created_at']
 
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)  # Username is required
+    password = serializers.CharField(required=True, write_only=True)  # Password is required, only for writing
+
+class InvitationCreateSerializer(serializers.Serializer):
+    group_id = serializers.IntegerField(required=True)
+    expiration_days = serializers.IntegerField(required=False, default=7)
+    max_uses = serializers.IntegerField(required=False, default=1)
+    email = serializers.EmailField(required=True)
+
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)  # Hasło tylko do zapisu
 
@@ -26,8 +36,14 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class GroupSerializer(serializers.ModelSerializer):
-    members = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True)
-
     class Meta:
         model = Group
-        fields = ['id', 'name', 'members']
+        fields = ['id', 'name']  # Nie wymagamy members na wejściu
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        if request and request.user:
+            group = Group.objects.create(name=validated_data['name'], admin=request.user)
+            group.members.add(request.user)
+            return group
+        raise serializers.ValidationError("Nie można utworzyć grupy bez uwierzytelnionego użytkownika.")

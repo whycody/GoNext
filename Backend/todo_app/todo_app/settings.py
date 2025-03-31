@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Załaduj zmienne środowiskowe z pliku .env
+# Load environment variables from the .env file
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=*s4tgij3sq9v!-sokm8w2yg36k=#t1k@@g3aiz3aybr!t15$h'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'todos',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -78,10 +79,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'todo_app.wsgi.application'
 
-# Konfiguracja DRF + JWT
+# DRF + JWT configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
     ),
 }
 
@@ -93,26 +97,39 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': 'your_secret_key',  # Zmień to na bardziej bezpieczny klucz
+    'SIGNING_KEY': os.getenv("SECRET_KEY"),
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'Add prefix **Bearer** and JWT token. Example: Bearer eyJhbGciOiJIUzI1NiIjg'
+        }
+    },
+    'USE_SESSION_AUTH': False,  # Hides the "login via Django session" button
+    'JSON_EDITOR': True,  # Optional: enables JSON editor in request body
+}
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# Baza PostgreSQL – Supabase
+# PostgreSQL database – Supabase
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('DB_NAME'),  # Zmienna z pliku .env
-        'USER': os.getenv('DB_USER'),  # Zmienna z pliku .env
-        'PASSWORD': os.getenv('DB_PASSWORD'),  # Zmienna z pliku .env
-        'HOST': os.getenv('DB_HOST'),  # Zmienna z pliku .env
-        'PORT': os.getenv('DB_PORT', 5432),  # Można ustawić wartość domyślną
+        'NAME': os.getenv('DB_NAME'),  # Environment variable
+        'USER': os.getenv('DB_USER'),  # Environment variable
+        'PASSWORD': os.getenv('DB_PASSWORD'),  # Environment variable
+        'HOST': os.getenv('DB_HOST'),  # Environment variable
+        'PORT': os.getenv('DB_PORT', 5432),  # Default value
         'OPTIONS': {
-            'sslmode': 'require',  # Konieczne połączenie SSL
+            'sslmode': 'require',  # Enforces SSL connection
         },
     }
 }
@@ -153,6 +170,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+
+FRONTEND_URL = 'http://localhost:8081'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

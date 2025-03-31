@@ -2,6 +2,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+import uuid
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)  # Pole email jako unikalne
@@ -11,27 +13,32 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.email})"
+
+
 class Group(models.Model):
     name = models.CharField(max_length=100, unique=True)
     members = models.ManyToManyField(get_user_model(), related_name='custom_groups')
+    admin = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name='administered_groups',
+        null=True,
+        blank = True
+    )
+
 
     def __str__(self):
         return self.name
 
+
 class ToDo(models.Model):
-    PRIORITY_CHOICES = [
-        (1, 'Low'),
-        (2, 'Medium'),
-        (3, 'High'),
-    ]
-    
-    # Jedno pole assigned_to, które może być albo użytkownikiem, albo grupą
+    # Pole priority jako IntegerField bez choices
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='todos', null=True, blank=True)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='todos', null=True, blank=True)
 
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    priority = models.IntegerField(choices=PRIORITY_CHOICES, default=2)
+    priority = models.IntegerField(default=2)
     category = models.CharField(max_length=100, blank=True)
     due_date = models.DateField(null=True, blank=True)
     is_completed = models.BooleanField(default=False)
@@ -46,3 +53,21 @@ class ToDo(models.Model):
             raise ValidationError('Zadanie musi być przypisane do użytkownika lub grupy.')
         if self.user and self.group:
             raise ValidationError('Zadanie nie może być przypisane zarówno do użytkownika, jak i do grupy.')
+        
+
+
+class Invitation(models.Model):
+    token = models.UUIDField(default=uuid.uuid4, unique=True)  # Unikalny token
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)  # Grupa, do której zapraszamy
+    inviter = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)  # Osoba, która zaprasza
+    expiration_date = models.DateTimeField()  # Data wygaśnięcia zaproszenia
+    max_uses = models.PositiveIntegerField(default=1)  # Maksymalna liczba użyć zaproszenia
+    uses = models.PositiveIntegerField(default=0)  # Liczba użyć zaproszenia
+
+    def is_valid(self):
+        """Sprawdza, czy zaproszenie jest ważne (nie wygasło i nie zostało przekroczona liczba użyć)."""
+        return self.uses < self.max_uses and timezone.now() < self.expiration_date
+
+    def __str__(self):
+        return f"Invitation to {self.group.name} by {self.inviter.username}"
+        
