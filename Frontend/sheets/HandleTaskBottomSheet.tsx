@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useRef, forwardRef } from "react";
-import { Text, TextInput, Platform, StyleSheet, Button } from "react-native";
+import { Text, TextInput, Platform, StyleSheet, Button, View } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
+import { Picker } from "@react-native-picker/picker";
 
 interface HandleTaskBottomSheetProps {
   taskId?: number,
@@ -30,11 +31,17 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
     const [description, setDescription] = useState("");
     const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
 
-    const handleAdd = () => {
+    const [selectedGroup, setSelectedGroup] = useState("");
+    const groups = ["Personal", "Znajomi", "Sport", "Rodzina", "Praca"]; //hardcoded temporary
+
+    const handleAdd = (clearForm: boolean) => {
       if (!title) return;
       onTaskAdd(title, description, priority);
-      setTitle("");
-      setDescription("");
+      if (clearForm) {
+        setTitle(""); 
+        setDescription(""); 
+        titleInputRef.current?.focus();
+      }
     };
 
     const renderBackdrop = useCallback((props: any) =>
@@ -47,6 +54,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
       <BottomSheetModal
         ref={ref}
         index={0}
+        snapPoints={["35%", "60%"]}
         backdropComponent={renderBackdrop}
         onChange={(index: number) => onChangeIndex?.(index)}
         containerComponent={renderContainerComponent}
@@ -54,7 +62,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
         handleIndicatorStyle={{ backgroundColor: colors.primary, borderRadius: 0 }}
       >
         <BottomSheetScrollView style={styles.root}>
-          <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
             {taskId ? 'Edit task' : 'Add task'}
           </Text>
 
@@ -71,10 +79,27 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
             placeholder="Task Description"
             value={description}
             onChangeText={setDescription}
-            style={{ borderBottomWidth: 1, marginBottom: 10 }}
+            style={{ borderBottomWidth: 1, marginBottom: 10}}
           />
 
-          <Button title="Add Task" onPress={handleAdd}/>
+          <View style={{ backgroundColor: "#f0f0f0", borderRadius: 8, overflow: "hidden", marginBottom: 10 }}>
+            <Picker
+              selectedValue={selectedGroup}
+              onValueChange={(itemValue) => setSelectedGroup(itemValue)}
+              >
+              <Picker.Item label="Select a group..." value="" color="gray" />
+              {groups.map((group, index) => (
+                <Picker.Item key={index} label={group} value={group} />
+              ))}
+            </Picker>
+          </View>
+          
+          <View style={{ marginBottom: 10 }}>
+            <Button title="Add Task" onPress={() => handleAdd(false)} />
+          </View>
+          <View>
+            <Button title="Add This and Another" onPress={() => handleAdd(true)} />
+          </View>
         </BottomSheetScrollView>
       </BottomSheetModal>
     );
@@ -84,7 +109,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
 const getStyles = (colors: any) => StyleSheet.create({
   root: {
     paddingHorizontal: MARGIN_HORIZONTAL,
-    marginVertical: 20,
+    marginVertical: 15,
   },
 });
 
