@@ -5,7 +5,8 @@ import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
-import { Picker } from "@react-native-picker/picker";
+import { Picker } from "@react-native-picker/picker"; //you need to run npm install @react-native-picker/picker
+import { RadioButton } from 'react-native-paper';
 
 interface HandleTaskBottomSheetProps {
   taskId?: number,
@@ -54,7 +55,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
       <BottomSheetModal
         ref={ref}
         index={0}
-        snapPoints={["35%", "60%"]}
+        snapPoints={["45%", "65%"]}
         backdropComponent={renderBackdrop}
         onChange={(index: number) => onChangeIndex?.(index)}
         containerComponent={renderContainerComponent}
@@ -93,6 +94,23 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
               ))}
             </Picker>
           </View>
+
+          <View style={{ marginBottom: 10 }}>
+            <Text style={{ marginBottom: 5 }}>Select Priority:</Text>
+            <RadioButton.Group onValueChange={newValue => setPriority(newValue)} value={priority}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <RadioButton value="minor" color="green"/><Text>Minor</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <RadioButton value="moderate" color="yellow" /><Text>Moderate</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <RadioButton value="critical" color="red" /><Text>Critical</Text>
+                </View>
+              </View>
+            </RadioButton.Group>
+          </View>
           
           <View style={{ marginBottom: 10 }}>
             <Button title="Add Task" onPress={() => handleAdd(false)} />
@@ -109,7 +127,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
 const getStyles = (colors: any) => StyleSheet.create({
   root: {
     paddingHorizontal: MARGIN_HORIZONTAL,
-    marginVertical: 15,
+    marginVertical: 10,
   },
 });
 
