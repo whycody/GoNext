@@ -33,7 +33,9 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
     const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
 
     const [selectedGroup, setSelectedGroup] = useState("");
+
     const groups = ["Personal", "Znajomi", "Sport", "Rodzina", "Praca"]; //hardcoded temporary
+
 
     const handleAdd = (clearForm: boolean) => {
       if (!title) return;

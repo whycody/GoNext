@@ -21,6 +21,7 @@ enum Categories {
 
 const HomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState(Categories.GROUP);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
   const loadedTaskItems = useTaskItems();
   const { colors } = useTheme();
@@ -42,7 +43,12 @@ const HomeScreen = () => {
       const newTask = { ...taskItems.find(task => task.id === id) } as TaskItem;
       newTask.isCompleted = !newTask.isCompleted;
       setTaskItems(taskItems.map(task => task.id === id ? newTask : task));
-    }}/>
+    }}
+    onLongPress={(id) => {
+      setSelectedTaskId(id); 
+      handleTaskBottomSheetRef.current?.present(); 
+    }}
+    />
   );
 
   const groupedTaskItems = () => {
@@ -90,6 +96,7 @@ const HomeScreen = () => {
     <>
       <HandleTaskBottomSheet
         ref={handleTaskBottomSheetRef}
+        taskId={selectedTaskId}
         onTaskAdd={() => {}}
       />
       <ScrollView style={{ flex: 1 }}>
