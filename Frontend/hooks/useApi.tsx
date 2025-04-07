@@ -1,17 +1,24 @@
-import ApiHandler from "../utils/ApiHandler";
+import { apiCall } from "../utils/ApiHandler";
 
-
-export const loginToApp = async (email: string, password: string): Promise<void> => {
+export const loginToApp = async (username: string, password: string) => {
   try {
-    const api = new ApiHandler();
-    const res = await api.apiCall({
+    return await apiCall({
       method: 'POST',
       url: '/login/',
-      data: { email, password }
+      data: { username, password }
     });
-    // await setToken(res.token);
-    return res;
   } catch (e) {
-    console.error(e);
+    return null;
+  }
+}
+
+export const getUserTodos = async () => {
+  try {
+    return await apiCall({
+      method: 'GET',
+      url: '/todos/',
+    });
+  } catch (e) {
+    return null;
   }
 }

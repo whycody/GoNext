@@ -9,6 +9,7 @@ import TaskView from "../components/TaskView";
 import { useTheme } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FAB } from "react-native-paper";
+import { getUserTodos } from "../hooks/useApi";
 
 enum Categories {
   PRIORITY = 'Priority',
@@ -22,8 +23,14 @@ const HomeScreen = () => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
 
+  const loadUserTodos = async () => {
+    const todos = await getUserTodos();
+    console.log(todos);
+  }
+
   useEffect(() => {
     setTaskItems(loadedTaskItems);
+    loadUserTodos();
   }, []);
 
   const renderTaskItem = ({ index, item }: { index: number, item: TaskItem }) => (
