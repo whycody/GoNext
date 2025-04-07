@@ -1,9 +1,13 @@
 import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { MARGIN_HORIZONTAL } from "../src/constants";
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
-const LoginScreen = () => {
+type LoginProps = {
+  login: (username: string, password: string) => void
+}
+
+const LoginScreen: FC<LoginProps> = ({ login }) => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
 
@@ -12,8 +16,9 @@ const LoginScreen = () => {
   const [password, setPassword] = useState<string>('');
   const filled = username.length > 0 && password.length > 0;
 
-  const handleLoginPress = () => {
+  const handleLoginPress = async () => {
     if (!filled) return;
+    login(username, password);
     setWarning('Invalid username or password');
   }
 

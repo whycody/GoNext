@@ -1,11 +1,15 @@
 import * as SecureStore from "expo-secure-store";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
 class ApiHandler {
   private baseURL: string;
   private token: string | null = null;
 
   constructor() {
-    this.baseURL = process.env.API_BASE_URL || 'http://localhost:3000';
+    this.baseURL = process.env.API_BASE_URL || 'http://localhost:8000';
+    (async () => {
+      await this.loadToken();
+    })();
   }
 
   async setToken(token: string): Promise<void> {
@@ -21,7 +25,7 @@ class ApiHandler {
   }
 
   async apiCall<T>(options: { method: string; url: string; data?: object | string }): Promise<T> {
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
@@ -29,26 +33,22 @@ class ApiHandler {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const fetchOptions: RequestInit = {
-      method: options.method,
-      headers,
-    };
+    try {
+      const response: AxiosResponse<T> = await axios({
+        method: options.method,
+        url: `${this.baseURL}${options.url}`,
+        headers,
+        data: options.data,
+      });
 
-    if (options.data) {
-      fetchOptions.body = typeof options.data === 'string' ? options.data : JSON.stringify(options.data);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        throw new Error('Nieautoryzowany – token wygasł lub jest nieprawidłowy.');
+      }
+
+      throw new Error(`API error: ${error.response?.status || error.message}`);
     }
-
-    const response = await fetch(`${this.baseURL}${options.url}`, fetchOptions);
-
-    if (response.status === 401) {
-      throw new Error('Nieautoryzowany – token wygasł lub jest nieprawidłowy.');
-    }
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    return response.json();
   }
 }
 
