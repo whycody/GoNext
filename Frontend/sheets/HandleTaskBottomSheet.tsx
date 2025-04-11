@@ -6,7 +6,7 @@ import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import { Picker } from "@react-native-picker/picker"; //you need to run npm install @react-native-picker/picker
-import { RadioButton } from 'react-native-paper';
+import { useGroups } from "../hooks/useGroups";
 
 interface HandleTaskBottomSheetProps {
   taskId?: number,
@@ -34,7 +34,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
 
     const [selectedGroup, setSelectedGroup] = useState("");
 
-    const groups = ["Personal", "Znajomi", "Sport", "Rodzina", "Praca"]; //hardcoded temporary
+    const groups = useGroups();
 
 
     const handleAdd = (clearForm: boolean) => {
@@ -93,8 +93,8 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
               onValueChange={(itemValue) => setSelectedGroup(itemValue)}
             >
               <Picker.Item label="Select a group..." value="" color="gray" />
-              {groups.map((group, index) => (
-                <Picker.Item key={index} label={group} value={group} />
+              {groups.map((group) => (
+                <Picker.Item key={group.id} label={group.name} value={group.name} />
               ))}
             </Picker>
           </View>
@@ -116,7 +116,6 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
                 <Text style={{ color: priority === TaskPriority.LOW ? "white" : "black" }}>Low</Text>
               </Pressable>
 
-              {/* Medium Priority */}
               <Pressable
                 onPress={() => setPriority(TaskPriority.MEDIUM)}
                 style={{
@@ -131,7 +130,6 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
                 <Text style={{ color: priority === TaskPriority.MEDIUM ? "white" : "black" }}>Medium</Text>
               </Pressable>
 
-              {/* High Priority */}
               <Pressable
                 onPress={() => setPriority(TaskPriority.HIGH)}
                 style={{
