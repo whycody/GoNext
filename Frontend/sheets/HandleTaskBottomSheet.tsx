@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, forwardRef } from "react";
-import { Text, TextInput, Platform, StyleSheet, Button, View } from "react-native";
+import { Text, TextInput, Platform, StyleSheet, Button, View, Pressable } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
@@ -45,6 +45,9 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
         setDescription(""); 
         titleInputRef.current?.focus();
       }
+      else {
+        (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
+      }
     };
 
     const renderBackdrop = useCallback((props: any) =>
@@ -57,7 +60,6 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
       <BottomSheetModal
         ref={ref}
         index={0}
-        snapPoints={["45%", "65%"]}
         backdropComponent={renderBackdrop}
         onChange={(index: number) => onChangeIndex?.(index)}
         containerComponent={renderContainerComponent}
@@ -65,31 +67,31 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
         handleIndicatorStyle={{ backgroundColor: colors.primary, borderRadius: 0 }}
       >
         <BottomSheetScrollView style={styles.root}>
-          <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12 }}>
             {taskId ? 'Edit task' : 'Add task'}
           </Text>
 
           <SheetText
             ref={titleInputRef}
-            placeholder="Task Title"
+            placeholder="Task title"
             value={title}
             onChangeText={setTitle}
-            style={{ borderBottomWidth: 1, marginBottom: 10 }}
+            style={{ borderBottomWidth: 1, marginBottom: 12, paddingVertical: 8 }}
           />
 
           <SheetText
             ref={descriptionInputRef}
-            placeholder="Task Description"
+            placeholder="Task description"
             value={description}
             onChangeText={setDescription}
-            style={{ borderBottomWidth: 1, marginBottom: 10}}
+            style={{ borderBottomWidth: 1, marginBottom: 12, paddingVertical: 8 }}
           />
 
-          <View style={{ backgroundColor: "#f0f0f0", borderRadius: 8, overflow: "hidden", marginBottom: 10 }}>
+          <View style={{ backgroundColor: "#f0f0f0", borderRadius: 8, overflow: "hidden", marginBottom: 15 }}>
             <Picker
               selectedValue={selectedGroup}
               onValueChange={(itemValue) => setSelectedGroup(itemValue)}
-              >
+            >
               <Picker.Item label="Select a group..." value="" color="gray" />
               {groups.map((group, index) => (
                 <Picker.Item key={index} label={group} value={group} />
@@ -97,28 +99,95 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
             </Picker>
           </View>
 
-          <View style={{ marginBottom: 10 }}>
-            <Text style={{ marginBottom: 5 }}>Select Priority:</Text>
-            <RadioButton.Group onValueChange={newValue => setPriority(newValue)} value={priority}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <RadioButton value="minor" color="green"/><Text>Minor</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <RadioButton value="moderate" color="yellow" /><Text>Moderate</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <RadioButton value="critical" color="red" /><Text>Critical</Text>
-                </View>
-              </View>
-            </RadioButton.Group>
+          <View style={{ marginBottom: 15 }}>
+            <Text style={{ marginBottom: 8, fontWeight: "bold" }}>Select priority:</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Pressable
+                onPress={() => setPriority(TaskPriority.LOW)}
+                style={{
+                  flex: 1,
+                  backgroundColor: priority === TaskPriority.LOW ? "green" : "#f0f0f0",
+                  paddingVertical: 10,
+                  marginHorizontal: 5,
+                  borderRadius: 8,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: priority === TaskPriority.LOW ? "white" : "black" }}>Low</Text>
+              </Pressable>
+
+              {/* Medium Priority */}
+              <Pressable
+                onPress={() => setPriority(TaskPriority.MEDIUM)}
+                style={{
+                  flex: 1,
+                  backgroundColor: priority === TaskPriority.MEDIUM ? "orange" : "#f0f0f0",
+                  paddingVertical: 10,
+                  marginHorizontal: 5,
+                  borderRadius: 8,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: priority === TaskPriority.MEDIUM ? "white" : "black" }}>Medium</Text>
+              </Pressable>
+
+              {/* High Priority */}
+              <Pressable
+                onPress={() => setPriority(TaskPriority.HIGH)}
+                style={{
+                  flex: 1,
+                  backgroundColor: priority === TaskPriority.HIGH ? "red" : "#f0f0f0",
+                  paddingVertical: 10,
+                  marginHorizontal: 5,
+                  borderRadius: 8,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: priority === TaskPriority.HIGH ? "white" : "black" }}>High</Text>
+              </Pressable>
+            </View>
           </View>
-          
-          <View style={{ marginBottom: 10 }}>
-            <Button title="Add Task" onPress={() => handleAdd(false)} />
-          </View>
-          <View>
-            <Button title="Add This and Another" onPress={() => handleAdd(true)} />
+
+          <View style={{ marginBottom: 20 }}>
+            {taskId ? (
+              <Pressable
+                onPress={() => handleAdd(false)}
+                style={{
+                  backgroundColor: colors.primary,
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: "white", fontWeight: "bold" }}>Edit task</Text>
+              </Pressable>
+            ) : (
+              <>
+                <Pressable
+                  onPress={() => handleAdd(false)}
+                  style={{
+                    backgroundColor: colors.primary,
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    alignItems: "center",
+                    marginBottom: 10,
+                  }}
+                >
+                  <Text style={{ color: "white", fontWeight: "bold" }}>Add task</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => handleAdd(true)}
+                  style={{
+                    backgroundColor: colors.primary,
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: "white", fontWeight: "bold" }}>Add this and another</Text>
+                </Pressable>
+              </>
+            )}
           </View>
         </BottomSheetScrollView>
       </BottomSheetModal>
