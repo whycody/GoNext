@@ -2,14 +2,14 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { Group } from "../types/Group";
 
-type GroupItemProps = {
+type GroupViewProps = {
   index: number;
   group: Group;
   onGroupPress: (id: number) => void;
   onLongPress?: (id: number) => void;
 };
 
-const GroupsView = ({ index, group, onGroupPress, onLongPress }: GroupItemProps) => {
+const GroupsView = ({ index, group, onGroupPress, onLongPress }: GroupViewProps) => {
   const { colors } = useTheme();
   const { id, name, color, icon } = group;
   const styles = getStyles(colors);
@@ -17,7 +17,7 @@ const GroupsView = ({ index, group, onGroupPress, onLongPress }: GroupItemProps)
   return (
     <>
       <Pressable
-        style={styles.root} // Usunięto zaokrąglone rogi
+        style={styles.root} 
         onPress={() => onGroupPress(id)}
         onLongPress={() => onLongPress?.(id)}
       >
