@@ -9,7 +9,7 @@ urlpatterns = [
     path('token/logout/', LogoutView.as_view(), name='token_logout'),
     # Tasks assigned directly to the user (no group)
     path('todos/user/', ToDoByUserView.as_view(), name='todos-by-user'),
-
+    path('api/verify-email/<uidb64>/<token>/', VerifyEmailView.as_view(), name='verify-email'),
     # Tasks assigned to the user, grouped by groups
     path('todos/groups/', ToDoByGroupView.as_view(), name='todos-by-group'),
 
