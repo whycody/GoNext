@@ -10,18 +10,11 @@ on:
       - main
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: ./Backend
-
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read #This is required for actions/checkout
-    defaults:
-      run:
-        working-directory: ./Backend
 
     steps:
       - uses: actions/checkout@v4
@@ -32,9 +25,7 @@ jobs:
           python-version: '3.13'
 
       - name: Create and start virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
+        run: mv ./Backend/* .
       
       - name: Install dependencies
         run: pip install -r requirements.txt
