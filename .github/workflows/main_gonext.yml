@@ -4,21 +4,24 @@
 
 name: Build and deploy Python app to Azure Web App - gonext
 
-defaults:
-  run:
-    working-directory: ./Backend
-
 on:
   push:
     branches:
       - main
   workflow_dispatch:
 
+defaults:
+  run:
+    working-directory: ./Backend
+
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read #This is required for actions/checkout
+    defaults:
+      run:
+        working-directory: ./Backend
 
     steps:
       - uses: actions/checkout@v4
