@@ -1,25 +1,12 @@
 from django.urls import path
-from .views import (
-    AcceptInvitationView,
-    GroupCreateView,
-    InvitationCreateView,
-    RegisterView,
-    LoginView,
-    ToDoByUserView,
-    ToDoByGroupView,
-    ToDoDetailView,
-    ToDoListCreateView,
-    GroupListView,  
-    GroupDetailView
-)
-from rest_framework_simplejwt.views import TokenRefreshView
+from .views import *
 
 urlpatterns = [
     # User registration and login
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Token refresh
-
+    path('token/refresh/', RefreshTokenView.as_view(), name='token_refresh'),
+    path('token/logout/', LogoutView.as_view(), name='token_logout'),
     # Tasks assigned directly to the user (no group)
     path('todos/user/', ToDoByUserView.as_view(), name='todos-by-user'),
 

@@ -1,39 +1,107 @@
 from django.contrib.auth import get_user_model
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, exceptions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from todo_app.settings import EMAIL_HOST_USER
 from .models import ToDo, Group
 from .serializers import InvitationCreateSerializer, LoginSerializer, ToDoSerializer, UserSerializer, GroupSerializer
-from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from django.utils import timezone
 from datetime import timedelta
-from .models import Invitation
+from .models import Invitation, Device
 from django.conf import settings
 from rest_framework import status
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.encoding import force_str, force_bytes
+from django.core.mail import send_mail
 
-# User registration
+# Endpoint user-info
+class UserInfoView(APIView):
+    permission_classes = [AllowAny]  # Dostęp dla wszystkich
+    
+    def get(self, request):
+        if request.user.is_authenticated:
+            return Response({
+                "username": request.user.username,
+                "status": "verified" if request.user.is_verified else "not_verified"
+            }, status=200)
+        return Response({"error": "Unauthorized"}, status=401)
+
+# Rozszerzenie modelu użytkownika
 class RegisterView(generics.CreateAPIView):
     permission_classes = [AllowAny]
-    queryset = get_user_model().objects.all()  # Using the custom user model
+    queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
+
+    def perform_create(self, serializer):
+        user = serializer.save(is_verified=False)  # Domyślnie niezweryfikowany
+        self.send_verification_email(user)
+
+    def send_verification_email(self, user):
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        verify_url = f"http://localhost:8000/api/verify-email/{uid}/{token}/"
+
+        subject = "Verify your email"
+        message = f"Click the link to verify: {verify_url}"
+        from_email = EMAIL_HOST_USER  # Pobiera z settings.py
+        recipient_list = [user.email]
+
+        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+
+
+# Endpoint do potwierdzania emaila
+class VerifyEmailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = get_user_model().objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
+            return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if default_token_generator.check_token(user, token):
+            user.is_verified = True
+            user.save()
+            return Response({"message": "Email verified successfully"}, status=200)
+        else:
+            return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 # Login – JWT token generation
 class LoginView(APIView):
     permission_classes = [AllowAny]  # Allow any user to access this view, even if not authenticated
-    
     # Define the expected input parameters using the `swagger_auto_schema` decorator
     @swagger_auto_schema(
         operation_description="Login and generate JWT tokens.",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'username': openapi.Schema(type=openapi.TYPE_STRING, description='The username of the user'),
-                'password': openapi.Schema(type=openapi.TYPE_STRING, description='The password of the user')
+                'username': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='The username of the user'
+                ),
+                'password': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='The password of the user'
+                ),
+                'remember_me': openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description='Whether to stay logged in (optional)',
+                    default=False
+                ),
+                'device_id': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Unique identifier for the device (required if remember_me is true)',
+                    default=''
+                )
             },
             required=['username', 'password']
         ),
@@ -45,19 +113,40 @@ class LoginView(APIView):
         username = request.data.get('username')
         password = request.data.get('password')
 
+        remember_me = request.data.get('remember_me', False)
+        device_id = request.data.get('device_id', None)
+
+        if remember_me and not device_id:
+            device_id = "test-device-id-6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+
         # Authenticate the user using Django's built-in authenticate function
         user = authenticate(username=username, password=password)
 
         if user:
             # If authentication is successful, generate the JWT token pair
             refresh = RefreshToken.for_user(user)
+            refresh, access_token = create_new_tokens(user, remember_me)
+
+            if remember_me and device_id:
+                # Zapisujemy refresh token wraz z identyfikatorem urządzenia do bazy
+                Device.objects.update_or_create(
+                    user=user,
+                    device_id=device_id,
+                    defaults={
+                        'refresh_token': str(refresh),
+                        'created_at': timezone.now(),
+                        'expires_at': timezone.now() + timedelta(days=7)  # lub inna logika wygaśnięcia
+                    }
+                )
             return Response({
+                'access': str(access_token),
                 'refresh': str(refresh),
-                'access': str(refresh.access_token),
             })
         else:
             # If authentication fails, return an error response
             return Response({'error': 'Invalid Credentials'}, status=400)
+        
+
 # Filtering tasks by user, group, and priority
 def get_filtered_todos(request, user=None):
     """
@@ -90,7 +179,8 @@ def get_filtered_todos(request, user=None):
 
 # Returning tasks assigned directly to the user (not belonging to any group)
 class ToDoByUserView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication]  # Sprawdza, czy użytkownik ma poprawny token
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         # Filtering tasks assigned directly to the user (i.e., without a group)
@@ -102,7 +192,8 @@ class ToDoByUserView(APIView):
 
 # Returning tasks assigned to the user, grouped by their respective groups
 class ToDoByGroupView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication]  # Sprawdza, czy użytkownik ma poprawny token
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         # Retrieve the logged-in user
@@ -118,9 +209,10 @@ class ToDoByGroupView(APIView):
         return Response(serializer.data)
 
 # Task detail view – allows updating and deleting a task
-class ToDoDetailView(generics.RetrieveUpdateDestroyAPIView):
+class ToDoDetailView(generics.RetrieveUpdateDestroyAPIView):   
+    authentication_classes = [JWTAuthentication]  # Sprawdza, czy użytkownik ma poprawny token
+    permission_classes = [IsAuthenticated]
     serializer_class = ToDoSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         if self.request.user.is_superuser:
@@ -128,10 +220,11 @@ class ToDoDetailView(generics.RetrieveUpdateDestroyAPIView):
         return ToDo.objects.filter(user=self.request.user)  # Other users can view only their tasks
 
 # User creates a task only for themselves (no group assignment)
-class ToDoListCreateView(generics.ListCreateAPIView):
+class ToDoListCreateView(generics.ListCreateAPIView):  
+    authentication_classes = [JWTAuthentication]  # Sprawdza, czy użytkownik ma poprawny token
+    permission_classes = [IsAuthenticated]
+    
     serializer_class = ToDoSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
     def get_queryset(self):
         if self.request.user.is_superuser:
             return ToDo.objects.all()  # Admin sees all tasks
@@ -170,16 +263,19 @@ class ToDoListCreateView(generics.ListCreateAPIView):
 
 # View for admins – list of groups
 class GroupListView(generics.ListAPIView):
-    queryset = Group.objects.all()  # Retrieve all groups
-    serializer_class = GroupSerializer  # Use the Group serializer to format the response
-    permission_classes = [permissions.IsAuthenticated]  # Only accessible to admins
+    permission_classes = [IsAdminUser]  # Only accessible to admins
+    authentication_classes = [JWTAuthentication]  # Sprawdza, czy użytkownik ma poprawny token
     
+    queryset = Group.objects.all()  # Retrieve all groups
+    serializer_class = GroupSerializer  # Use the Group serializer to format the response 
 
 # View for admins – group detail view
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = [JWTAuthentication]  # Sprawdza, czy użytkownik ma poprawny token
+    permission_classes = [IsAuthenticated]  # Only accessible to admins
+
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]  # Only accessible to admins
     def get_queryset(self):
         queryset = super().get_queryset()
         print(queryset)  # Debug: Sprawdź zawartość queryset
@@ -187,17 +283,20 @@ class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 # View for admins – create a new group
 class GroupCreateView(generics.CreateAPIView):
+    authentication_classes = [JWTAuthentication]  # Sprawdza, czy użytkownik ma poprawny token
+    permission_classes = [IsAdminUser]
+
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+
     def perform_create(self, serializer):
-        group = serializer.save(admin=self.request.user)
         # Automatycznie dodaj twórcę do członków grupy
-        group.members.add(self.request.user)
+        group = serializer.save(admin=self.request.user)  
         group.members.add(self.request.user)
 
 class InvitationCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]  # Tylko administratorzy mogą generować zaproszenia
+    authentication_classes = [JWTAuthentication]  # Sprawdza, czy użytkownik ma poprawny token
+    permission_classes = [IsAuthenticated]  # Tylko zalogowani użytkownicy mogą zaakceptować zaproszenie
     
     @swagger_auto_schema(
         request_body=InvitationCreateSerializer,  # Używamy serializatora jako body
@@ -239,7 +338,8 @@ class InvitationCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class AcceptInvitationView(APIView):
-    permission_classes = [permissions.IsAuthenticated]  # Tylko zalogowani użytkownicy mogą zaakceptować zaproszenie
+    authentication_classes = [JWTAuthentication]  # Sprawdza, czy użytkownik ma poprawny token
+    permission_classes = [IsAuthenticated]  # Tylko zalogowani użytkownicy mogą zaakceptować zaproszenie
 
     @swagger_auto_schema(
         responses={200: 'Invitation accepted successfully', 400: 'Bad Request', 404: 'Invitation not found'},
@@ -261,8 +361,7 @@ class AcceptInvitationView(APIView):
         # Dodajemy użytkownika do grupy
         user = request.user
         group = invitation.group
-        group.members.add(user)  # Dodajemy użytkownika do grupy (zakładając, że jest relacja m:n między Group a User)
-
+        group.members.add(user)  # Doda
         # Zwiększamy liczbę użyć zaproszenia
         invitation.uses += 1
         invitation.save()
@@ -270,3 +369,105 @@ class AcceptInvitationView(APIView):
         return Response({
             "message": "Invitation accepted successfully. User: "+user.username+" added to group: "+group.name,
         }, status=status.HTTP_200_OK)
+    
+class LogoutView(APIView):
+    authentication_classes = [JWTAuthentication]  # Sprawdza, czy użytkownik ma poprawny token
+    permission_classes = [IsAuthenticated]  # Sprawdza, czy użytkownik jest uwierzytelniony
+    @swagger_auto_schema(
+        operation_description="Logs out the user from a specific device by removing the refresh token.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'device_id': openapi.Schema(type=openapi.TYPE_STRING, description='The ID of the device',default=''),
+                'refresh_token': openapi.Schema(type=openapi.TYPE_STRING, description='The refresh token to remove'),
+            },
+        ),
+        responses={
+            200: openapi.Response(description="Successfully logged out"),
+            400: openapi.Response(description="Missing device_id or refresh_token"),
+            404: openapi.Response(description="Token not found")
+        }
+    )
+    def post(self, request):
+        device_id = request.data.get('device_id')
+        refresh_token = request.data.get('refresh_token')
+
+        if not device_id or not refresh_token:
+            return Response({"detail": "device_id and refresh_token are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            device = Device.objects.get(user=request.user, device_id=device_id, refresh_token=refresh_token)
+            device.delete()  # Usuwamy token z bazy
+            return Response({"detail": "Successfully logged out"}, status=status.HTTP_200_OK)
+        except Device.DoesNotExist:
+            return Response({"detail": "Token not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+    # Endpoint do odświeżania tokenu
+class RefreshTokenView(APIView):
+    authentication_classes = [JWTAuthentication]  # Sprawdza, czy użytkownik ma poprawny token
+    permission_classes = [IsAuthenticated]  # Sprawdza, czy użytkownik jest uwierzytelniony
+    
+    @swagger_auto_schema(
+        operation_description="Refreshes the access token using a valid refresh token.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'device_id': openapi.Schema(type=openapi.TYPE_STRING, description='The ID of the device', default=''),
+                'refresh_token': openapi.Schema(type=openapi.TYPE_STRING, description='The refresh token to refresh'),
+            },
+        ),
+        responses={
+            200: openapi.Response(description="Successfully refreshed token"),
+            400: openapi.Response(description="Refresh token expired"),
+            404: openapi.Response(description="Invalid refresh token"),
+        }
+    )
+    def post(self, request):
+        device_id = request.data.get('device_id')
+        refresh_token = request.data.get('refresh_token')
+
+        if not device_id or not refresh_token:
+            return Response({"detail": "device_id and refresh_token are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Sprawdzamy, czy istnieje urządzenie z odpowiednim device_id i refresh_token
+            device = Device.objects.get(user=request.user, device_id=device_id, refresh_token=refresh_token)
+
+            # Sprawdzamy, czy token wygasł
+            if device.expires_at < timezone.now():
+                return Response({"detail": "Refresh token expired"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Generowanie nowych tokenów
+            new_refresh_token, new_access_token = create_new_tokens(request.user,True)
+
+            # Pobieramy datę wygaśnięcia starego refresh tokenu
+            old_expiration = device.expires_at
+
+            # Aktualizowanie refresh_token i expires_at w bazie
+            device.refresh_token = new_refresh_token
+            device.expires_at = old_expiration  # Ustawiamy na tę samą datę wygaśnięcia
+            device.save()
+
+            return Response({
+                "access_token": new_access_token,
+                "refresh_token": new_refresh_token,
+            }, status=status.HTTP_200_OK)
+
+        except Device.DoesNotExist:
+            return Response({"detail": "Invalid refresh token or device_id"}, status=status.HTTP_404_NOT_FOUND)
+
+def create_new_tokens(user, remember_me):
+    # Generowanie refresh tokenu
+    refresh = RefreshToken.for_user(user)
+    
+    # Ustawienie czasu wygaśnięcia na podstawie 'remember_me'
+    if remember_me:
+        refresh.set_exp(lifetime=timedelta(days=7))  # Jeśli 'remember_me' jest True, token ważny przez 7 dni
+    else:
+        refresh.set_exp(lifetime=timedelta(days=1))  # Jeśli 'remember_me' jest False, token ważny przez 1 dzień
+
+    # Generowanie access tokenu z refresh tokenu
+    access_token = refresh.access_token
+
+    # Zwróć oba tokeny
+    return str(refresh), str(access_token)

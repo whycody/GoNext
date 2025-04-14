@@ -70,4 +70,10 @@ class Invitation(models.Model):
 
     def __str__(self):
         return f"Invitation to {self.group.name} by {self.inviter.username}"
-        
+    
+class Device(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    device_id = models.CharField(max_length=255)  # hashed or UUID string
+    refresh_token = models.CharField(max_length=500)  # JWT token string
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()         
