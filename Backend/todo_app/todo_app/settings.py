@@ -30,7 +30,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://gonext-a7hthre4g0avd7fr.polandcentral-01.azurewebsites.net']
+CSRF_TRUSTED_ORIGINS = ['https://gonext-a7hthre4g0avd7fr.polandcentral-01.azurewebsites.net']
 
 AUTH_USER_MODEL = 'todos.CustomUser' 
 
