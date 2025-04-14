@@ -67,7 +67,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
         handleIndicatorStyle={{ backgroundColor: colors.primary, borderRadius: 0 }}
       >
         <BottomSheetScrollView style={styles.root}>
-          <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12 }}>
+          <Text style={{ fontSize: 19, fontWeight: "bold", marginBottom: 16 }}>
             {taskId ? 'Edit task' : 'Add task'}
           </Text>
 
@@ -76,7 +76,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
             placeholder="Task title"
             value={title}
             onChangeText={setTitle}
-            style={{ borderBottomWidth: 1, marginBottom: 12, paddingVertical: 8 }}
+            style={{ marginBottom: 12, paddingVertical: 4, borderRadius: 10 }}
           />
 
           <SheetText
@@ -84,7 +84,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
             placeholder="Task description"
             value={description}
             onChangeText={setDescription}
-            style={{ borderBottomWidth: 1, marginBottom: 12, paddingVertical: 8 }}
+            style={{ marginBottom: 12, paddingVertical: 4, borderRadius: 10, }}
           />
 
           <View style={{ backgroundColor: "#f0f0f0", borderRadius: 8, overflow: "hidden", marginBottom: 15 }}>
@@ -101,45 +101,24 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
 
           <View style={{ marginBottom: 15 }}>
             <Text style={{ marginBottom: 8, fontWeight: "bold" }}>Select priority:</Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
               <Pressable
                 onPress={() => setPriority(TaskPriority.LOW)}
-                style={{
-                  flex: 1,
-                  backgroundColor: priority === TaskPriority.LOW ? "green" : "#f0f0f0",
-                  paddingVertical: 10,
-                  marginHorizontal: 5,
-                  borderRadius: 8,
-                  alignItems: "center",
-                }}
+                style={[styles.priorityContainer, { backgroundColor: priority === TaskPriority.LOW ? "green" : "#f0f0f0", borderBottomLeftRadius: 5, borderTopLeftRadius: 5 }]}
               >
                 <Text style={{ color: priority === TaskPriority.LOW ? "white" : "black" }}>Low</Text>
               </Pressable>
 
               <Pressable
                 onPress={() => setPriority(TaskPriority.MEDIUM)}
-                style={{
-                  flex: 1,
-                  backgroundColor: priority === TaskPriority.MEDIUM ? "orange" : "#f0f0f0",
-                  paddingVertical: 10,
-                  marginHorizontal: 5,
-                  borderRadius: 8,
-                  alignItems: "center",
-                }}
+                style={[styles.priorityContainer, { backgroundColor: priority === TaskPriority.MEDIUM ? "orange" : "#f0f0f0", }]}
               >
                 <Text style={{ color: priority === TaskPriority.MEDIUM ? "white" : "black" }}>Medium</Text>
               </Pressable>
 
               <Pressable
                 onPress={() => setPriority(TaskPriority.HIGH)}
-                style={{
-                  flex: 1,
-                  backgroundColor: priority === TaskPriority.HIGH ? "red" : "#f0f0f0",
-                  paddingVertical: 10,
-                  marginHorizontal: 5,
-                  borderRadius: 8,
-                  alignItems: "center",
-                }}
+                style={[styles.priorityContainer, { backgroundColor: priority === TaskPriority.HIGH ? "red" : "#f0f0f0", borderBottomRightRadius: 5, borderTopRightRadius: 5 }]}
               >
                 <Text style={{ color: priority === TaskPriority.HIGH ? "white" : "black" }}>High</Text>
               </Pressable>
@@ -166,9 +145,9 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
                   style={{
                     backgroundColor: colors.primary,
                     paddingVertical: 12,
-                    borderRadius: 8,
+                    borderRadius: 5,
                     alignItems: "center",
-                    marginBottom: 10,
+                    marginVertical: 10,
                   }}
                 >
                   <Text style={{ color: "white", fontWeight: "bold" }}>Add task</Text>
@@ -176,13 +155,12 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
                 <Pressable
                   onPress={() => handleAdd(true)}
                   style={{
-                    backgroundColor: colors.primary,
                     paddingVertical: 12,
                     borderRadius: 8,
                     alignItems: "center",
                   }}
                 >
-                  <Text style={{ color: "white", fontWeight: "bold" }}>Add this and another</Text>
+                  <Text style={{ color: colors.primary, fontWeight: "bold" }}>Add this and another</Text>
                 </Pressable>
               </>
             )}
@@ -198,6 +176,11 @@ const getStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: MARGIN_HORIZONTAL,
     marginVertical: 10,
   },
+  priorityContainer: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+  }
 });
 
 export default HandleTaskCardBottomSheet;

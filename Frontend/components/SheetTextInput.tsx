@@ -108,13 +108,13 @@ const getStyles = (colors: any) => StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.background,
   },
   input: {
     flex: 1,
     fontFamily: `Montserrat-Regular`,
     color: colors.primary300,
     paddingLeft: MARGIN_HORIZONTAL,
-    backgroundColor: colors.background,
     fontSize: 16,
     height: 42,
   },
