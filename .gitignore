@@ -37,3 +37,6 @@ yarn-error.*
 
 *.env
 __pycache__/
+
+*.pyc
+staticfiles/
