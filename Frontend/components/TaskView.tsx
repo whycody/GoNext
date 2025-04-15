@@ -8,9 +8,10 @@ type TaskItemProps = {
   index: number,
   taskItem: TaskItem,
   onTaskPress: (id: number) => void,
+  onLongPress?: (id: number) => void; 
 }
 
-const TaskView = ({ index, taskItem, onTaskPress }: TaskItemProps) => {
+const TaskView = ({ index, taskItem, onTaskPress, onLongPress }: TaskItemProps) => {
   const { colors } = useTheme();
   const { id, title, description, priority, groupName } = taskItem;
   const styles = getStyles(colors);
@@ -18,7 +19,7 @@ const TaskView = ({ index, taskItem, onTaskPress }: TaskItemProps) => {
   return (
     <>
       {index > 0 && <View style={{ height: 1 }}/>}
-      <Pressable style={styles.root} onPress={() => onTaskPress(id)}>
+      <Pressable style={styles.root} onPress={() => onTaskPress(id)} onLongPress={() => onLongPress?.(id)}>
         <View
           style={{
             height: 10,
