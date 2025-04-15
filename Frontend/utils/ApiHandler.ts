@@ -1,55 +1,54 @@
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
+import axios, { AxiosResponse } from "axios";
 
-class ApiHandler {
-  private baseURL: string;
-  private token: string | null = null;
+let accessToken: string | null = null;
+let refreshToken: string | null = null;
 
-  constructor() {
-    this.baseURL = process.env.API_BASE_URL || 'http://localhost:3000';
+const baseURL = process.env.API_BASE_URL || 'http://localhost:8000';
+
+export const setAccessToken = async (token: string): Promise<void> => {
+  accessToken = token;
+  await SecureStore.setItemAsync('accessToken', token);
+};
+
+export const setRefreshToken = async (token: string): Promise<void> => {
+  refreshToken = token;
+  await SecureStore.setItemAsync('refreshToken', token);
+};
+
+export const loadToken = async (): Promise<void> => {
+  const token = await SecureStore.getItemAsync('accessToken');
+  if (token) {
+    accessToken = token;
+  }
+};
+
+export const apiCall = async <T>(options: { method: string; url: string; data?: object | string }): Promise<T> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  console.log(options.method, options.url, accessToken);
+
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  async setToken(token: string): Promise<void> {
-    this.token = token;
-    await SecureStore.setItemAsync('authToken', token);
-  }
-
-  async loadToken(): Promise<void> {
-    const token = await SecureStore.getItemAsync('authToken');
-    if (token) {
-      this.token = token;
-    }
-  }
-
-  async apiCall<T>(options: { method: string; url: string; data?: object | string }): Promise<T> {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
-
-    const fetchOptions: RequestInit = {
+  try {
+    const response: AxiosResponse<T> = await axios({
       method: options.method,
+      url: `${baseURL}${options.url}`,
       headers,
-    };
+      data: options.data,
+      timeout: 2000,
+    });
 
-    if (options.data) {
-      fetchOptions.body = typeof options.data === 'string' ? options.data : JSON.stringify(options.data);
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      throw new Error('Nieautoryzowany – accessToken wygasł lub jest nieprawidłowy.');
     }
 
-    const response = await fetch(`${this.baseURL}${options.url}`, fetchOptions);
-
-    if (response.status === 401) {
-      throw new Error('Nieautoryzowany – token wygasł lub jest nieprawidłowy.');
-    }
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    return response.json();
+    throw new Error(`API error: ${error.response?.status || error.message}`);
   }
-}
-
-export default ApiHandler;
+};
