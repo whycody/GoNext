@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, forwardRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, forwardRef } from "react";
 import { Text, TextInput, Platform, StyleSheet, Button, View, Pressable } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
@@ -7,6 +7,7 @@ import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import { Picker } from "@react-native-picker/picker"; //you need to run npm install @react-native-picker/picker
 import { useGroups } from "../hooks/useGroups";
+import { useTasks } from "../hooks/useTasks";
 
 interface HandleTaskBottomSheetProps {
   taskId?: number,
@@ -35,7 +36,27 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
     const [selectedGroup, setSelectedGroup] = useState("");
 
     const groups = useGroups();
+    const tasks = useTasks();
 
+    useEffect(() => {
+      if (taskId) {
+        const task = tasks.find((t) => t.id === taskId);
+        if (task) {
+          setTitle(task.title);
+          setDescription(task.description);
+    
+          const priorityMap: { [key: number]: TaskPriority } = {
+            1: TaskPriority.LOW,
+            2: TaskPriority.MEDIUM,
+            3: TaskPriority.HIGH,
+          };
+          setPriority(priorityMap[task.priority] || TaskPriority.MEDIUM);
+    
+          const group = groups.find((g) => g.id === task.groupId);
+          setSelectedGroup(group ? group.name : "");
+        }
+      }
+    }, [taskId, tasks, groups]);
 
     const handleAdd = (clearForm: boolean) => {
       if (!title) return;
@@ -43,6 +64,8 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
       if (clearForm) {
         setTitle(""); 
         setDescription(""); 
+        setPriority(TaskPriority.MEDIUM);
+        setSelectedGroup("");
         titleInputRef.current?.focus();
       }
       else {
