@@ -63,3 +63,17 @@ class GroupSerializer(serializers.ModelSerializer):
             group.members.add(request.user)
             return group
         raise serializers.ValidationError("Cannot create group without an authenticated user.")
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uidb64 = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(min_length=8)
+    re_new_password = serializers.CharField(min_length=8)
+
+    def validate(self, data):
+        if data['new_password'] != data['re_new_password']:
+            raise serializers.ValidationError("Hasła muszą być identyczne.")
+        return data

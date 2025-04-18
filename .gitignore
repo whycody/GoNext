@@ -37,3 +37,7 @@ yarn-error.*
 
 *.env
 **/__pycache__/
+__pycache__/
+.vscode/settings.json
+Backend/todo_app/todo_app/__pycache__/settings.cpython-312.pyc
+Backend/todo_app/todo_app/__pycache__/wsgi.cpython-312.pyc

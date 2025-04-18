@@ -19,7 +19,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from todo_app.settings import EMAIL_HOST_USER
 from .models import ToDo, Group, Invitation, Device
-from .serializers import InvitationCreateSerializer, LoginSerializer, ToDoSerializer, UserSerializer, GroupSerializer
+from .serializers import InvitationCreateSerializer, LoginSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ToDoSerializer, UserSerializer, GroupSerializer
 
 # Endpoint user-info
 class UserInfoView(APIView):
@@ -48,7 +48,7 @@ class RegisterView(generics.CreateAPIView):
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         # Użycie zmiennej z settings zamiast hardcodowanego localhosta byłoby lepsze w produkcji
-        verify_url = f"http://localhost:8000/api/verify-email/{uid}/{token}/"
+        verify_url = f"http://localhost:8000/verify-email/{uid}/{token}/"
 
         subject = "Verify your email"
         message = f"Click the link to verify: {verify_url}"
@@ -441,3 +441,69 @@ def create_new_tokens(user, remember_me):
         refresh.set_exp(lifetime=timedelta(days=1))
     access_token = refresh.access_token
     return str(refresh), str(access_token)
+
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(request_body=PasswordResetRequestSerializer)
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        User = get_user_model()
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Nie ujawniamy, że e‑mail nie istnieje
+            return Response({"message": "Jeśli konto istnieje, otrzymasz wiadomość e‑mail."})
+
+        token = default_token_generator.make_token(user)
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        reset_url = f"{settings.FRONTEND_URL}/password-reset-confirm/{uidb64}/{token}/"
+
+        subject = "Reset hasła"
+        message = f"Clique w link, aby zresetować hasło: {reset_url}"
+        send_mail(subject, message, EMAIL_HOST_USER, [email], fail_silently=False)
+
+        return Response({"message": "Link do resetu hasła został wysłany."}, status=status.HTTP_200_OK)
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, uidb64, token):
+        """
+        # Verifies UID and token. 
+        # The front-end can display the password reset form upon receiving a 200 response.
+
+        """
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = get_user_model().objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
+            return Response({'error': 'Invalid link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({'error': 'Invalid or expired token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'message': 'Token is valid.'}, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(request_body=PasswordResetConfirmSerializer)
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        uidb64 = serializer.validated_data['uidb64']
+        token = serializer.validated_data['token']
+        new_password = serializer.validated_data['new_password']
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = get_user_model().objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
+            return Response({"error": "Link jest nieprawidłowy."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({"error": "Token jest nieprawidłowy lub wygasł."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Hasło zostało zmienione pomyślnie."}, status=status.HTTP_200_OK)
