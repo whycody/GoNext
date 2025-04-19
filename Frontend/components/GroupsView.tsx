@@ -6,7 +6,6 @@ type GroupViewProps = {
   index: number;
   group: Group;
   onGroupPress: (id: number) => void;
-  onLongPress?: (id: number) => void;
 };
 
 const GroupsView = ({ index, group, onGroupPress, onLongPress }: GroupViewProps) => {
