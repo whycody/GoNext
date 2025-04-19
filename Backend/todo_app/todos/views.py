@@ -20,7 +20,9 @@ from drf_yasg.utils import swagger_auto_schema
 from todo_app.settings import EMAIL_HOST_USER
 from .models import ToDo, Group, Invitation, Device
 from .serializers import InvitationCreateSerializer, LoginSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ToDoSerializer, UserSerializer, GroupSerializer
-
+from axes.handlers.proxy import AxesProxyHandler
+from axes.helpers import get_client_username, get_client_ip_address
+from todos.utils import lockout_response 
 # Endpoint user-info
 class UserInfoView(APIView):
     permission_classes = [AllowAny]  # Dostęp dla wszystkich
@@ -116,12 +118,25 @@ class LoginView(APIView):
         remember_me = validated_data.get('remember_me', False)
         device_id = validated_data.get('device_id') or None
 
+        if AxesProxyHandler.is_locked(request):
+            return lockout_response(request, credentials={"username": username})
+
         if remember_me and not device_id:
             # Domyślny identyfikator, warto podmienić na generowanie unikalnego identyfikatora
             device_id = "test-device-id-6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 
-        user = authenticate(username=username, password=password)
+        user = authenticate(request=request, username=username, password=password)
         if user:
+            # RESETUJ blokady dla tego requestu
+            username = get_client_username(request, credentials={'username': username})
+            ip_address = get_client_ip_address(request)
+
+            # Reset prób logowania
+            handler = AxesProxyHandler()
+            handler.reset_attempts(
+                ip_address=ip_address,
+                username=username,
+            )
             # Generowanie tokenów przy użyciu dedykowanej funkcji
             refresh, access_token = create_new_tokens(user, remember_me)
 
@@ -488,11 +503,15 @@ class PasswordResetConfirmView(APIView):
         return Response({'message': 'Token is valid.'}, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(request_body=PasswordResetConfirmSerializer)
-    def post(self, request):
-        serializer = PasswordResetConfirmSerializer(data=request.data)
+    def post(self, request, uidb64, token):
+        data = {
+            'uidb64': uidb64,
+            'token': token,
+            **request.data
+        }
+        serializer = PasswordResetConfirmSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-        uidb64 = serializer.validated_data['uidb64']
-        token = serializer.validated_data['token']
+
         new_password = serializer.validated_data['new_password']
 
         try:
