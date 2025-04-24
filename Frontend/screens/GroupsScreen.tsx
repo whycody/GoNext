@@ -19,13 +19,19 @@ const GroupsScreen = () => {
     console.log("New group added:", { name, icon, color, members });
   };
 
+  const handleGroupEdit = (id: number, name: string, icon: string, color: string, members: string[]) => {
+    console.log("Group edited:", { id, name, icon, color, members });
+  };
+
   const handleGroupLongPress = (id: number) => {
-    console.log("Group long pressed:", id);
+    setSelectedGroupId(id); // Set the groupId for editing
+    handleGroupBottomSheetRef.current?.present(); // Open the bottom sheet
   };
 
   const handleFABPress = () => {
-    setSelectedGroupId(null); 
+    setSelectedGroupId(null); // Reset groupId for adding a new group
     handleGroupBottomSheetRef.current?.present(); 
+    //handleGroupBottomSheetRef.current?.resetForm();
   };
 
   return (
@@ -39,8 +45,8 @@ const GroupsScreen = () => {
           <GroupsView
             index={index}
             group={item}
-            onGroupPress={handleGroupAdd}
-            onLongPress={handleGroupLongPress}
+            onGroupPress={() => console.log("Group pressed:", item.id)}
+            onLongPress={() => handleGroupLongPress(item.id)} 
           />
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -53,7 +59,9 @@ const GroupsScreen = () => {
       />
       <HandleGroupBottomSheet
         ref={handleGroupBottomSheetRef} 
+        groupId={selectedGroupId} 
         onGroupAdd={handleGroupAdd} 
+        onGroupEdit={handleGroupEdit} 
       />
     </View>
   );

@@ -6,36 +6,60 @@ import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants"; // Import MARGIN_HORIZONTAL
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import useEmojiPicker from "../hooks/useEmojiPicker";
-
+import { useGroups } from "../hooks/useGroups";
 
 
 interface HandleGroupBottomSheetProps {
-  onGroupAdd: (name: string, icon: string, color: string, members: string[]) => void;
-  onChangeIndex?: (index: number) => void;
+    groupId?: number; 
+    onGroupAdd: (name: string, icon: string, color: string, members: string[]) => void;
+    onGroupEdit: (id: number, name: string, icon: string, color: string, members: string[]) => void;
+    onChangeIndex?: (index: number) => void;
 }
 
 const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomSheetProps>(
-  ({ onGroupAdd, onChangeIndex }, ref) => {
+  ({ groupId, onGroupAdd, onGroupEdit, onChangeIndex }, ref) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
+    const groups = useGroups();
 
     const nameInputRef = useRef<SheetTextRef>(null);
     const [name, setName] = useState("");
     const [selectedColor, setSelectedColor] = useState("#ff5733");
     const [members, setMembers] = useState<string[]>([]);
-
     const { emojis, selectedEmoji, selectEmoji } = useEmojiPicker();
+    
+    const colorOptions = ["#ff5733", "#33ff57", "#3357ff", "#ff33a8", "#040404", "#9632BF", "#53BFD4"]; 
 
-    const handleAdd = () => {
+    React.useEffect(() => {
+        if (groupId) {
+          const group = groups.find((g) => g.id === groupId);
+          if (group) {
+            setName(group.name);
+            setSelectedColor(group.color);
+            selectEmoji(group.icon);
+            setMembers(group.membersIds);
+          }
+        }
+      }, [groupId, groups, selectEmoji]);
+
+    const handleSave = () => {
         if (!name || !selectedEmoji || !selectedColor) return;
-        onGroupAdd(name, selectedEmoji, selectedColor, members);
+        if (groupId) {
+          onGroupEdit(groupId, name, selectedEmoji, selectedColor, members);
+        } else {
+          onGroupAdd(name, selectedEmoji, selectedColor, members);
+        }
+        //resetForm();
+        //(ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
+    };
+/*
+    const resetForm = () => {
         setName("");
-        selectEmoji(emojis[0]); 
+        selectEmoji(emojis[0]);
         setSelectedColor("#ff5733");
         setMembers([]);
-        (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
       };
-
+*/
     const renderBackdrop = useCallback(
       (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
       []
@@ -45,8 +69,6 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
       Platform.OS === "ios"
         ? useCallback(({ children }: any) => <FullWindowOverlay>{children}</FullWindowOverlay>, [])
         : undefined;
-
-    const colorOptions = ["#ff5733", "#33ff57", "#3357ff", "#ff33a8", "#040404", "#9632BF", "#53BFD4"]; 
 
     return (
       <BottomSheetModal
@@ -59,7 +81,9 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
         handleIndicatorStyle={{ backgroundColor: colors.primary, borderRadius: 0 }}
       >
         <BottomSheetScrollView style={styles.root}>
-          <Text style={{ fontSize: 19, fontWeight: "bold", marginBottom: 16 }}>Add New Group</Text>
+          <Text style={{ fontSize: 19, fontWeight: "bold", marginBottom: 16 }}>
+            {groupId ? "Edit Group" : "Add New Group"}
+          </Text>
 
           <SheetText
             ref={nameInputRef}
@@ -118,7 +142,7 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
           />
 
           <Pressable
-            onPress={handleAdd}
+            onPress={handleSave}
             style={{
               backgroundColor: colors.primary,
               paddingVertical: 12,
@@ -126,10 +150,12 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
               alignItems: "center",
             }}
           >
-            <Text style={{ color: "white", fontWeight: "bold" }}>Add Group</Text>
+            <Text style={{ color: "white", fontWeight: "bold" }}>
+                {groupId ? "Edit group" : "Add Group"}
+            </Text>
           </Pressable>
           <Pressable
-            onPress={() => handleAdd(true)}
+            onPress={() => handleSave()}
             style={{
             paddingVertical: 12,
             borderRadius: 8,
