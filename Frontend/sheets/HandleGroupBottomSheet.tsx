@@ -21,17 +21,17 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
 
     const nameInputRef = useRef<SheetTextRef>(null);
     const [name, setName] = useState("");
-    const [color, setColor] = useState("#ff5733");
+    const [selectedColor, setSelectedColor] = useState("#ff5733");
     const [members, setMembers] = useState<string[]>([]);
 
     const { emojis, selectedEmoji, selectEmoji } = useEmojiPicker();
 
     const handleAdd = () => {
-        if (!name || !selectedEmoji || !color) return;
-        onGroupAdd(name, selectedEmoji, color, members);
+        if (!name || !selectedEmoji || !selectedColor) return;
+        onGroupAdd(name, selectedEmoji, selectedColor, members);
         setName("");
         selectEmoji(emojis[0]); 
-        setColor("#ff5733");
+        setSelectedColor("#ff5733");
         setMembers([]);
         (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
       };
@@ -45,6 +45,8 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
       Platform.OS === "ios"
         ? useCallback(({ children }: any) => <FullWindowOverlay>{children}</FullWindowOverlay>, [])
         : undefined;
+
+    const colorOptions = ["#ff5733", "#33ff57", "#3357ff", "#ff33a8", "#040404", "#9632BF", "#53BFD4"]; 
 
     return (
       <BottomSheetModal
@@ -87,12 +89,26 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
             </View>
           </View>
 
-          <SheetText
-            placeholder="Group color (e.g., #ff5733)"
-            value={color}
-            onChangeText={setColor}
-            style={{ marginBottom: 12, paddingVertical: 4, borderRadius: 10 }}
-          />
+          <View style={{ marginBottom: 12 }}>
+            <Text style={{ marginBottom: 8, fontWeight: "bold" }}>Select Group Color</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+              {colorOptions.map((color) => (
+                <Pressable
+                  key={color}
+                  onPress={() => setSelectedColor(color)}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    margin: 4,
+                    borderRadius: 20,
+                    backgroundColor: color,
+                    borderWidth: selectedColor === color ? 2 : 0,
+                    borderColor: selectedColor === color ? colors.primary : "transparent",
+                  }}
+                />
+              ))}
+            </View>
+        </View>
 
           <SheetText
             placeholder="Members (comma-separated IDs)"
