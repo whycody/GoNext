@@ -55,6 +55,11 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
           const group = groups.find((g) => g.id === task.groupId);
           setSelectedGroup(group ? group.name : "");
         }
+      } else {
+        setTitle("");
+        setDescription("");
+        setPriority(TaskPriority.MEDIUM);
+        setSelectedGroup("");
       }
     }, [taskId, tasks, groups]);
 
