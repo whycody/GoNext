@@ -5,6 +5,7 @@ import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants"; // Import MARGIN_HORIZONTAL
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
+import useEmojiPicker from "../hooks/useEmojiPicker";
 
 
 
@@ -20,19 +21,20 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
 
     const nameInputRef = useRef<SheetTextRef>(null);
     const [name, setName] = useState("");
-    const [icon, setIcon] = useState("💼");
     const [color, setColor] = useState("#ff5733");
     const [members, setMembers] = useState<string[]>([]);
 
+    const { emojis, selectedEmoji, selectEmoji } = useEmojiPicker();
+
     const handleAdd = () => {
-      if (!name || !icon || !color) return;
-      onGroupAdd(name, icon, color, members);
-      setName("");
-      setIcon("💼");
-      setColor("#ff5733");
-      setMembers([]);
-      (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
-    };
+        if (!name || !selectedEmoji || !color) return;
+        onGroupAdd(name, selectedEmoji, color, members);
+        setName("");
+        selectEmoji(emojis[0]); 
+        setColor("#ff5733");
+        setMembers([]);
+        (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
+      };
 
     const renderBackdrop = useCallback(
       (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
@@ -65,12 +67,25 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
             style={{ marginBottom: 12, paddingVertical: 4, borderRadius: 10 }}
           />
 
-          <SheetText
-            placeholder="Group icon (e.g., 💼)"
-            value={icon}
-            onChangeText={setIcon}
-            style={{ marginBottom: 12, paddingVertical: 4, borderRadius: 10 }}
-          />
+          <View style={{ marginBottom: 12 }}>
+            <Text style={{ marginBottom: 8, fontWeight: "bold" }}>Select Group Icon</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+              {emojis.map((emoji) => (
+                <Pressable
+                  key={emoji}
+                  onPress={() => selectEmoji(emoji)}
+                  style={{
+                    padding: 8,
+                    margin: 4,
+                    borderRadius: 8,
+                    backgroundColor: selectedEmoji === emoji ? colors.primary : colors.card,
+                  }}
+                >
+                  <Text style={{ fontSize: 24 }}>{emoji}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
 
           <SheetText
             placeholder="Group color (e.g., #ff5733)"
