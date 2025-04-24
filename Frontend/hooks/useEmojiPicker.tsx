@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 
 const useEmojiPicker = () => {
-  const emojis = ["💼", "🎉", "📚", "🚀", "❤️", "🌟", "🎨", "🎵", "⚽", "🍕", "🏡", "💰", "🏢", "💻"];
+  const emojis = useMemo(
+    () => ["💼", "🎉", "📚", "🚀", "❤️", "🌟", "🎨", "🎵", "⚽", "🍕", "🏡", "💰", "🏢", "💻"],
+    []
+  );
+
   const [selectedEmoji, setSelectedEmoji] = useState(emojis[0]);
 
-  const selectEmoji = (emoji: string) => {
+  const selectEmoji = useCallback((emoji: string) => {
     setSelectedEmoji(emoji);
-  };
+  }, []); 
 
   return { emojis, selectedEmoji, selectEmoji };
 };

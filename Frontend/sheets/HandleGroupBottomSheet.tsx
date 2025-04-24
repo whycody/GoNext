@@ -1,19 +1,18 @@
-import React, { useState, useCallback, useRef, forwardRef } from "react";
+import React, { useState, useCallback, useRef, forwardRef, useEffect } from "react";
 import { Text, StyleSheet, View, Pressable, Platform } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
-import { MARGIN_HORIZONTAL } from "../src/constants"; // Import MARGIN_HORIZONTAL
+import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import useEmojiPicker from "../hooks/useEmojiPicker";
 import { useGroups } from "../hooks/useGroups";
 
-
 interface HandleGroupBottomSheetProps {
-    groupId?: number; 
-    onGroupAdd: (name: string, icon: string, color: string, members: string[]) => void;
-    onGroupEdit: (id: number, name: string, icon: string, color: string, members: string[]) => void;
-    onChangeIndex?: (index: number) => void;
+  groupId?: number;
+  onGroupAdd: (name: string, icon: string, color: string, members: string[]) => void;
+  onGroupEdit: (id: number, name: string, icon: string, color: string, members: string[]) => void;
+  onChangeIndex?: (index: number) => void;
 }
 
 const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomSheetProps>(
@@ -27,39 +26,44 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
     const [selectedColor, setSelectedColor] = useState("#ff5733");
     const [members, setMembers] = useState<string[]>([]);
     const { emojis, selectedEmoji, selectEmoji } = useEmojiPicker();
-    
-    const colorOptions = ["#ff5733", "#33ff57", "#3357ff", "#ff33a8", "#040404", "#9632BF", "#53BFD4"]; 
 
-    React.useEffect(() => {
-        if (groupId) {
-          const group = groups.find((g) => g.id === groupId);
-          if (group) {
-            setName(group.name);
-            setSelectedColor(group.color);
-            selectEmoji(group.icon);
-            setMembers(group.membersIds);
-          }
-        }
-      }, [groupId, groups, selectEmoji]);
+    const colorOptions = ["#ff5733", "#33ff57", "#3357ff", "#ff33a8", "#040404", "#9632BF", "#53BFD4"];
 
-    const handleSave = () => {
-        if (!name || !selectedEmoji || !selectedColor) return;
-        if (groupId) {
-          onGroupEdit(groupId, name, selectedEmoji, selectedColor, members);
-        } else {
-          onGroupAdd(name, selectedEmoji, selectedColor, members);
+    useEffect(() => {
+      if (groupId) {
+        const group = groups.find((g) => g.id === groupId);
+        if (group) {
+          setName(group.name);
+          setSelectedColor(group.color);
+          selectEmoji(group.icon);
+          setMembers(group.membersIds);
         }
-        //resetForm();
-        //(ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
-    };
-/*
-    const resetForm = () => {
+      } else {
         setName("");
-        selectEmoji(emojis[0]);
         setSelectedColor("#ff5733");
+        selectEmoji(emojis[0]);
         setMembers([]);
-      };
-*/
+      }
+    }, [groupId, groups, selectEmoji, emojis]);
+
+    const handleAdd = (clearForm: boolean) => {
+      if (!name || !selectedEmoji || !selectedColor) return;
+      if (groupId) {
+        onGroupEdit(groupId, name, selectedEmoji, selectedColor, members);
+      } else {
+        onGroupAdd(name, selectedEmoji, selectedColor, members);
+      }
+      if (clearForm) {
+        setName("");
+        setSelectedColor("#ff5733");
+        selectEmoji(emojis[0]);
+        setMembers([]);
+        nameInputRef.current?.focus();
+      } else {
+        (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
+      }
+    };
+
     const renderBackdrop = useCallback(
       (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
       []
@@ -132,7 +136,7 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
                 />
               ))}
             </View>
-        </View>
+          </View>
 
           <SheetText
             placeholder="Members (comma-separated IDs)"
@@ -141,30 +145,48 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
             style={{ marginBottom: 12, paddingVertical: 4, borderRadius: 10 }}
           />
 
-          <Pressable
-            onPress={handleSave}
-            style={{
-              backgroundColor: colors.primary,
-              paddingVertical: 12,
-              borderRadius: 8,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "white", fontWeight: "bold" }}>
-                {groupId ? "Edit group" : "Add Group"}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => handleSave()}
-            style={{
-            paddingVertical: 12,
-            borderRadius: 8,
-            alignItems: "center",
-            marginBottom: 15,
-            }}
-        >
-            <Text style={{ color: colors.primary, fontWeight: "bold" }}>Add this and another</Text>
-        </Pressable>
+          <View style={{ marginBottom: 20 }}>
+            {groupId ? (
+              // Tryb edycji grupy
+              <Pressable
+                onPress={() => handleAdd(false)}
+                style={{
+                  backgroundColor: colors.primary,
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: "white", fontWeight: "bold" }}>Edit group</Text>
+              </Pressable>
+            ) : (
+              // Tryb dodawania nowej grupy
+              <>
+                <Pressable
+                  onPress={() => handleAdd(false)}
+                  style={{
+                    backgroundColor: colors.primary,
+                    paddingVertical: 12,
+                    borderRadius: 5,
+                    alignItems: "center",
+                    marginVertical: 10,
+                  }}
+                >
+                  <Text style={{ color: "white", fontWeight: "bold" }}>Add Group</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => handleAdd(true)}
+                  style={{
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: colors.primary, fontWeight: "bold" }}>Add this and another</Text>
+                </Pressable>
+              </>
+            )}
+          </View>
         </BottomSheetScrollView>
       </BottomSheetModal>
     );
@@ -174,8 +196,8 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
 const getStyles = (colors: any) =>
   StyleSheet.create({
     root: {
-      paddingHorizontal: MARGIN_HORIZONTAL, 
-      marginVertical: 10, 
+      paddingHorizontal: MARGIN_HORIZONTAL,
+      marginVertical: 10,
     },
   });
 

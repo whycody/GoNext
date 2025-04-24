@@ -24,14 +24,13 @@ const GroupsScreen = () => {
   };
 
   const handleGroupLongPress = (id: number) => {
-    setSelectedGroupId(id); // Set the groupId for editing
+    setSelectedGroupId(id); 
     handleGroupBottomSheetRef.current?.present(); // Open the bottom sheet
   };
 
   const handleFABPress = () => {
-    setSelectedGroupId(null); // Reset groupId for adding a new group
+    setSelectedGroupId(null); 
     handleGroupBottomSheetRef.current?.present(); 
-    //handleGroupBottomSheetRef.current?.resetForm();
   };
 
   return (
