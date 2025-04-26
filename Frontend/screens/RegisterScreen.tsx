@@ -4,20 +4,22 @@ import { MARGIN_HORIZONTAL } from "../src/constants";
 import { FC, useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 
-type LoginProps = {
+type RegisterScreenProps = {
   login: (username: string, password: string) => Promise<void>;
   authError: string | null;
 }
 
-const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
+const RegisterScreen: FC<RegisterScreenProps> = ({ login, authError }) => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
 
   const [warning, setWarning] = useState<string | null>(null);
-  const [username, setUsername] = useState<string>('admin');
-  const [password, setPassword] = useState<string>('haslo123');
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const filled = username.length > 0 && password.length > 0;
   const nav = useNavigation();
 
@@ -40,8 +42,8 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
     <KeyboardAvoidingView style={styles.root}>
       <View style={{ flex: 0.4 }}/>
       <View style={{ justifyContent: 'center' }}>
-        <Text style={styles.header}>GoNext</Text>
-        <Text style={styles.subheader}>Realize your tasks in a better way</Text>
+        <Text style={styles.header}>Register</Text>
+        <Text style={styles.subheader}>Create an account to increase your efficiency</Text>
       </View>
       <View style={styles.inputsContainer}>
         <Text style={styles.label}>Username</Text>
@@ -73,6 +75,25 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
             onPress={() => setShowPassword((prev) => !prev)}
           />
         </View>
+        <Text style={styles.label}>Confirm password</Text>
+        <View style={styles.textInputContainer}>
+          <TextInput
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            style={styles.textInput}
+            cursorColor={colors.primary}
+            textContentType={'password'}
+            secureTextEntry={!showPassword}
+            autoCapitalize={'none'}
+          />
+          <Ionicons
+            name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
+            size={24}
+            style={{ padding: 5, paddingRight: 0 }}
+            color={colors.text}
+            onPress={() => setShowConfirmPassword((prev) => !prev)}
+          />
+        </View>
         <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 10 }}>
           {warning}
         </Text>
@@ -82,10 +103,10 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
         <View style={[styles.loginButton, !filled && { opacity: 0.5 }]}>
           {loading ?
             <ActivityIndicator size="small" color={colors.background} style={{ justifyContent: 'center' }}/> :
-            <Text style={styles.loginButtonLabel} onPress={handleLoginPress}>Log in</Text>
+            <Text style={styles.loginButtonLabel} onPress={handleLoginPress}>Register</Text>
           }
         </View>
-        <Text style={styles.registerButton} onPress={() => nav.navigate('Register')}>Create new account</Text>
+        <Text style={styles.registerButton} onPress={() => nav.goBack()}>Log in</Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -150,4 +171,4 @@ const getStyles = (colors: any) => StyleSheet.create({
   }
 });
 
-export default LoginScreen;
+export default RegisterScreen;

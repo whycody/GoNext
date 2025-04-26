@@ -1,25 +1,32 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { Text } from 'react-native';
-import { apiCall, loadToken, setAccessToken, setRefreshToken } from './ApiHandler';
+import { getRefreshToken, loadToken, removeTokens, setAccessToken, setRefreshToken } from './ApiHandler';
 import LoginScreen from "../screens/LoginScreen";
-import { loginToApp } from "../hooks/useApi";
+import { getUserTodos, loginToApp, logoutFromApp } from "../hooks/useApi";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useTheme } from "@react-navigation/native";
+import RegisterScreen from "../screens/RegisterScreen";
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  logout: () => Promise<boolean>;
 }
+
+const Stack = createNativeStackNavigator();
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const { colors } = useTheme();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         await loadToken();
-        await apiCall({ method: 'GET', url: '/user/info' });
-        setIsAuthenticated(true);
+        const res = await getUserTodos();
+        setIsAuthenticated(!!res);
       } catch {
         setIsAuthenticated(false);
       }
@@ -40,6 +47,19 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   }
 
+  const logout = async () => {
+    const refreshToken = await getRefreshToken();
+    if (!refreshToken) return false;
+    const res = await logoutFromApp(refreshToken);
+    console.log(res);
+    if (res) {
+      await removeTokens();
+      setIsAuthenticated(false);
+      return true;
+    }
+    return false;
+  }
+
   const setTokens = (accessToken: string, refreshToken: string) => {
     setAccessToken(accessToken);
     setRefreshToken(refreshToken);
@@ -49,8 +69,21 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   if (isAuthenticated === null) return <Text>Ładowanie...</Text>;
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated }}>
-      {isAuthenticated ? children : <LoginScreen login={login} authError={authError}/>}
+    <AuthContext.Provider value={{ isAuthenticated, logout }}>
+      {isAuthenticated ? children :
+        <Stack.Navigator
+          initialRouteName="Login"
+          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.card } }}
+        >
+          <Stack.Screen name="Login">
+            {() => <LoginScreen login={login} authError={authError}/>}
+          </Stack.Screen>
+          <Stack.Screen name="Register">
+            {() => <RegisterScreen login={login} authError={authError}/>}
+          </Stack.Screen>
+        </Stack.Navigator>
+
+      }
     </AuthContext.Provider>
   );
 };
