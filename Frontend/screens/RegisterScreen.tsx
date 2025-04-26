@@ -1,15 +1,15 @@
-import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, KeyboardAvoidingView, ActivityIndicator } from "react-native";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import { FC, useEffect, useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
+import AuthTextInput from "../components/AuthTextInput";
 
 type RegisterScreenProps = {
-  login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
   authError: string | null;
 }
 
-const RegisterScreen: FC<RegisterScreenProps> = ({ login, authError }) => {
+const RegisterScreen: FC<RegisterScreenProps> = ({ register, authError }) => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
 
@@ -18,15 +18,19 @@ const RegisterScreen: FC<RegisterScreenProps> = ({ login, authError }) => {
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-  const filled = username.length > 0 && password.length > 0;
+  const filled = username.length > 0 && password.length > 0 && confirmPassword.length > 0;
   const nav = useNavigation();
 
-  const handleLoginPress = async () => {
+  const handleRegisterPress = async () => {
     if (!filled || loading) return;
+
+    if (password !== confirmPassword) {
+      setWarning('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
-    await login(username, password);
+    await register(username, password);
     setLoading(false);
   }
 
@@ -36,64 +40,38 @@ const RegisterScreen: FC<RegisterScreenProps> = ({ login, authError }) => {
 
   useEffect(() => {
     setWarning(null);
-  }, [username, password]);
+  }, [username, password, confirmPassword]);
 
   return (
     <KeyboardAvoidingView style={styles.root}>
       <View style={{ flex: 0.4 }}/>
       <View style={{ justifyContent: 'center' }}>
-        <Text style={styles.header}>Register</Text>
+        <Text style={styles.header}>Sign up</Text>
         <Text style={styles.subheader}>Create an account to increase your efficiency</Text>
       </View>
       <View style={styles.inputsContainer}>
-        <Text style={styles.label}>Username</Text>
-        <View style={styles.textInputContainer}>
-          <TextInput
-            value={username}
-            onChangeText={setUsername}
-            style={styles.textInput}
-            cursorColor={colors.primary}
-            autoCapitalize={'none'}
-          />
-        </View>
-        <Text style={styles.label}>Password</Text>
-        <View style={styles.textInputContainer}>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            style={styles.textInput}
-            cursorColor={colors.primary}
-            textContentType={'password'}
-            secureTextEntry={!showPassword}
-            autoCapitalize={'none'}
-          />
-          <Ionicons
-            name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-            size={24}
-            style={{ padding: 5, paddingRight: 0 }}
-            color={colors.text}
-            onPress={() => setShowPassword((prev) => !prev)}
-          />
-        </View>
-        <Text style={styles.label}>Confirm password</Text>
-        <View style={styles.textInputContainer}>
-          <TextInput
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            style={styles.textInput}
-            cursorColor={colors.primary}
-            textContentType={'password'}
-            secureTextEntry={!showPassword}
-            autoCapitalize={'none'}
-          />
-          <Ionicons
-            name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
-            size={24}
-            style={{ padding: 5, paddingRight: 0 }}
-            color={colors.text}
-            onPress={() => setShowConfirmPassword((prev) => !prev)}
-          />
-        </View>
+        <AuthTextInput
+          label={'Username'}
+          value={username}
+          editable={!loading}
+          onChangeText={setUsername}
+        />
+        <AuthTextInput
+          label={'Password'}
+          value={password}
+          editable={!loading}
+          style={{ marginTop: 10 }}
+          onChangeText={setPassword}
+          textContentType={'password'}
+        />
+        <AuthTextInput
+          label={'Confirm password'}
+          value={confirmPassword}
+          editable={!loading}
+          style={{ marginTop: 10 }}
+          onChangeText={setConfirmPassword}
+          textContentType={'password'}
+        />
         <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 10 }}>
           {warning}
         </Text>
@@ -103,10 +81,10 @@ const RegisterScreen: FC<RegisterScreenProps> = ({ login, authError }) => {
         <View style={[styles.loginButton, !filled && { opacity: 0.5 }]}>
           {loading ?
             <ActivityIndicator size="small" color={colors.background} style={{ justifyContent: 'center' }}/> :
-            <Text style={styles.loginButtonLabel} onPress={handleLoginPress}>Register</Text>
+            <Text style={styles.loginButtonLabel} onPress={handleRegisterPress}>Create account</Text>
           }
         </View>
-        <Text style={styles.registerButton} onPress={() => nav.goBack()}>Log in</Text>
+        <Text style={styles.registerButton} onPress={() => nav.goBack()}>Sign in</Text>
       </View>
     </KeyboardAvoidingView>
   );

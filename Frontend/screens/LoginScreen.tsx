@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, KeyboardAvoidingView, ActivityIndicator } from "react-native";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import { FC, useEffect, useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
+import AuthTextInput from "../components/AuthTextInput";
 
 type LoginProps = {
   login: (username: string, password: string) => Promise<void>;
@@ -17,7 +17,6 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
   const [username, setUsername] = useState<string>('admin');
   const [password, setPassword] = useState<string>('haslo123');
   const [loading, setLoading] = useState<boolean>(false);
-  const [showPassword, setShowPassword] = useState<boolean>(false);
   const filled = username.length > 0 && password.length > 0;
   const nav = useNavigation();
 
@@ -44,35 +43,20 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
         <Text style={styles.subheader}>Realize your tasks in a better way</Text>
       </View>
       <View style={styles.inputsContainer}>
-        <Text style={styles.label}>Username</Text>
-        <View style={styles.textInputContainer}>
-          <TextInput
-            value={username}
-            onChangeText={setUsername}
-            style={styles.textInput}
-            cursorColor={colors.primary}
-            autoCapitalize={'none'}
-          />
-        </View>
-        <Text style={styles.label}>Password</Text>
-        <View style={styles.textInputContainer}>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            style={styles.textInput}
-            cursorColor={colors.primary}
-            textContentType={'password'}
-            secureTextEntry={!showPassword}
-            autoCapitalize={'none'}
-          />
-          <Ionicons
-            name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-            size={24}
-            style={{ padding: 5, paddingRight: 0 }}
-            color={colors.text}
-            onPress={() => setShowPassword((prev) => !prev)}
-          />
-        </View>
+        <AuthTextInput
+          label={'Username'}
+          value={username}
+          editable={!loading}
+          onChangeText={setUsername}
+        />
+        <AuthTextInput
+          label={'Password'}
+          editable={!loading}
+          value={password}
+          onChangeText={setPassword}
+          style={{ marginTop: 10 }}
+          textContentType={'password'}
+        />
         <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 10 }}>
           {warning}
         </Text>
