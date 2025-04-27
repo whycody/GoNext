@@ -1,5 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 import axios, { AxiosResponse } from "axios";
+import { refreshUserAccessToken } from "../hooks/useApi";
 
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
@@ -34,14 +35,35 @@ export const loadToken = async (): Promise<void> => {
   }
 };
 
-export const apiCall = async <T>(options: { method: string; url: string; data?: object | string }): Promise<T> => {
+const refreshAccessToken = async (options: any, header: boolean = false) => {
+  refreshToken = await getRefreshToken();
+
+  if (!refreshToken) {
+    throw new Error('Brak refresh token.');
+  }
+
+  try {
+    const response = await refreshUserAccessToken(refreshToken);
+    if (response?.access_token) {
+      await setAccessToken(response?.access_token);
+      await apiCall(options, header, true);
+    }
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    throw new Error('Nie można odświeżyć tokena.');
+  }
+};
+
+export const apiCall = async <T>(
+  options: { method: string; url: string; data?: object | string }, header: boolean = true, refreshed: boolean = false): Promise<T> => {
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
 
   console.log(options.method, options.url, accessToken);
 
-  if (accessToken) {
+  if (accessToken && header) {
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
@@ -58,7 +80,12 @@ export const apiCall = async <T>(options: { method: string; url: string; data?: 
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Nieautoryzowany – accessToken wygasł lub jest nieprawidłowy.');
+      if (refreshed)
+        throw new Error('Nieautoryzowany – accessToken wygasł lub jest nieprawidłowy.');
+      else {
+        console.log('refreshuje')
+        await refreshAccessToken(options);
+      }
     }
 
     throw new Error(`API error: ${error.response?.status || error.message}`);
