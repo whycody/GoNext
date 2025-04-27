@@ -4,7 +4,7 @@ import { getRefreshToken, loadToken, removeTokens, setAccessToken, setRefreshTok
 import LoginScreen from "../screens/LoginScreen";
 import { getUserTodos, loginToApp, logoutFromApp, registerToApp } from "../hooks/useApi";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useTheme } from "@react-navigation/native";
+import { useNavigation, useTheme } from "@react-navigation/native";
 import RegisterScreen from "../screens/RegisterScreen";
 
 interface AuthContextType {
@@ -20,6 +20,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const nav = useNavigation();
   const { colors } = useTheme();
 
   useEffect(() => {
@@ -53,7 +54,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const res = await registerToApp(username, email, password);
     if (res) {
       Alert.alert('Success', 'Registration successful. You can now log in.');
-
+      nav.navigate('Login');
     } else {
       setRegisterError('Registration failed. Please try again.');
     }
