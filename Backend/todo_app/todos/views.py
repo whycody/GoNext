@@ -406,8 +406,8 @@ class LogoutView(APIView):
 
 
 class RefreshTokenView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    authentication_classes = []
+    permission_classes = [AllowAny]
 
     @swagger_auto_schema(
         operation_description="Refreshes the access token using a valid refresh token.",
