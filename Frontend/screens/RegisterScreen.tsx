@@ -14,18 +14,30 @@ const RegisterScreen: FC<RegisterScreenProps> = ({ register, authError }) => {
   const styles = getStyles(colors);
 
   const [warning, setWarning] = useState<string | null>(null);
+  const [email, setEmail] = useState<string>('');
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const filled = username.length > 0 && password.length > 0 && confirmPassword.length > 0;
+  const filled = username.length > 0 && password.length > 0 && confirmPassword.length > 0 && email.length > 0;
   const nav = useNavigation();
 
   const handleRegisterPress = async () => {
     if (!filled || loading) return;
 
+    if (!isValidPassword(password)) {
+      setWarning('Password must contain at least 8 characters, including one uppercase letter, one lowercase letter, one number, and one special character');
+      return;
+    }
+
+
     if (password !== confirmPassword) {
       setWarning('Passwords do not match');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setWarning('Invalid email address');
       return;
     }
 
@@ -34,13 +46,23 @@ const RegisterScreen: FC<RegisterScreenProps> = ({ register, authError }) => {
     setLoading(false);
   }
 
+  const isValidPassword = (password: string): boolean => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   useEffect(() => {
     setWarning(authError);
   }, [authError]);
 
   useEffect(() => {
     setWarning(null);
-  }, [username, password, confirmPassword]);
+  }, [username, email, password, confirmPassword]);
 
   return (
     <KeyboardAvoidingView style={styles.root}>
@@ -55,6 +77,14 @@ const RegisterScreen: FC<RegisterScreenProps> = ({ register, authError }) => {
           value={username}
           editable={!loading}
           onChangeText={setUsername}
+        />
+        <AuthTextInput
+          label={'Email'}
+          value={email}
+          editable={!loading}
+          style={{ marginTop: 10 }}
+          onChangeText={setEmail}
+          textContentType={'emailAddress'}
         />
         <AuthTextInput
           label={'Password'}
