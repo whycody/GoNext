@@ -13,6 +13,19 @@ export const loginToApp = async (username: string, password: string) => {
   }
 }
 
+export const registerToApp = async (username: string, email: string, password: string) => {
+  try {
+    return await apiCall({
+      method: 'POST',
+      url: '/register/',
+      data: { username, email, password }
+    }, false);
+  } catch (e) {
+    console.error('/register/', e);
+    return null;
+  }
+}
+
 export const refreshUserAccessToken = async (refreshToken: string) => {
   try {
     return await apiCall({

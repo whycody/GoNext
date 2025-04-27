@@ -1,8 +1,8 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { Text } from 'react-native';
+import { Alert, Text } from 'react-native';
 import { getRefreshToken, loadToken, removeTokens, setAccessToken, setRefreshToken } from './ApiHandler';
 import LoginScreen from "../screens/LoginScreen";
-import { getUserTodos, loginToApp, logoutFromApp } from "../hooks/useApi";
+import { getUserTodos, loginToApp, logoutFromApp, registerToApp } from "../hooks/useApi";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useTheme } from "@react-navigation/native";
 import RegisterScreen from "../screens/RegisterScreen";
@@ -19,6 +19,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const { colors } = useTheme();
 
   useEffect(() => {
@@ -44,6 +45,17 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     } else {
       setIsAuthenticated(false);
       setAuthError('Invalid username or password');
+    }
+  }
+
+  const register = async (username: string, email: string, password: string) => {
+    setRegisterError(null);
+    const res = await registerToApp(username, email, password);
+    if (res) {
+      Alert.alert('Success', 'Registration successful. You can now log in.');
+
+    } else {
+      setRegisterError('Registration failed. Please try again.');
     }
   }
 
@@ -79,7 +91,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             {() => <LoginScreen login={login} authError={authError}/>}
           </Stack.Screen>
           <Stack.Screen name="Register">
-            {() => <RegisterScreen login={login} authError={authError}/>}
+            {() => <RegisterScreen register={register} registerError={registerError}/>}
           </Stack.Screen>
         </Stack.Navigator>
 

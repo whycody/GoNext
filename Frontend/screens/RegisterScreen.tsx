@@ -5,11 +5,11 @@ import { FC, useEffect, useState } from "react";
 import AuthTextInput from "../components/AuthTextInput";
 
 type RegisterScreenProps = {
-  register: (username: string, password: string) => Promise<void>;
-  authError: string | null;
+  register: (username: string, email: string, password: string) => Promise<void>;
+  registerError: string | null;
 }
 
-const RegisterScreen: FC<RegisterScreenProps> = ({ register, authError }) => {
+const RegisterScreen: FC<RegisterScreenProps> = ({ register, registerError }) => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
 
@@ -42,7 +42,7 @@ const RegisterScreen: FC<RegisterScreenProps> = ({ register, authError }) => {
     }
 
     setLoading(true);
-    await register(username, password);
+    await register(username, email, password);
     setLoading(false);
   }
 
@@ -57,8 +57,8 @@ const RegisterScreen: FC<RegisterScreenProps> = ({ register, authError }) => {
   };
 
   useEffect(() => {
-    setWarning(authError);
-  }, [authError]);
+    setWarning(registerError);
+  }, [registerError]);
 
   useEffect(() => {
     setWarning(null);
