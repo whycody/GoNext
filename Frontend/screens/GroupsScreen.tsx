@@ -1,14 +1,14 @@
 import { FlatList, StyleSheet, View } from "react-native";
 import GroupsHeader from "../components/GroupsHeader"; 
 import GroupsView from "../components/GroupsView"; 
-import { useGroups } from "../hooks/useGroups"; 
+import { useGroupStats } from "../hooks/useGroupStats"; // Zmieniono na useGroupStats
 import { useTheme } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
 import { useState, useRef } from "react";
 
 const GroupsScreen = () => {
-  const groups = useGroups(); 
+  const groups = useGroupStats(); // Użycie useGroupStats
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
@@ -44,6 +44,8 @@ const GroupsScreen = () => {
           <GroupsView
             index={index}
             group={item}
+            taskCount={item.taskCount} // Przekazanie liczby zadań
+            memberCount={item.memberCount} // Przekazanie liczby członków
             onGroupPress={() => console.log("Group pressed:", item.id)}
             onLongPress={() => handleGroupLongPress(item.id)} 
           />
