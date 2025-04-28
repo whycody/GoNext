@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from datetime import timedelta
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -52,9 +53,11 @@ INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
     'todos',
     'drf_yasg',
+    'axes',
 ]
 
 MIDDLEWARE = [
+    'axes.middleware.AxesMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -62,8 +65,20 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',  
 ]
+
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Security settings
+AXES_FAILURE_LIMIT = 5  # Maximum number of allowed login attempts
+AXES_COOLOFF_TIME = timedelta(minutes=30)  # Lockout duration after reaching failure limit
+AXES_LOCKOUT_CALLABLE = 'todos.utils.lockout_response'  # Optional custom lockout response
+AXES_RESET_ON_SUCCESS = True  # Reset failure counter after successful login
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]] # Only lock out when the exact combination of username AND IP address exceeds the failure limit
 
 ROOT_URLCONF = 'todo_app.urls'
 
@@ -189,7 +204,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 #STATICFILES_STORAGE = ('whitenoise.storage.CompressedManifestStaticFilesStorage')
 
-FRONTEND_URL = 'http://localhost:8081'
+FRONTEND_URL = 'http://localhost:8000'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

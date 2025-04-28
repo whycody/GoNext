@@ -256,6 +256,26 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
 
 #### Sprint Analysis
 
-- Analysis: Analysis will occur after the sprint finishes
+- Analysis: Task creation finished with great success, nonetheless, the team is currently struggling with setting up the registration process and API configuration.
 
 - Version: 0.1
+
+### Sprint 2
+
+#### Sprint Plan
+
+- Goal: Registration, email verification, group creation.
+
+    - Registration
+    - Group creation
+
+- Date: from 05.04 to 22.04, 2 weeks
+
+- To do:
+    - US1: Registration/Logging in
+    - US4: Creating groups
+
+#### Sprint Analysis
+
+- Analysis: 
+- Version: 0.2

@@ -1,7 +1,7 @@
 import { ScrollView, View, StyleSheet, Text, FlatList } from "react-native";
 import HomeHeader from "../components/HomeHeader";
 import CategoryItem from "../components/CategoryItem";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MARGIN_HORIZONTAL, MARGIN_VERTICAL } from "../src/constants";
 import { useTaskItems } from "../hooks/useTaskItems";
 import { TaskItem } from "../types/Task";
@@ -9,6 +9,10 @@ import TaskView from "../components/TaskView";
 import { useTheme } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FAB } from "react-native-paper";
+import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
+import { BottomSheetModalRef } from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetModalProvider/types";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { getUserTodos } from "../hooks/useApi";
 
 enum Categories {
   PRIORITY = 'Priority',
@@ -17,21 +21,35 @@ enum Categories {
 
 const HomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState(Categories.GROUP);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
   const loadedTaskItems = useTaskItems();
   const { colors } = useTheme();
   const styles = getStyles(colors);
+  const handleTaskBottomSheetRef = useRef<BottomSheetModal>(null);
+
+  const loadUserTodos = async () => {
+    const todos = await getUserTodos();
+    console.log(todos);
+  }
 
   useEffect(() => {
     setTaskItems(loadedTaskItems);
+    loadUserTodos();
   }, []);
 
   const renderTaskItem = ({ index, item }: { index: number, item: TaskItem }) => (
-    <TaskView index={index} taskItem={item} onTaskPress={(id) => {
+    <TaskView index={index} taskItem={item} 
+    onTaskPress={(id) => {
       const newTask = { ...taskItems.find(task => task.id === id) } as TaskItem;
       newTask.isCompleted = !newTask.isCompleted;
       setTaskItems(taskItems.map(task => task.id === id ? newTask : task));
-    }}/>
+    }}
+    onLongPress={(id) => {
+      setSelectedTaskId(id); 
+      handleTaskBottomSheetRef.current?.present(); 
+    }}
+    />
   );
 
   const groupedTaskItems = () => {
@@ -55,13 +73,14 @@ const HomeScreen = () => {
         title: primaryKey,
         data: Object.keys(grouped[primaryKey]).map(secondaryKey => ({
           title: secondaryKey,
-          data: grouped[primaryKey][secondaryKey],
+          data: grouped[primaryKey][secondaryKey].sort((a, b) => a.isCompleted ? 1 : -1),
         })).sort((a, b) => b.title.localeCompare(a.title)),
       }));
   };
 
   const handleFABPress = () => {
-
+    setSelectedTaskId(null);
+    handleTaskBottomSheetRef.current?.present();
   }
 
   const translatePriority = (priority: number) => {
@@ -77,6 +96,11 @@ const HomeScreen = () => {
 
   return (
     <>
+      <HandleTaskBottomSheet
+        ref={handleTaskBottomSheetRef}
+        taskId={selectedTaskId}
+        onTaskAdd={() => {}}
+      />
       <ScrollView style={{ flex: 1 }}>
         <HomeHeader style={{ paddingHorizontal: 20, paddingTop: 30, paddingBottom: 15 }}/>
         <View style={styles.categoriesContainer}>

@@ -9,7 +9,7 @@ urlpatterns = [
     path('token/logout/', LogoutView.as_view(), name='token_logout'),
     # Tasks assigned directly to the user (no group)
     path('todos/user/', ToDoByUserView.as_view(), name='todos-by-user'),
-
+    path('verify-email/<uidb64>/<token>/', VerifyEmailView.as_view(), name='verify-email'),
     # Tasks assigned to the user, grouped by groups
     path('todos/groups/', ToDoByGroupView.as_view(), name='todos-by-group'),
 
@@ -25,4 +25,6 @@ urlpatterns = [
     path('groups/create/', GroupCreateView.as_view(), name='group-create'),
     path('invitations/create/', InvitationCreateView.as_view(), name='invitation-create'),
     path('invitations/accept/<str:token>/', AcceptInvitationView.as_view(), name='invitation-accept'),
+    path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset'),
+    path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
 ]
