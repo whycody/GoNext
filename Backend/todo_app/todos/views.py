@@ -49,8 +49,8 @@ class RegisterView(generics.CreateAPIView):
     def send_verification_email(self, user):
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
-        # Użycie zmiennej z settings zamiast hardcodowanego localhosta byłoby lepsze w produkcji
-        verify_url = f"http://localhost:8000/verify-email/{uid}/{token}/"
+        # Zmiana z localhosta na azure
+        verify_url = f"https://gonext-a7hthre4g0avd7fr.polandcentral-01.azurewebsites.net/verify-email/{uid}/{token}/"
 
         subject = "Verify your email"
         message = f"Click the link to verify: {verify_url}"
