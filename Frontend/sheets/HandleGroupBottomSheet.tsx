@@ -84,7 +84,7 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
         backgroundStyle={{ backgroundColor: colors.card }}
         handleIndicatorStyle={{ backgroundColor: colors.primary, borderRadius: 0 }}
       >
-        <BottomSheetScrollView style={styles.root}>
+        <BottomSheetScrollView style={styles.root} scrollEnabled={false}>
           <Text style={{ fontSize: 19, fontWeight: "bold", marginBottom: 16 }}>
             {groupId ? "Edit Group" : "Add New Group"}
           </Text>
@@ -138,16 +138,8 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
             </View>
           </View>
 
-          <SheetText
-            placeholder="Members (comma-separated IDs)"
-            value={members.join(", ")}
-            onChangeText={(text) => setMembers(text.split(",").map((id) => id.trim()))}
-            style={{ marginBottom: 12, paddingVertical: 4, borderRadius: 10 }}
-          />
-
           <View style={{ marginBottom: 20 }}>
             {groupId ? (
-              // Tryb edycji grupy
               <Pressable
                 onPress={() => handleAdd(false)}
                 style={{
@@ -160,7 +152,6 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
                 <Text style={{ color: "white", fontWeight: "bold" }}>Edit group</Text>
               </Pressable>
             ) : (
-              // Tryb dodawania nowej grupy
               <>
                 <Pressable
                   onPress={() => handleAdd(false)}
