@@ -28,7 +28,7 @@ const GroupsView = ({ index, group, taskCount, memberCount, onGroupPress, onLong
       <View style={styles.textContainer}>
         <Text style={styles.header}>{name}</Text>
         <Text style={styles.details}>
-          tasks {taskCount} • members {memberCount}
+        {taskCount} tasks  • {memberCount} members 
         </Text>
       </View>
     </Pressable>
