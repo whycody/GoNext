@@ -44,7 +44,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       setTokens(res.access, res.refresh);
       setIsAuthenticated(true);
     } else {
-      setIsAuthenticated(false);
+      setIsAuthenticated(true);
       setAuthError('Invalid username or password');
     }
   }

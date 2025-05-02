@@ -7,6 +7,8 @@ import { useState, useRef } from "react";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
 import FloatingButtonWithMenu from "../components/FloatingButtonWithMenu";
 import GroupLongPressMenu from "../components/GroupLongPressMenu";
+import InvitationLinkBottomSheet from "../sheets/InvitationLinkBottomSheet";
+import { generateGroupInvitationLink } from "../hooks/useApi";
 
 const GroupsScreen = () => {
   const groups = useGroupStats();
@@ -15,6 +17,9 @@ const GroupsScreen = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [longPressMenuVisible, setLongPressMenuVisible] = useState(false);
   const handleGroupBottomSheetRef = useRef<BottomSheetModal>(null);
+  const invitationLinkSheetRef = useRef<BottomSheetModal>(null);
+  const [invitationLink, setInvitationLink] = useState<string | null>(null);
+  const [invitationLoading, setInvitationLoading] = useState(false);
 
   const handleGroupAdd = (name: string, icon: string, color: string, members: string[]) => {
     console.log("New group added:", { name, icon, color, members });
@@ -29,9 +34,19 @@ const GroupsScreen = () => {
     setLongPressMenuVisible(true);
   };
 
-  const handleGenerateInvitationLink = () => {
+  const handleGenerateInvitationLink = async () => {
     if (selectedGroupId !== null) {
-      console.log("Generate invitation link for group:", selectedGroupId);
+      setInvitationLoading(true);
+      setInvitationLink(null);
+      invitationLinkSheetRef.current?.present();
+  
+      const res = await generateGroupInvitationLink(selectedGroupId);
+      if (res?.link) {
+        setInvitationLink(res.link);
+      } else {
+        setInvitationLink(null);
+      }
+      setInvitationLoading(false);
     }
   };
 
@@ -74,6 +89,12 @@ const GroupsScreen = () => {
         onGroupAdd={handleGroupAdd}
         onGroupEdit={handleGroupEdit}
       />
+      <InvitationLinkBottomSheet
+        ref={invitationLinkSheetRef}
+        invitationLink={invitationLink}
+        onClose={() => invitationLinkSheetRef.current?.dismiss()}
+      />
+
       <GroupLongPressMenu
         visible={longPressMenuVisible}
         onClose={() => setLongPressMenuVisible(false)}

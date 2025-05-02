@@ -63,3 +63,15 @@ export const getUserTodos = async () => {
     return null;
   }
 }
+
+export const generateGroupInvitationLink = async (groupId: number) => {
+  try {
+    return await apiCall({
+      method: 'POST',
+      url: `/groups/${groupId}/generate-invitation-link/`, 
+    });
+  } catch (e) {
+    console.error(`/groups/${groupId}/generate-invitation-link/`, e); 
+    return null;
+  }
+};
