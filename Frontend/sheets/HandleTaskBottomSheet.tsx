@@ -94,7 +94,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
         backgroundStyle={{ backgroundColor: colors.card }}
         handleIndicatorStyle={{ backgroundColor: colors.primary, borderRadius: 0 }}
       >
-        <BottomSheetScrollView style={styles.root}>
+        <BottomSheetScrollView style={styles.root} scrollEnabled={false}>
           <Text style={{ fontSize: 19, fontWeight: "bold", marginBottom: 16 }}>
             {taskId ? 'Edit task' : 'Add task'}
           </Text>
