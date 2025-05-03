@@ -1,11 +1,10 @@
-import React, { useState, useCallback, useRef, forwardRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, forwardRef, useEffect, useMemo } from "react";
 import { Text, StyleSheet, View, Pressable, Platform } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
-import useEmojiPicker from "../hooks/useEmojiPicker";
 import { useGroups } from "../hooks/useGroups";
 
 interface HandleGroupBottomSheetProps {
@@ -14,6 +13,21 @@ interface HandleGroupBottomSheetProps {
   onGroupEdit: (id: number, name: string, icon: string, color: string, members: string[]) => void;
   onChangeIndex?: (index: number) => void;
 }
+
+const useEmojiPicker = () => {
+  const emojis = useMemo(
+    () => ["💼", "🎉", "📚", "🚀", "❤️", "🌟", "🎨", "🎵", "⚽", "🍕", "🏡", "💰", "🏢", "💻"],
+    []
+  );
+
+  const [selectedEmoji, setSelectedEmoji] = useState(emojis[0]);
+
+  const selectEmoji = useCallback((emoji: string) => {
+    setSelectedEmoji(emoji);
+  }, []);
+
+  return { emojis, selectedEmoji, selectEmoji };
+};
 
 const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomSheetProps>(
   ({ groupId, onGroupAdd, onGroupEdit, onChangeIndex }, ref) => {
