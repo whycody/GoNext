@@ -23,6 +23,8 @@ from .serializers import InvitationCreateSerializer, LoginSerializer, PasswordRe
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_username, get_client_ip_address
 from todos.utils import lockout_response 
+from .permissions import IsGroupAdminOrMemberReadOnly 
+
 # Endpoint user-info
 class UserInfoView(APIView):
     permission_classes = [AllowAny]  # Dostęp dla wszystkich
@@ -281,7 +283,7 @@ class GroupListView(generics.ListAPIView):
 # View for admins – group detail view
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsGroupAdminOrMemberReadOnly] 
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
@@ -295,14 +297,14 @@ class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
 # View for admins – create a new group
 class GroupCreateView(generics.CreateAPIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
     def perform_create(self, serializer):
-        group = serializer.save(admin=self.request.user)
+        group = serializer.save() 
         group.members.add(self.request.user)
-
+        group.admins.add(self.request.user)     
 
 class InvitationCreateView(APIView):
     authentication_classes = [JWTAuthentication]

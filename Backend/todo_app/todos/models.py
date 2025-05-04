@@ -18,12 +18,10 @@ class CustomUser(AbstractUser):
 class Group(models.Model):
     name = models.CharField(max_length=100, unique=True)
     members = models.ManyToManyField(get_user_model(), related_name='custom_groups')
-    admin = models.ForeignKey(
+    admins = models.ManyToManyField( # Zamiana na ManyToManyField
         get_user_model(),
-        on_delete=models.CASCADE,
-        related_name='administered_groups',
-        null=True,
-        blank = True
+        related_name='administered_groups', # Nazwa relacji zwrotnej może pozostać
+        blank=True # Pozwala grupie istnieć bez żadnych adminów (opcjonalne, ale często przydatne)
     )
 
 
