@@ -11,7 +11,8 @@ from rest_framework import generics, status, exceptions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken as SimpleJWTRefreshToken # Alias needed
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from drf_yasg import openapi
@@ -142,16 +143,27 @@ class LoginView(APIView):
             # Generowanie tokenów przy użyciu dedykowanej funkcji
             refresh, access_token = create_new_tokens(user, remember_me)
 
-            if remember_me and device_id:
-                Device.objects.update_or_create(
-                    user=user,
-                    device_id=device_id,
-                    defaults={
-                        'refresh_token': str(refresh),
-                        'created_at': timezone.now(),
-                        'expires_at': timezone.now() + timedelta(days=7)  # lub inna logika wygaśnięcia
-                    }
-                )
+            if device_id:
+                 # Ustal czas trwania sesji na podstawie flagi remember_me
+                 # Pobierz skonfigurowany długi czas życia z ustawień (np. 30 dni)
+                 refresh_lifetime_setting = settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME', timedelta(days=30))
+                 # Ustaw krótki czas życia dla sesji nietrwałych (np. 1 dzień)
+                 short_lifetime = timedelta(days=1) # Możesz też to wziąć z ustawień, jeśli chcesz
+
+                 session_duration = refresh_lifetime_setting if remember_me else short_lifetime
+
+                 # Użyj update_or_create, aby stworzyć nowy wpis lub zaktualizować istniejący
+                 # dla tej kombinacji użytkownika i urządzenia
+                 Device.objects.update_or_create(
+                     user=user,
+                     device_id=device_id,
+                     defaults={
+                         'refresh_token': str(refresh),
+                         # 'created_at' ustawi się samo dzięki auto_now_add=True w modelu
+                         'expires_at': timezone.now() + session_duration, # Ustaw odpowiedni czas wygaśnięcia
+                         'remember_me': remember_me 
+                     }
+                 )
             return Response({
                 'access': str(access_token),
                 'refresh': str(refresh),
@@ -404,60 +416,108 @@ class LogoutView(APIView):
             device.delete()
             return Response({"detail": "Successfully logged out"}, status=status.HTTP_200_OK)
         except Device.DoesNotExist:
-            return Response({"detail": "Token not found"}, status=status.HTTP_404_NOT_FOUND)
+            # Traktujemy brak wpisu jako równoznaczny z wylogowaniem dla sesji nietrwałych
+            return Response({"detail": "Successfully logged out (session was not persistent or already ended)."}, status=status.HTTP_200_OK)
 
 
 class RefreshTokenView(APIView):
-    authentication_classes = []
-    permission_classes = [AllowAny]
+     # AllowAny is correct here, authentication comes from the refresh token itself
+     permission_classes = [AllowAny]
+     authentication_classes = [] # Explicitly no auth needed beforehand
 
-    @swagger_auto_schema(
-        operation_description="Refreshes the access token using a valid refresh token.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'device_id': openapi.Schema(type=openapi.TYPE_STRING, description='The ID of the device', default=''),
-                'refresh_token': openapi.Schema(type=openapi.TYPE_STRING, description='The refresh token to refresh'),
-            },
-        ),
-        responses={
-            200: openapi.Response(description="Successfully refreshed token"),
-            400: openapi.Response(description="Refresh token expired"),
-            404: openapi.Response(description="Invalid refresh token"),
-        }
-    )
-    def post(self, request):
-        device_id = request.data.get('device_id')
-        refresh_token = request.data.get('refresh_token')
-        if not device_id or not refresh_token:
-            return Response({"detail": "device_id and refresh_token are required"},
-                            status=status.HTTP_400_BAD_REQUEST)
+     @swagger_auto_schema(
+         operation_description="Refreshes the access token using a valid refresh token.",
+         request_body=openapi.Schema(
+             type=openapi.TYPE_OBJECT,
+             properties={
+                 'device_id': openapi.Schema(type=openapi.TYPE_STRING, description='The ID of the device', default=''),
+                 'refresh_token': openapi.Schema(type=openapi.TYPE_STRING, description='The refresh token to refresh'),
+             },
+         ),
+         responses={
+             200: openapi.Response(description="Successfully refreshed token"),
+             400: openapi.Response(description="Refresh token expired"),
+             404: openapi.Response(description="Invalid refresh token"),
+         }
+     )
+     def post(self, request):
+         device_id = request.data.get('device_id')
+         refresh_token_str = request.data.get('refresh_token')
 
-        try:
-            device = Device.objects.get(user=request.user, device_id=device_id, refresh_token=refresh_token)
-            if device.expires_at < timezone.now():
-                return Response({"detail": "Refresh token expired"}, status=status.HTTP_400_BAD_REQUEST)
-            new_refresh_token, new_access_token = create_new_tokens(request.user, True)
-            old_expiration = device.expires_at
-            device.refresh_token = new_refresh_token
-            device.expires_at = old_expiration  # zachowujemy datę wygaśnięcia
-            device.save()
-            return Response({
-                "access_token": new_access_token,
-                "refresh_token": new_refresh_token,
-            }, status=status.HTTP_200_OK)
-        except Device.DoesNotExist:
-            return Response({"detail": "Invalid refresh token or device_id"}, status=status.HTTP_404_NOT_FOUND)
+         if not device_id or not refresh_token_str:
+             return Response({"detail": "device_id and refresh_token are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+         try:
+             # 1. Validate the refresh token and extract user ID
+             # This checks signature and token type, but not expiry yet
+             token = SimpleJWTRefreshToken(refresh_token_str)
+             user_id = token.get('user_id')
+             user = get_user_model().objects.get(id=user_id) # Find the user
+
+             # 2. Find the corresponding Device record in the database
+             # Match user, device_id, AND the submitted token string to ensure it's the correct one
+             device = Device.objects.get(user=user, device_id=device_id, refresh_token=refresh_token_str)
+
+             # 3. Check OUR database expiration (sliding window check)
+             # This allows us to enforce expiry even if the token's internal 'exp' is further out
+             if device.expires_at < timezone.now():
+                 # Consider blacklisting the token here if using SimpleJWT's blacklist app
+                 # E.g., token.blacklist()
+                 return Response({"detail": "Refresh token has expired (session inactive)."}, status=status.HTTP_401_UNAUTHORIZED)
+
+             # --- If token and device are valid and DB expiry is OK ---
+
+             # 4. Implement Sliding Expiration & Rotation
+             # Generate new access and refresh tokens (using remember_me=True logic for persistent sessions)
+             new_refresh_token_str, new_access_token_str = create_new_tokens(user, device.remember_me)
+
+            # Update the Device record with the NEW token
+             device.refresh_token = new_refresh_token_str
+
+             # Calculate the NEW expiration timestamp for the DB record (sliding window)
+             # E.g., 7 days from now
+             if device.remember_me:
+                sliding_window_duration = timedelta(days=settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME', 30))
+                new_db_expires_at = timezone.now() + sliding_window_duration
+                device.expires_at = new_db_expires_at
+             # else: Nie robimy nic z expires_at dla sesji nietrwałych
+             
+             device.save()
+
+             # 5. Return the new tokens
+             return Response({
+                 'access': new_access_token_str,
+                 'refresh': new_refresh_token_str, # Return the new refresh token
+             }, status=status.HTTP_200_OK)
+
+         # Handle specific error cases
+         except (Device.DoesNotExist):
+             return Response({"detail": "Invalid refresh token or device ID association."}, status=status.HTTP_401_UNAUTHORIZED)
+         except (get_user_model().DoesNotExist):
+              # Should not happen if token validation worked, but good practice
+              return Response({"detail": "User associated with token not found."}, status=status.HTTP_401_UNAUTHORIZED)
+         except (TokenError, InvalidToken) as e:
+              # Token is invalid (malformed, expired based on its 'exp' claim, etc.)
+              return Response({"detail": f"Refresh token is invalid or expired: {e}"}, status=status.HTTP_401_UNAUTHORIZED)
+         except Exception as e:
+              # Log the exception e here for debugging
+              print(f"Unexpected error during token refresh: {e}") # Replace with proper logging
+              return Response({"detail": "An internal error occurred during token refresh."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 def create_new_tokens(user, remember_me):
-    refresh = RefreshToken.for_user(user)
-    if remember_me:
-        refresh.set_exp(lifetime=timedelta(days=7))
-    else:
-        refresh.set_exp(lifetime=timedelta(days=1))
-    access_token = refresh.access_token
-    return str(refresh), str(access_token)
+     # Ensure this function sets the appropriate lifetime based on SIMPLE_JWT settings
+     # It already seems to handle remember_me, which is fine for initial login.
+     # For refresh, we might always want the longer lifetime, which is handled by passing remember_me=True above.
+     refresh = SimpleJWTRefreshToken.for_user(user) # Use aliased import
+     refresh_lifetime = settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME',timedelta(days=30))
+     if remember_me:
+         refresh.set_exp(lifetime=refresh_lifetime)
+     else:
+         refresh.set_exp(lifetime=timedelta(days=1))
+
+     access_token = refresh.access_token
+     return str(refresh), str(access_token)
 
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]

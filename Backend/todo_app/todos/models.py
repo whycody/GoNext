@@ -75,3 +75,4 @@ class Device(models.Model):
     refresh_token = models.CharField(max_length=500)  # JWT token string
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()         
+    remember_me = models.BooleanField(default=False)
