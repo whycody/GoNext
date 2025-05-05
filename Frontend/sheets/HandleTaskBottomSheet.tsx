@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef, forwardRef } from "react";
-import { Text, TextInput, Platform, StyleSheet, Button, View, Pressable } from "react-native";
+import { Text, Platform, StyleSheet, View, Pressable } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
-import { Picker } from "@react-native-picker/picker"; //you need to run npm install @react-native-picker/picker
+import { Picker } from "@react-native-picker/picker";
 import { useGroups } from "../hooks/useGroups";
-import { useTasks } from "../hooks/useTasks";
+import { getUserTodo } from "../hooks/useApi";
+import { Task, TaskModel } from "../types/Task";
 
 interface HandleTaskBottomSheetProps {
-  taskId?: number,
-  onTaskAdd: (title: string, description: string, priority: TaskPriority ) => void;
+  taskId: number | null,
+  onTaskHandle: (task: Task) => void;
   onChangeIndex?: (index: number) => void;
 }
 
@@ -22,12 +23,12 @@ export enum TaskPriority {
 }
 
 const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomSheetProps>(
-  ({ taskId, onTaskAdd, onChangeIndex }, ref) => {
+  ({ taskId, onTaskHandle, onChangeIndex }, ref) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
 
     const titleInputRef = useRef<SheetTextRef>(null);
-    const descriptionInputRef = useRef<SheetTextRef >(null);
+    const descriptionInputRef = useRef<SheetTextRef>(null);
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -36,44 +37,54 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
     const [selectedGroup, setSelectedGroup] = useState("");
 
     const groups = useGroups();
-    const tasks = useTasks();
+
+    const priorityMap: { [key: number]: TaskPriority } = {
+      1: TaskPriority.LOW,
+      2: TaskPriority.MEDIUM,
+      3: TaskPriority.HIGH,
+    };
+
+    const reversePriorityMap: { [key in TaskPriority]: number } = {
+      [TaskPriority.LOW]: 1,
+      [TaskPriority.MEDIUM]: 2,
+      [TaskPriority.HIGH]: 3,
+    };
+
+    const loadTaskFromApi = async () => {
+      if (taskId) {
+        const task: TaskModel | null = await getUserTodo(taskId);
+        if (!task) return;
+
+        setTitle(task.title);
+        setDescription(task.description);
+
+        setPriority(priorityMap[task.priority] || TaskPriority.MEDIUM);
+        setSelectedGroup(task.group);
+      }
+    }
 
     useEffect(() => {
-      if (taskId) {
-        const task = tasks.find((t) => t.id === taskId);
-        if (task) {
-          setTitle(task.title);
-          setDescription(task.description);
-    
-          const priorityMap: { [key: number]: TaskPriority } = {
-            1: TaskPriority.LOW,
-            2: TaskPriority.MEDIUM,
-            3: TaskPriority.HIGH,
-          };
-          setPriority(priorityMap[task.priority] || TaskPriority.MEDIUM);
-    
-          const group = groups.find((g) => g.id === task.groupId);
-          setSelectedGroup(group ? group.name : "");
-        }
-      } else {
+      loadTaskFromApi();
+    }, [taskId, groups]);
+
+    const handleAdd = (clearForm: boolean) => {
+      if (!title) return;
+
+      onTaskHandle({
+        title: title,
+        description: description,
+        priority: reversePriorityMap[priority],
+        isCompleted: false,
+        groupId: 1
+      } as Task);
+
+      if (clearForm) {
         setTitle("");
         setDescription("");
         setPriority(TaskPriority.MEDIUM);
         setSelectedGroup("");
-      }
-    }, [taskId, tasks, groups]);
-
-    const handleAdd = (clearForm: boolean) => {
-      if (!title) return;
-      onTaskAdd(title, description, priority);
-      if (clearForm) {
-        setTitle(""); 
-        setDescription(""); 
-        setPriority(TaskPriority.MEDIUM);
-        setSelectedGroup("");
         titleInputRef.current?.focus();
-      }
-      else {
+      } else {
         (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
       }
     };
@@ -120,9 +131,9 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
               selectedValue={selectedGroup}
               onValueChange={(itemValue) => setSelectedGroup(itemValue)}
             >
-              <Picker.Item label="Select a group..." value="" color="gray" />
+              <Picker.Item label="Select a group..." value="" color="gray"/>
               {groups.map((group) => (
-                <Picker.Item key={group.id} label={group.name} value={group.name} />
+                <Picker.Item key={group.id} label={group.name} value={group.name}/>
               ))}
             </Picker>
           </View>
@@ -132,7 +143,11 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
               <Pressable
                 onPress={() => setPriority(TaskPriority.LOW)}
-                style={[styles.priorityContainer, { backgroundColor: priority === TaskPriority.LOW ? "green" : "#f0f0f0", borderBottomLeftRadius: 5, borderTopLeftRadius: 5 }]}
+                style={[styles.priorityContainer, {
+                  backgroundColor: priority === TaskPriority.LOW ? "green" : "#f0f0f0",
+                  borderBottomLeftRadius: 5,
+                  borderTopLeftRadius: 5
+                }]}
               >
                 <Text style={{ color: priority === TaskPriority.LOW ? "white" : "black" }}>Low</Text>
               </Pressable>
@@ -146,7 +161,11 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
 
               <Pressable
                 onPress={() => setPriority(TaskPriority.HIGH)}
-                style={[styles.priorityContainer, { backgroundColor: priority === TaskPriority.HIGH ? "red" : "#f0f0f0", borderBottomRightRadius: 5, borderTopRightRadius: 5 }]}
+                style={[styles.priorityContainer, {
+                  backgroundColor: priority === TaskPriority.HIGH ? "red" : "#f0f0f0",
+                  borderBottomRightRadius: 5,
+                  borderTopRightRadius: 5
+                }]}
               >
                 <Text style={{ color: priority === TaskPriority.HIGH ? "white" : "black" }}>High</Text>
               </Pressable>

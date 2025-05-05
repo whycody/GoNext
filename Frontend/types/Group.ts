@@ -5,3 +5,8 @@ export type Group = {
   icon: string;
   membersIds: string[];
 }
+
+export type GroupModel = {
+  id: number;
+  name: string;
+}

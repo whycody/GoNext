@@ -1,5 +1,9 @@
 import { apiCall } from "../utils/ApiHandler";
-import { TaskModel } from "../types/Task";
+import { Task, TaskItem, TaskModel } from "../types/Task";
+import TaskView from "../components/TaskView";
+import { GroupModel } from "../types/Group";
+
+// Authentication
 
 export const loginToApp = async (username: string, password: string) => {
   try {
@@ -53,6 +57,8 @@ export const logoutFromApp = async (refreshToken: string) => {
   }
 }
 
+// Tasks handling
+
 export const getUserTodos = async (): Promise<TaskModel[]> => {
   try {
     return await apiCall({
@@ -61,6 +67,69 @@ export const getUserTodos = async (): Promise<TaskModel[]> => {
     });
   } catch (e) {
     console.error('/todos/', e);
+    return [];
+  }
+}
+
+export const getUserTodo = async (id: number): Promise<TaskModel | null> => {
+  try {
+    return await apiCall({
+      method: 'GET',
+      url: `/todos/${id}/`,
+    });
+  } catch (e) {
+    console.error(`GET /todos/${id}/`, e);
+    return null;
+  }
+}
+
+export const updateUserTodo = async (task: Task) => {
+  try {
+    return await apiCall({
+      method: 'PUT',
+      url: `/todos/${task.id}/`,
+      data: {
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        is_completed: task.isCompleted
+      },
+    });
+  } catch (e) {
+    console.error(`PUT /todos/${task.id}/`, e);
+    return [];
+  }
+}
+
+export const addUserTodo = async (task: Task) => {
+  try {
+    return await apiCall({
+      method: 'POST',
+      url: `/todos/`,
+      data: {
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        is_completed: task.isCompleted,
+        group: task.groupId
+      },
+    });
+  } catch (e) {
+    console.error(`POST /todos/`, e);
+    return [];
+  }
+}
+
+// Groups handling
+
+export const getUserGroups = async (): Promise<GroupModel[]> => {
+  try {
+    return await apiCall({
+      method: 'GET',
+      url: '/groups/',
+    });
+  } catch (e) {
+    console.error('/groups/', e);
     return [];
   }
 }

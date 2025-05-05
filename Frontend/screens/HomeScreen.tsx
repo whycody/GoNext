@@ -3,14 +3,14 @@ import HomeHeader from "../components/HomeHeader";
 import CategoryItem from "../components/CategoryItem";
 import { useEffect, useRef, useState } from "react";
 import { MARGIN_HORIZONTAL, MARGIN_VERTICAL } from "../src/constants";
-import { TaskItem, TaskModel } from "../types/Task";
+import { Task, TaskItem, TaskModel } from "../types/Task";
 import TaskView from "../components/TaskView";
 import { useTheme } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FAB } from "react-native-paper";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { getUserTodos } from "../hooks/useApi";
+import { addUserTodo, getUserTodos, updateUserTodo } from "../hooks/useApi";
 
 enum Categories {
   PRIORITY = 'Priority',
@@ -100,6 +100,12 @@ const HomeScreen = () => {
     setRefreshing(false);
   }
 
+  const handleTask = async (task: Task) => {
+    setLoading(true);
+    selectedTaskId ? await updateUserTodo(task) : await addUserTodo(task);
+    setLoading(false);
+  }
+
   const translatePriority = (priority: number) => {
     switch (priority) {
       case 3:
@@ -116,8 +122,7 @@ const HomeScreen = () => {
       <HandleTaskBottomSheet
         ref={handleTaskBottomSheetRef}
         taskId={selectedTaskId}
-        onTaskAdd={() => {
-        }}
+        onTaskHandle={handleTask}
       />
       <ScrollView
         style={{ flex: 1 }}
