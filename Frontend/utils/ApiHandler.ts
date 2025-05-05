@@ -5,7 +5,7 @@ import { refreshUserAccessToken } from "../hooks/useApi";
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 
-const baseURL = process.env.API_BASE_URL || 'http://localhost:8000';
+const baseURL = process.env["API_BASE_URL"] || 'http://localhost:8000';
 
 export const getRefreshToken = async (): Promise<string | null> => {
   return await SecureStore.getItemAsync('refreshToken');
