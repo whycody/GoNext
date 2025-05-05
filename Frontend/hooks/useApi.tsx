@@ -1,4 +1,5 @@
 import { apiCall } from "../utils/ApiHandler";
+import { TaskModel } from "../types/Task";
 
 export const loginToApp = async (username: string, password: string) => {
   try {
@@ -52,7 +53,7 @@ export const logoutFromApp = async (refreshToken: string) => {
   }
 }
 
-export const getUserTodos = async () => {
+export const getUserTodos = async (): Promise<TaskModel[]> => {
   try {
     return await apiCall({
       method: 'GET',
@@ -60,6 +61,6 @@ export const getUserTodos = async () => {
     });
   } catch (e) {
     console.error('/todos/', e);
-    return null;
+    return [];
   }
 }

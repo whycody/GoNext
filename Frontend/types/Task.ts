@@ -17,3 +17,16 @@ export type TaskItem = {
   groupName: string;
   isCompleted: boolean;
 };
+
+export type TaskModel = {
+  id: number;
+  title: string;
+  category: string;
+  created_at: string;
+  description: string;
+  due_date: string;
+  group: string;
+  is_completed: boolean;
+  priority: number;
+  user: string;
+}
