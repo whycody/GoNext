@@ -83,6 +83,18 @@ export const getUserTodo = async (id: number): Promise<TaskModel | null> => {
   }
 }
 
+export const generateGroupInvitationLink = async (groupId: number) => {
+  try {
+    return await apiCall({
+      method: 'POST',
+      url: `/groups/${groupId}/generate-invitation-link/`, 
+    });
+  } catch (e) {
+    console.error(`/groups/${groupId}/generate-invitation-link/`, e); 
+    return null;
+  }
+};
+
 export const updateUserTodo = async (task: Task) => {
   try {
     return await apiCall({
