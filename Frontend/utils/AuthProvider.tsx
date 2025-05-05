@@ -28,7 +28,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       try {
         await loadToken();
         const res = await getUserTodos();
-        setIsAuthenticated(!!res);
+        setIsAuthenticated(!!res && res.length > 0);
       } catch {
         setIsAuthenticated(false);
       }

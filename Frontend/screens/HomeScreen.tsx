@@ -1,18 +1,16 @@
-import { ScrollView, View, StyleSheet, Text, FlatList } from "react-native";
+import { ScrollView, View, StyleSheet, Text, FlatList, ActivityIndicator, RefreshControl } from "react-native";
 import HomeHeader from "../components/HomeHeader";
 import CategoryItem from "../components/CategoryItem";
 import { useEffect, useRef, useState } from "react";
 import { MARGIN_HORIZONTAL, MARGIN_VERTICAL } from "../src/constants";
-import { useTaskItems } from "../hooks/useTaskItems";
-import { TaskItem } from "../types/Task";
+import { Task, TaskItem, TaskModel } from "../types/Task";
 import TaskView from "../components/TaskView";
 import { useTheme } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FAB } from "react-native-paper";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
-import { BottomSheetModalRef } from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetModalProvider/types";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { getUserTodos } from "../hooks/useApi";
+import { addUserTodo, getUserTodos, updateUserTodo } from "../hooks/useApi";
 
 enum Categories {
   PRIORITY = 'Priority',
@@ -22,33 +20,46 @@ enum Categories {
 const HomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState(Categories.GROUP);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
-  const loadedTaskItems = useTaskItems();
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const handleTaskBottomSheetRef = useRef<BottomSheetModal>(null);
 
   const loadUserTodos = async () => {
-    const todos = await getUserTodos();
-    console.log(todos);
+    setLoading(true);
+    const todos: TaskModel[] = await getUserTodos();
+    setTaskItems(todos.map((todo: TaskModel) => {
+      return {
+        id: todo.id,
+        title: todo.title,
+        description: todo.description,
+        priority: todo.priority,
+        groupName: todo.group,
+        isCompleted: todo.is_completed,
+      } as TaskItem;
+    }));
+    setLoading(false);
   }
 
   useEffect(() => {
-    setTaskItems(loadedTaskItems);
     loadUserTodos();
   }, []);
 
   const renderTaskItem = ({ index, item }: { index: number, item: TaskItem }) => (
-    <TaskView index={index} taskItem={item} 
-    onTaskPress={(id) => {
-      const newTask = { ...taskItems.find(task => task.id === id) } as TaskItem;
-      newTask.isCompleted = !newTask.isCompleted;
-      setTaskItems(taskItems.map(task => task.id === id ? newTask : task));
-    }}
-    onLongPress={(id) => {
-      setSelectedTaskId(id); 
-      handleTaskBottomSheetRef.current?.present(); 
-    }}
+    <TaskView
+      index={index}
+      taskItem={item}
+      onTaskPress={(id) => {
+        const newTask = { ...taskItems.find(task => task.id === id) } as TaskItem;
+        newTask.isCompleted = !newTask.isCompleted;
+        setTaskItems(taskItems.map(task => task.id === id ? newTask : task));
+      }}
+      onLongPress={(id) => {
+        setSelectedTaskId(id);
+        handleTaskBottomSheetRef.current?.present();
+      }}
     />
   );
 
@@ -83,6 +94,18 @@ const HomeScreen = () => {
     handleTaskBottomSheetRef.current?.present();
   }
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadUserTodos();
+    setRefreshing(false);
+  }
+
+  const handleTask = async (task: Task) => {
+    setLoading(true);
+    selectedTaskId ? await updateUserTodo(task) : await addUserTodo(task);
+    setLoading(false);
+  }
+
   const translatePriority = (priority: number) => {
     switch (priority) {
       case 3:
@@ -99,9 +122,18 @@ const HomeScreen = () => {
       <HandleTaskBottomSheet
         ref={handleTaskBottomSheetRef}
         taskId={selectedTaskId}
-        onTaskAdd={() => {}}
+        onTaskHandle={handleTask}
       />
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            progressViewOffset={240}
+          />
+        }
+      >
         <HomeHeader style={{ paddingHorizontal: 20, paddingTop: 30, paddingBottom: 15 }}/>
         <View style={styles.categoriesContainer}>
           <CategoryItem
@@ -115,6 +147,13 @@ const HomeScreen = () => {
             onPress={() => setSelectedCategory(Categories.GROUP)}
           />
         </View>
+        {loading &&
+          <ActivityIndicator
+            size="large"
+            color={colors.primary}
+            style={{ marginVertical: MARGIN_VERTICAL }}
+          />
+        }
         <FlatList
           scrollEnabled={false}
           data={groupedTaskItems()}
