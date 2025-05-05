@@ -34,8 +34,6 @@ DEBUG = False
 ALLOWED_HOSTS = ['gonext-a7hthre4g0avd7fr.polandcentral-01.azurewebsites.net']
 CSRF_TRUSTED_ORIGINS = ['https://gonext-a7hthre4g0avd7fr.polandcentral-01.azurewebsites.net']
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.15']
-
 AUTH_USER_MODEL = 'todos.CustomUser' 
 
 # Application definition
