@@ -324,7 +324,10 @@ class InvitationCreateView(APIView):
 
     @swagger_auto_schema(
         request_body=InvitationCreateSerializer,
-        responses={201: 'Invitation created successfully', 400: 'Bad Request'},
+        responses={
+            201: "Invitation created successfully",
+            400: "Bad Request"
+        }
     )
     def post(self, request):
         serializer = InvitationCreateSerializer(data=request.data)
@@ -332,7 +335,7 @@ class InvitationCreateView(APIView):
             group_id = serializer.validated_data['group_id']
             expiration_days = serializer.validated_data.get('expiration_days', 7)
             max_uses = serializer.validated_data.get('max_uses', 1)
-            email = serializer.validated_data['email']
+            email = serializer.validated_data.get('email')
 
             try:
                 group = Group.objects.get(id=group_id)
@@ -346,9 +349,28 @@ class InvitationCreateView(APIView):
                 expiration_date=expiration_date,
                 max_uses=max_uses
             )
-            invite_link = f"{settings.FRONTEND_URL}/accept-invitation/{invitation.token}/"
+
+            invite_link = f"{settings.FRONTEND_URL}/invitations/{invitation.token}/accept/"
+
+            if email:
+                subject = f"Zaproszenie do grupy: {group.name}"
+                message = (
+                    f"Cześć!\n\n"
+                    f"{request.user.username} zaprosił(a) Cię do dołączenia do grupy \"{group.name}\".\n\n"
+                    f"Kliknij poniższy link, aby zaakceptować zaproszenie:\n{invite_link}\n\n"
+                    f"Link wygaśnie za {expiration_days} dni.\n"
+                )
+
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+
             return Response({
-                "message": "Invitation created successfully",
+                "message": "Invitation created successfully" + (", email sent" if email else ""),
                 "invite_link": invite_link
             }, status=status.HTTP_201_CREATED)
 
@@ -360,7 +382,11 @@ class AcceptInvitationView(APIView):
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
-        responses={200: 'Invitation accepted successfully', 400: 'Bad Request', 404: 'Invitation not found'},
+        responses={
+            200: 'Invitation accepted successfully',
+            400: 'Bad Request',
+            404: 'Invitation not found'
+        },
     )
     def post(self, request, token):
         try:
@@ -371,12 +397,16 @@ class AcceptInvitationView(APIView):
         if invitation.expiration_date < timezone.now():
             return Response({"error": "Invitation has expired"}, status=status.HTTP_400_BAD_REQUEST)
 
+        user = request.user
+        group = invitation.group
+
+        if group.members.filter(id=user.id).exists():
+            return Response({"message": "User is already a member of the group"}, status=status.HTTP_200_OK)
+
         if invitation.uses >= invitation.max_uses:
             return Response({"error": "Invitation has already been used the maximum number of times"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        user = request.user
-        group = invitation.group
         group.members.add(user)
         invitation.uses += 1
         invitation.save()
@@ -384,7 +414,6 @@ class AcceptInvitationView(APIView):
         return Response({
             "message": f"Invitation accepted successfully. User: {user.username} added to group: {group.name}"
         }, status=status.HTTP_200_OK)
-
 
 class LogoutView(APIView):
     authentication_classes = [JWTAuthentication]

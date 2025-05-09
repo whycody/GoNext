@@ -24,7 +24,7 @@ urlpatterns = [
     path('groups/<int:pk>/', GroupDetailView.as_view(), name='group-detail'),
     path('groups/create/', GroupCreateView.as_view(), name='group-create'),
     path('invitations/create/', InvitationCreateView.as_view(), name='invitation-create'),
-    path('invitations/accept/<str:token>/', AcceptInvitationView.as_view(), name='invitation-accept'),
+    path('invitations/<str:token>/accept', AcceptInvitationView.as_view(), name='invitation-accept'),
     path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset'),
     path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
 ]

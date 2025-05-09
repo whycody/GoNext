@@ -22,9 +22,12 @@ class InvitationCreateSerializer(serializers.Serializer):
     group_id = serializers.IntegerField(required=True)
     expiration_days = serializers.IntegerField(required=False, default=7)
     max_uses = serializers.IntegerField(required=False, default=1)
-    email = serializers.EmailField(required=True)
-
-
+    email = serializers.EmailField(
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        help_text="Opcjonalnie: adres e-mail osoby zapraszanej. Jeśli nie podano, link zostanie zwrócony w odpowiedzi i można go przesłać samodzielnie."
+    )
 class UserSerializer(serializers.ModelSerializer):
     # Dodajemy walidatory unikalności dla username i email
     username = serializers.CharField(
