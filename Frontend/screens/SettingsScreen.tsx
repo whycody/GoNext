@@ -10,8 +10,10 @@ const SettingsScreen = () => {
   const authContext = useContext(AuthContext);
   const { colors } = useTheme();
   const styles = getStyles(colors);
-  const settingsButtons = useSettingsButtons(); 
-
+  const settingsItems = [
+    { id: 1, name: "Change password", description: "Change your current password", color: "#ff5733", icon: "🔐"},
+    { id: 2, name: "Log out", description: "Bye-bye!", color: "#33ff57", icon: "👋🏻" },
+    ];
   const logout = async () => {
     await authContext?.logout();
   };
@@ -21,12 +23,15 @@ const SettingsScreen = () => {
       <SettingsHeader style={{ paddingHorizontal: 20, paddingTop: 30, paddingBottom: 30 }}/>
       <FlatList
         style={{ marginTop: 2 }}
-        data={settingsButtons}
+        data={settingsItems}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item, index }) => (
           <SettingsButton
             index={index}
-            button={item}
+            name={item.name}
+            description={item.description}
+            color={item.color}
+            icon={item.icon}
             onButtonPress={() => item.id === 2 ? logout() : console.log("Button pressed:", item.id)}
           />
         )}

@@ -1,23 +1,23 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@react-navigation/native";
-import { Group } from "../types/Group";
-import { SettingsButton } from "../types/SettingsButton";
 
 type SettingsButtonProps = {
   index: number;
-  button: SettingsButton;
+  name: string;
+  description: string;
+  color: string;
+  icon: string;
   onButtonPress: (id: number) => void;
 };
 
-const SettingsButtonsView = ({ index, button, onButtonPress}: SettingsButtonProps) => {
+const SettingsButton = ({ index, name, description, color, icon, onButtonPress}: SettingsButtonProps) => {
   const { colors } = useTheme();
-  const { id, name, description, color, icon } = button;
   const styles = getStyles(colors);
 
   return (
     <Pressable
       style={styles.root}
-      onPress={() => onButtonPress(id)}
+      onPress={() => onButtonPress(index)}
     >
       <View style={[styles.iconContainer, { backgroundColor: color }]}>
         <Text style={styles.icon}>{icon}</Text>
@@ -72,4 +72,4 @@ const getStyles = (colors: any) =>
     },
   });
 
-export default SettingsButtonsView;
+export default SettingsButton;
