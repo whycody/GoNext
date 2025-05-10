@@ -8,6 +8,10 @@ import uuid
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)  # Pole email jako unikalne
 
+    is_verified = models.BooleanField(
+            default=False,
+            help_text='Designates whether the user has verified their email address.'
+        )
     USERNAME_FIELD = 'username'  # Możliwość logowania za pomocą nazwy użytkownika
     REQUIRED_FIELDS = ['email']  # Email jest wymagany podczas tworzenia użytkownika, ale logować się można także za pomocą username
 
