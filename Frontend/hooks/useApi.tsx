@@ -133,3 +133,26 @@ export const getUserGroups = async (): Promise<GroupModel[]> => {
     return [];
   }
 }
+
+export const createGroupInvitation = async (
+  groupId: number,
+  email: string,
+  expirationDays: number = 7,
+  maxUses: number = 1
+) => {
+  try {
+    return await apiCall({
+      method: 'POST',
+      url: '/invitations/create/',
+      data: {
+        group_id: groupId,
+        email,
+        expiration_days: expirationDays,
+        max_uses: maxUses,
+      },
+    });
+  } catch (e) {
+    console.error('/invitations/create/', e);
+    return null;
+  }
+};

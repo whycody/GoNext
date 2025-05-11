@@ -1,19 +1,22 @@
 import { FlatList, StyleSheet, View } from "react-native";
 import GroupsHeader from "../components/GroupsHeader"; 
 import GroupsView from "../components/GroupsView"; 
-import { useGroupStats } from "../hooks/useGroupStats"; // Zmieniono na useGroupStats
+import { useGroupStats } from "../hooks/useGroupStats"; 
 import { useTheme } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
+import InviteUserBottomSheet from "../sheets/InviteUserBottomSheet";
 import { useState, useRef } from "react";
 
 const GroupsScreen = () => {
-  const groups = useGroupStats(); // Użycie useGroupStats
+  const groups = useGroupStats(); 
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [selectedGroupName, setSelectedGroupName] = useState<string | null>(null); 
 
   const handleGroupBottomSheetRef = useRef<BottomSheetModal>(null);
+  const inviteUserBottomSheetRef = useRef<BottomSheetModal>(null);
 
   const handleGroupAdd = (name: string, icon: string, color: string, members: string[]) => {
     console.log("New group added:", { name, icon, color, members });
@@ -23,9 +26,15 @@ const GroupsScreen = () => {
     console.log("Group edited:", { id, name, icon, color, members });
   };
 
+  const handleSendInvitation = (email: string) => {
+    console.log(`Invitation sent to ${email} for group ID: ${selectedGroupId}`);
+  };
+
   const handleGroupLongPress = (id: number) => {
+    const group = groups.find((g) => g.id === id); 
     setSelectedGroupId(id); 
-    handleGroupBottomSheetRef.current?.present(); // Open the bottom sheet
+    setSelectedGroupName(group?.name || null);
+    inviteUserBottomSheetRef.current?.present(); 
   };
 
   const handleFABPress = () => {
@@ -44,8 +53,8 @@ const GroupsScreen = () => {
           <GroupsView
             index={index}
             group={item}
-            taskCount={item.taskCount} // Przekazanie liczby zadań
-            memberCount={item.memberCount} // Przekazanie liczby członków
+            taskCount={item.taskCount} 
+            memberCount={item.memberCount} 
             onGroupPress={() => console.log("Group pressed:", item.id)}
             onLongPress={() => handleGroupLongPress(item.id)} 
           />
@@ -63,6 +72,12 @@ const GroupsScreen = () => {
         groupId={selectedGroupId} 
         onGroupAdd={handleGroupAdd} 
         onGroupEdit={handleGroupEdit} 
+      />
+      <InviteUserBottomSheet
+        ref={inviteUserBottomSheetRef} 
+        onSendInvitation={handleSendInvitation} 
+        groupName={selectedGroupName}
+        groupId={selectedGroupId}
       />
     </View>
   );

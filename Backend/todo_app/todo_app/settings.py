@@ -203,7 +203,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-FRONTEND_URL = 'http://localhost:8000'
+FRONTEND_URL = 'https://gonext-a7hthre4g0avd7fr.polandcentral-01.azurewebsites.net'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

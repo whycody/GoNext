@@ -22,9 +22,13 @@ class InvitationCreateSerializer(serializers.Serializer):
     group_id = serializers.IntegerField(required=True)
     expiration_days = serializers.IntegerField(required=False, default=7)
     max_uses = serializers.IntegerField(required=False, default=1)
-    email = serializers.EmailField(required=True)
-
-
+    email = serializers.EmailField(
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        help_text="Opcjonalnie: adres e-mail osoby zapraszanej. Jeśli nie podano, link zostanie zwrócony w odpowiedzi i można go przesłać samodzielnie."
+    )
+    
 class UserSerializer(serializers.ModelSerializer):
     # Dodajemy walidatory unikalności dla username i email
     username = serializers.CharField(
@@ -50,19 +54,61 @@ class UserSerializer(serializers.ModelSerializer):
         )
         return user
 
+# Serializator dla członka grupy z przypisaną rolą
+class GroupMemberSerializer(serializers.ModelSerializer): 
+    role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User 
+        fields = ['id', 'username', 'role'] 
+
+    def get_role(self, obj):
+        """
+        Określa rolę użytkownika w kontekście grupy.
+        'obj' to instancja User.
+        Kontekst 'group' jest przekazywany z GroupSerializer.
+        """
+        group = self.context.get('group')
+        if group and group.admins.filter(pk=obj.pk).exists(): 
+            return 'admin'
+        return 'user'
+
 
 class GroupSerializer(serializers.ModelSerializer):
+    members = serializers.SerializerMethodField() 
+
     class Meta:
         model = Group
-        fields = ['id', 'name']  # members nie są wymagani przy tworzeniu grupy
+        fields = ['id', 'name', 'members'] 
+
+    def get_members(self, obj): 
+        """
+        Pobiera wszystkich członków grupy i serializuje ich za pomocą GroupMemberSerializer.
+        'obj' to instancja Group.
+        """
+        queryset = obj.members.all() 
+        
+        serializer_context = {'group': obj, 'request': self.context.get('request')}
+        # Używamy zaktualizowanej nazwy GroupMemberSerializer
+        return GroupMemberSerializer(queryset, many=True, context=serializer_context).data
 
     def create(self, validated_data):
         request = self.context.get('request')
-        if request and request.user:
-            group = Group.objects.create(name=validated_data['name'], admin=request.user)
-            group.members.add(request.user)
-            return group
-        raise serializers.ValidationError("Cannot create group without an authenticated user.")
+        
+        if not request or not hasattr(request, 'user') or not request.user.is_authenticated:
+            raise serializers.ValidationError(
+                "Nie można utworzyć grupy: Wymagany jest kontekst uwierzytelnionego użytkownika."
+            )
+        
+        current_user = request.user
+        
+        group = Group.objects.create(name=validated_data['name'])
+        
+        group.admins.add(current_user)
+        group.members.add(current_user)
+        
+        return group
+
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
