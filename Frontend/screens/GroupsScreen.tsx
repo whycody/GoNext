@@ -2,7 +2,7 @@ import { FlatList, StyleSheet, View } from "react-native";
 import GroupsHeader from "../components/GroupsHeader"; 
 import GroupsView from "../components/GroupsView"; 
 import { useGroupStats } from "../hooks/useGroupStats"; 
-import { useTheme } from "@react-navigation/native";
+import { useNavigation, useTheme } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
 import InviteUserBottomSheet from "../sheets/InviteUserBottomSheet";
@@ -14,6 +14,7 @@ const GroupsScreen = () => {
   const groups = useGroupStats(refreshGroups);
   const { colors } = useTheme();
   const styles = getStyles(colors);
+  const navigation = useNavigation();
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [selectedGroupName, setSelectedGroupName] = useState<string | null>(null); 
 
@@ -60,7 +61,7 @@ const GroupsScreen = () => {
             group={item}
             taskCount={item.taskCount} 
             memberCount={item.memberCount} 
-            onGroupPress={() => console.log("Group pressed:", item.id)}
+            onGroupPress={() => navigation.navigate("GroupDetails", { groupId: item.id })}
             onLongPress={() => handleGroupLongPress(item.id)} 
           />
         )}
