@@ -20,6 +20,7 @@ const InviteUserBottomSheet = forwardRef<BottomSheetModal, InviteUserBottomSheet
     const styles = getStyles(colors);
 
     const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleSendInvitation = async () => { 
         if (!email) {
@@ -33,6 +34,7 @@ const InviteUserBottomSheet = forwardRef<BottomSheetModal, InviteUserBottomSheet
         }
   
         try {
+          setLoading(true);
           const response = await createGroupInvitation(groupId, email); 
           console.log("Backend response:", response); 
           if (response) {
@@ -46,6 +48,8 @@ const InviteUserBottomSheet = forwardRef<BottomSheetModal, InviteUserBottomSheet
         } catch (error) {
           console.error("Error sending invitation:", error);
           Alert.alert("Error", "An error occurred while sending the invitation.");
+        } finally {
+          setLoading(false);
         }
       };
 
@@ -83,13 +87,14 @@ const InviteUserBottomSheet = forwardRef<BottomSheetModal, InviteUserBottomSheet
 
           <Pressable
             onPress={handleSendInvitation}
-            style={{
+            style={[{
               backgroundColor: colors.primary,
               paddingVertical: 12,
               borderRadius: 8,
               alignItems: "center",
               marginBottom: 25,
-            }}
+            }, loading && { opacity: 0.6 }]}
+            disabled={loading}
           >
             <Text style={{ color: "white", fontWeight: "bold" }}>Send Invitation Link</Text>
           </Pressable>
