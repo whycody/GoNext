@@ -1,6 +1,5 @@
 import { apiCall } from "../utils/ApiHandler";
-import { Task, TaskItem, TaskModel } from "../types/Task";
-import TaskView from "../components/TaskView";
+import { Task, TaskModel } from "../types/Task";
 import { GroupModel } from "../types/Group";
 
 // Authentication
@@ -92,7 +91,6 @@ export const updateUserTodo = async (task: Task) => {
         title: task.title,
         description: task.description,
         priority: task.priority,
-        is_completed: task.isCompleted
       },
     });
   } catch (e) {
@@ -103,6 +101,7 @@ export const updateUserTodo = async (task: Task) => {
 
 export const addUserTodo = async (task: Task) => {
   try {
+    console.log('Dodaje nowego taska!')
     return await apiCall({
       method: 'POST',
       url: `/todos/`,
@@ -156,3 +155,18 @@ export const createGroupInvitation = async (
     return null;
   }
 };
+
+export const toggleTodoCompleted = async (id: number, currentValue: boolean) => {
+  try {
+    return await apiCall({
+      method: 'PATCH',
+      url: `/todos/${id}/`,
+      data: {
+        is_completed: !currentValue
+      },
+    });
+  } catch (e) {
+    console.error(`PATCH /todos/${id}/, e`);
+    return null;
+  }
+}

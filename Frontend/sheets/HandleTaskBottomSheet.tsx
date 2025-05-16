@@ -71,8 +71,9 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
       if (!title) return;
 
       onTaskHandle({
-        title: title,
-        description: description,
+        id: taskId,
+        title: titleInputRef.current?.getWord(),
+        description: descriptionInputRef.current?.getWord(),
         priority: reversePriorityMap[priority],
         isCompleted: false,
         groupId: 1

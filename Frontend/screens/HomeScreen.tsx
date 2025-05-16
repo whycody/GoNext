@@ -1,118 +1,63 @@
-import { ScrollView, View, StyleSheet, Text, FlatList, ActivityIndicator, RefreshControl } from "react-native";
+import { ScrollView, View, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import HomeHeader from "../components/HomeHeader";
 import CategoryItem from "../components/CategoryItem";
 import { useEffect, useRef, useState } from "react";
 import { MARGIN_HORIZONTAL, MARGIN_VERTICAL } from "../src/constants";
 import { Task, TaskItem } from "../types/Task";
-import TaskView from "../components/TaskView";
 import { useTheme } from "@react-navigation/native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FAB } from "react-native-paper";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { addUserTodo, updateUserTodo } from "../hooks/useApi";
+import { addUserTodo } from "../hooks/useApi";
 import { useTaskItems } from "../hooks/useTaskItems";
-import { useTasks } from "../hooks/useTasks";
+import TaskItemsList from "../components/TaskItemsList";
 
-enum Categories {
+export enum Categories {
   PRIORITY = 'Priority',
   GROUP = 'Group',
 }
 
 const HomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState(Categories.GROUP);
-  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+
+  const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const handleTaskBottomSheetRef = useRef<BottomSheetModal>(null);
   const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
-  const { tasks, loadTasks } = useTasks();
-  const globalTaskItems = useTaskItems();
-
-  useEffect(() => {
-    setTaskItems(globalTaskItems);
-  }, [tasks]);
-
-  const handleTaskPress = async (id: number, currentValue: boolean) => {
-    // await toggle(id, currentValue);
-    const newTask = { ...taskItems.find(task => task.id === id) } as TaskItem;
-    newTask.isCompleted = !newTask.isCompleted;
-    setTaskItems(taskItems.map(task => task.id === id ? newTask : task));
-  }
-
-  const renderTaskItem = ({ index, item }: { index: number, item: TaskItem }) => (
-    <TaskView
-      index={index}
-      taskItem={item}
-      onTaskPress={handleTaskPress}
-      onLongPress={(id) => {
-        setSelectedTaskId(id);
-        handleTaskBottomSheetRef.current?.present();
-      }}
-    />
-  );
-
-  const groupedTaskItems = () => {
-    const grouped = taskItems.reduce((acc, task) => {
-      const primaryKey = selectedCategory === Categories.PRIORITY ? task.priority : task.groupName;
-      const secondaryKey = selectedCategory === Categories.PRIORITY ? task.groupName : task.priority;
-
-      if (!acc[primaryKey]) {
-        acc[primaryKey] = {};
-      }
-      if (!acc[primaryKey][secondaryKey]) {
-        acc[primaryKey][secondaryKey] = [];
-      }
-      acc[primaryKey][secondaryKey].push(task);
-      return acc;
-    }, {} as Record<string, Record<string, TaskItem[]>>);
-
-    return Object.keys(grouped)
-      .sort((a, b) => b.localeCompare(a))
-      .map(primaryKey => ({
-        title: primaryKey,
-        data: Object.keys(grouped[primaryKey]).map(secondaryKey => ({
-          title: secondaryKey,
-          data: grouped[primaryKey][secondaryKey].sort((a, b) => a.isCompleted ? 1 : -1),
-        })).sort((a, b) => b.title.localeCompare(a.title)),
-      }));
-  };
+  const { globalTaskItems, loadTasks } = useTaskItems();
 
   const handleFABPress = () => {
-    setSelectedTaskId(null);
     handleTaskBottomSheetRef.current?.present();
   }
 
+  useEffect(() => {
+    if (!globalTaskItems || globalTaskItems.length == 0) return;
+    setTaskItems(globalTaskItems);
+    setLoading(false);
+  }, [globalTaskItems]);
+
   const handleRefresh = async () => {
     setRefreshing(true);
+    setLoading(true);
     await loadTasks();
     setRefreshing(false);
-  }
+    setLoading(false);
+  };
 
   const handleTask = async (task: Task) => {
     setLoading(true);
-    selectedTaskId ? await updateUserTodo(task) : await addUserTodo(task);
+    await addUserTodo(task);
+    await loadTasks();
     setLoading(false);
-  }
-
-  const translatePriority = (priority: number) => {
-    switch (priority) {
-      case 3:
-        return 'Critical';
-      case 2:
-        return 'Moderate';
-      default:
-        return 'Minor';
-    }
   }
 
   return (
     <>
       <HandleTaskBottomSheet
         ref={handleTaskBottomSheetRef}
-        taskId={selectedTaskId}
+        taskId={null}
         onTaskHandle={handleTask}
       />
       <ScrollView
@@ -145,45 +90,11 @@ const HomeScreen = () => {
             style={{ marginVertical: MARGIN_VERTICAL }}
           />
         }
-        <FlatList
-          scrollEnabled={false}
-          data={groupedTaskItems()}
-          ListFooterComponent={<View style={{ height: 150 }}/>}
-          renderItem={({ item }) => (
-            <View>
-              <View style={styles.sectionHeaderContainer}>
-                <MaterialCommunityIcons
-                  name={selectedCategory == Categories.PRIORITY ? 'flag' : 'account-group'}
-                  size={22}
-                  color={colors.primary}
-                  style={{ marginRight: 10 }}
-                />
-                <Text style={styles.sectionHeader}>
-                  {selectedCategory == Categories.PRIORITY ? translatePriority(Number(item.title)) : item.title}
-                </Text>
-              </View>
-              {item.data.map(subItem => (
-                <View key={subItem.title}>
-                  <View style={styles.subsectionHeaderContainer}>
-                    <MaterialCommunityIcons
-                      name={selectedCategory == Categories.PRIORITY ? 'account-group' : 'flag'}
-                      size={18}
-                      color={colors.text}
-                      style={{ marginRight: 10 }}
-                    />
-                    <Text style={styles.subsectionHeader}>
-                      {selectedCategory == Categories.GROUP ? translatePriority(Number(subItem.title)) : subItem.title}
-                    </Text>
-                  </View>
-                  <FlatList
-                    data={subItem.data}
-                    renderItem={renderTaskItem}
-                    scrollEnabled={false}
-                  />
-                </View>
-              ))}
-            </View>
-          )}
+        <TaskItemsList
+          taskItems={taskItems}
+          setTaskItems={setTaskItems}
+          onDataChange={loadTasks}
+          selectedCategory={selectedCategory}
         />
       </ScrollView>
       <FAB
@@ -203,26 +114,6 @@ const getStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: MARGIN_HORIZONTAL,
     paddingVertical: 15
   },
-  sectionHeaderContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: MARGIN_HORIZONTAL,
-    paddingVertical: MARGIN_VERTICAL / 1.5
-  },
-  sectionHeader: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    color: colors.primary,
-  },
-  subsectionHeaderContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: MARGIN_HORIZONTAL,
-    paddingVertical: MARGIN_VERTICAL / 2,
-    backgroundColor: colors.card,
-  },
-  subsectionHeader: {
-    fontWeight: 'bold',
-    fontSize: 15,
-  }
 });
 
 export default HomeScreen;
