@@ -5,7 +5,6 @@ export type Task = {
   priority: 1 | 2 | 3;
   date: Date;
   groupId: number;
-  category: string;
   isCompleted: boolean;
 }
 
@@ -21,7 +20,6 @@ export type TaskItem = {
 export type TaskModel = {
   id: number;
   title: string;
-  category: string;
   created_at: string;
   description: string;
   due_date: string;

@@ -7,7 +7,7 @@ import BouncyCheckbox from "react-native-bouncy-checkbox";
 type TaskItemProps = {
   index: number,
   taskItem: TaskItem,
-  onTaskPress: (id: number) => void,
+  onTaskPress: (id: number, currentValue: boolean) => void,
   onLongPress?: (id: number) => void; 
 }
 
@@ -19,7 +19,7 @@ const TaskView = ({ index, taskItem, onTaskPress, onLongPress }: TaskItemProps) 
   return (
     <>
       {index > 0 && <View style={{ height: 1 }}/>}
-      <Pressable style={styles.root} onPress={() => onTaskPress(id)} onLongPress={() => onLongPress?.(id)}>
+      <Pressable style={styles.root} onPress={() => onTaskPress(id, taskItem.isCompleted)} onLongPress={() => onLongPress?.(id)}>
         <View
           style={{
             height: 10,

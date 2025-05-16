@@ -1,16 +1,18 @@
 import { ScrollView, View, StyleSheet, Text, FlatList, ActivityIndicator, RefreshControl } from "react-native";
 import HomeHeader from "../components/HomeHeader";
 import CategoryItem from "../components/CategoryItem";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { MARGIN_HORIZONTAL, MARGIN_VERTICAL } from "../src/constants";
-import { Task, TaskItem, TaskModel } from "../types/Task";
+import { Task, TaskItem } from "../types/Task";
 import TaskView from "../components/TaskView";
 import { useTheme } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FAB } from "react-native-paper";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { addUserTodo, getUserTodos, updateUserTodo } from "../hooks/useApi";
+import { addUserTodo, updateUserTodo } from "../hooks/useApi";
+import { useTaskItems } from "../hooks/useTaskItems";
+import { useTasks } from "../hooks/useTasks";
 
 enum Categories {
   PRIORITY = 'Priority',
@@ -22,40 +24,22 @@ const HomeScreen = () => {
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const handleTaskBottomSheetRef = useRef<BottomSheetModal>(null);
+  const taskItems = useTaskItems();
+  const { loadTasks } = useTasks();
 
-  const loadUserTodos = async () => {
-    setLoading(true);
-    const todos: TaskModel[] = await getUserTodos();
-    setTaskItems(todos.map((todo: TaskModel) => {
-      return {
-        id: todo.id,
-        title: todo.title,
-        description: todo.description,
-        priority: todo.priority,
-        groupName: todo.group,
-        isCompleted: todo.is_completed,
-      } as TaskItem;
-    }));
-    setLoading(false);
+  const handleTaskPress = async (id: number, currentValue: boolean) => {
+    // toggle(id, currentValue)
+    await loadTasks();
   }
-
-  useEffect(() => {
-    loadUserTodos();
-  }, []);
 
   const renderTaskItem = ({ index, item }: { index: number, item: TaskItem }) => (
     <TaskView
       index={index}
       taskItem={item}
-      onTaskPress={(id) => {
-        const newTask = { ...taskItems.find(task => task.id === id) } as TaskItem;
-        newTask.isCompleted = !newTask.isCompleted;
-        setTaskItems(taskItems.map(task => task.id === id ? newTask : task));
-      }}
+      onTaskPress={handleTaskPress}
       onLongPress={(id) => {
         setSelectedTaskId(id);
         handleTaskBottomSheetRef.current?.present();
@@ -96,7 +80,7 @@ const HomeScreen = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadUserTodos();
+    await loadTasks();
     setRefreshing(false);
   }
 
