@@ -3,9 +3,9 @@ import { useTasks } from "./useTasks";
 
 export const useGroupStats = () => {
   const groups = useGroups();
-  const tasks = useTasks();
+  const tasks = useTasks().tasks;
 
-  const groupStats = groups.map((group) => {
+  return groups.map((group) => {
     const taskCount = tasks.filter((task) => task.groupId === group.id).length;
     const memberCount = group.membersIds.length;
 
@@ -15,6 +15,4 @@ export const useGroupStats = () => {
       memberCount,
     };
   });
-
-  return groupStats;
 };
