@@ -1,7 +1,7 @@
 import { ScrollView, View, StyleSheet, Text, FlatList, ActivityIndicator, RefreshControl } from "react-native";
 import HomeHeader from "../components/HomeHeader";
 import CategoryItem from "../components/CategoryItem";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MARGIN_HORIZONTAL, MARGIN_VERTICAL } from "../src/constants";
 import { Task, TaskItem } from "../types/Task";
 import TaskView from "../components/TaskView";
@@ -27,12 +27,19 @@ const HomeScreen = () => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const handleTaskBottomSheetRef = useRef<BottomSheetModal>(null);
-  const taskItems = useTaskItems();
-  const { loadTasks } = useTasks();
+  const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
+  const { tasks, loadTasks } = useTasks();
+  const globalTaskItems = useTaskItems();
+
+  useEffect(() => {
+    setTaskItems(globalTaskItems);
+  }, [tasks]);
 
   const handleTaskPress = async (id: number, currentValue: boolean) => {
-    // toggle(id, currentValue)
-    await loadTasks();
+    // await toggle(id, currentValue);
+    const newTask = { ...taskItems.find(task => task.id === id) } as TaskItem;
+    newTask.isCompleted = !newTask.isCompleted;
+    setTaskItems(taskItems.map(task => task.id === id ? newTask : task));
   }
 
   const renderTaskItem = ({ index, item }: { index: number, item: TaskItem }) => (
