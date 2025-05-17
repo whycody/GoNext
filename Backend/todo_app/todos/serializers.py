@@ -6,10 +6,24 @@ from .models import ToDo, Group
 User = get_user_model()  # Pobieramy nasz niestandardowy model użytkownika
 
 class ToDoSerializer(serializers.ModelSerializer):
+    group_id = serializers.PrimaryKeyRelatedField(
+        source='group',  # Nazwa pola ForeignKey w modelu ToDo
+        queryset=Group.objects.all(), # Queryset dla modelu Group
+        allow_null=True,  # Pozwala na brak grupy
+        required=False    # Pole nie jest wymagane przy wysyłaniu danych
+    )
     class Meta:
         model = ToDo
-        fields = '__all__'
-        read_only_fields = ['user', 'created_at']
+        fields = [
+            'id',
+            'title',
+            'description',
+            'priority',
+            'is_completed',
+            'group_id',                
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_at']
 
 
 class LoginSerializer(serializers.Serializer):
