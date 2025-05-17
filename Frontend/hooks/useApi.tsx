@@ -156,6 +156,31 @@ export const createGroupInvitation = async (
   }
 };
 
+export const createGroup = async (
+  name: string,
+  icon?: string,
+  color?: string
+): Promise<GroupModel | null> => {
+  try {
+    const data: { name: string; icon?: string; color?: string } = { name };
+    if (icon !== undefined) {
+      data.icon = icon;
+    }
+    if (color !== undefined) {
+      data.color = color;
+    }
+
+    return await apiCall({
+      method: 'POST',
+      url: '/groups/create/',
+      data: data,
+    });
+  } catch (e) {
+    console.error('POST /groups/create/', e);
+    return null;
+  }
+}
+
 export const toggleTodoCompleted = async (id: number, currentValue: boolean) => {
   try {
     return await apiCall({

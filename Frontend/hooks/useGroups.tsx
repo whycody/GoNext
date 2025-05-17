@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Group, GroupModel } from "../types/Group";
 import { getUserGroups } from "./useApi";
 
-export const useGroups = () => {
+export const useGroups = (refresh?: number) => {
   const [groups, setGroups] = useState<Group[]>([]);
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export const useGroups = () => {
     }
 
     loadGroups();
-  }, []);
+  }, [refresh]); 
 
   return groups;
 };

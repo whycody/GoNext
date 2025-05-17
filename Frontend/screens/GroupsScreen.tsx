@@ -7,9 +7,11 @@ import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
 import InviteUserBottomSheet from "../sheets/InviteUserBottomSheet";
 import { useState, useRef } from "react";
+import { createGroup } from "../hooks/useApi"; 
 
 const GroupsScreen = () => {
-  const groups = useGroupStats(); 
+  const [refreshGroups, setRefreshGroups] = useState(0);
+  const groups = useGroupStats(refreshGroups);
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
@@ -18,8 +20,11 @@ const GroupsScreen = () => {
   const handleGroupBottomSheetRef = useRef<BottomSheetModal>(null);
   const inviteUserBottomSheetRef = useRef<BottomSheetModal>(null);
 
-  const handleGroupAdd = (name: string, icon: string, color: string, members: string[]) => {
-    console.log("New group added:", { name, icon, color, members });
+  const handleGroupAdd = async (name: string, icon: string, color: string, members: string[]) => {
+    const result = await createGroup(name, icon, color);
+    if (result) {
+      setRefreshGroups(r => r + 1); 
+    }
   };
 
   const handleGroupEdit = (id: number, name: string, icon: string, color: string, members: string[]) => {

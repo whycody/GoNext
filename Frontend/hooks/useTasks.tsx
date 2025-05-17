@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Task, TaskModel } from "../types/Task";
 import { getUserTodos } from "./useApi";
 
-export const useTasks = () => {
+export const useTasks = (refresh?: number) => {
   const [tasks, setTasks] = useState<Task[]>([]);
 
   const loadTasks = useCallback(async () => {
@@ -25,7 +25,7 @@ export const useTasks = () => {
 
   useEffect(() => {
     loadTasks();
-  }, [loadTasks]);
+  }, [loadTasks, refresh]);
 
   return { tasks, loadTasks };
 };
