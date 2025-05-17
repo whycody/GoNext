@@ -1,26 +1,50 @@
-import { FlatList, View, Button, StyleSheet } from "react-native";
-import { useContext } from "react";
+import { FlatList, View, StyleSheet, Alert } from "react-native"; 
+import React, { useContext, useRef } from "react"; 
 import { AuthContext } from "../utils/AuthProvider";
 import { useTheme } from "@react-navigation/native";
 import SettingsHeader from "../components/SettingsHeader";
 import SettingsButton from "../components/SettingsButton";
-import { useSettingsButtons } from "../hooks/useSettingsButtons";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import ResetPasswordBottomSheet from "../sheets/ResetPasswordBottomSheet"; 
 
 const SettingsScreen = () => {
   const authContext = useContext(AuthContext);
   const { colors } = useTheme();
   const styles = getStyles(colors);
+
+  const resetPasswordSheetRef = useRef<BottomSheetModal>(null);
+
   const settingsItems = [
-    { id: 1, name: "Change password", description: "Change your current password", color: "#ff5733", icon: "🔐"},
+    { id: 1, name: "Change password", description: "Change your current password", color: "#ff5733", icon: "🔐" },
     { id: 2, name: "Log out", description: "Bye-bye!", color: "#33ff57", icon: "👋🏻" },
-    ];
+  ];
+
   const logout = async () => {
     await authContext?.logout();
   };
 
+  const handleOpenResetPasswordSheet = () => {
+    resetPasswordSheetRef.current?.present();
+  };
+
+  const handlePasswordReset = async (newPassword: string) => {
+    console.log("Nowe hasło do ustawienia:", newPassword);
+    // here api integration 
+  };
+
+  const handleSettingsItemPress = (itemId: number) => {
+    if (itemId === 1) {
+      handleOpenResetPasswordSheet();
+    } else if (itemId === 2) {
+      logout();
+    } else {
+      console.log("Button pressed:", itemId);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <SettingsHeader style={{ paddingHorizontal: 20, paddingTop: 30, paddingBottom: 30 }}/>
+      <SettingsHeader style={{ paddingHorizontal: 20, paddingTop: 30, paddingBottom: 30 }} />
       <FlatList
         style={{ marginTop: 2 }}
         data={settingsItems}
@@ -32,11 +56,16 @@ const SettingsScreen = () => {
             description={item.description}
             color={item.color}
             icon={item.icon}
-            onButtonPress={() => item.id === 2 ? logout() : console.log("Button pressed:", item.id)}
+            onButtonPress={() => handleSettingsItemPress(item.id)}
           />
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-       />
+      />
+
+      <ResetPasswordBottomSheet
+        ref={resetPasswordSheetRef}
+        onPasswordReset={handlePasswordReset}
+      />
     </View>
   );
 };
@@ -48,10 +77,11 @@ const getStyles = (colors: any) =>
       backgroundColor: colors.background,
     },
     separator: {
-      height: 1, 
-      backgroundColor: colors.background,
+      height: 1,
+      backgroundColor: colors.background, 
+                                        
     },
-    fab: {
+    fab: { 
       position: "absolute",
       right: 20,
       bottom: 20,

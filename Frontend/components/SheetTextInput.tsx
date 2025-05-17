@@ -1,26 +1,44 @@
-import React, { FC, useEffect, useState, forwardRef, useImperativeHandle, useRef, useCallback } from "react";
+import React, { FC, useEffect, useState, forwardRef, useImperativeHandle, useRef } from "react"; 
 import { useTheme } from "@react-navigation/native";
-import { View, StyleSheet, Platform, TextInput, FlatList, Pressable } from "react-native";
-import { MARGIN_HORIZONTAL } from "../src/constants";
+import { View, StyleSheet, Platform, TextInput, FlatList, Pressable, Text } from "react-native"; 
+import { MARGIN_HORIZONTAL } from "../src/constants"; 
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 
 type SheetTextProps = {
-  value: string; 
-  onChangeText: (text: string) => void; 
-  onTextRefresh: (text: string) => void;
+  value: string;
+  onChangeText: (text: string) => void;
+  onTextRefresh?: (text: string) => void; 
   placeholder?: string;
   suggestions?: string[];
   style?: any;
+  secureTextEntry?: boolean; 
+  onSubmitEditing?: () => void;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters'; 
 };
 
-const SheetText: FC<SheetTextProps> = forwardRef(({ value, onChangeText, onTextRefresh, placeholder,  suggestions, style }, ref) => {
+export interface SheetTextRef {
+  focus: () => void;
+  clearWord: () => void;
+  getWord: () => string;
+}
+
+const SheetText = forwardRef<SheetTextRef, SheetTextProps>(({
+  value,
+  onChangeText,
+  placeholder,
+  suggestions,
+  style,
+  secureTextEntry, 
+  onSubmitEditing, 
+  autoCapitalize = 'none', 
+}, ref) => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const [focused, setFocused] = useState(false);
 
   const [internalWord, setInternalWord] = useState(value);
   const [currentSuggestions, setCurrentSuggestions] = useState<string[]>([]);
-  const inputRef = useRef<any>(null);
+  const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     setInternalWord(value);
@@ -28,17 +46,24 @@ const SheetText: FC<SheetTextProps> = forwardRef(({ value, onChangeText, onTextR
 
   useImperativeHandle(ref, () => ({
     focus: () => inputRef.current?.focus(),
-    clearWord: () => setInternalWord(''),
+    clearWord: () => {
+        setInternalWord('');
+        onChangeText('');
+    },
     getWord: () => internalWord,
   }));
 
   useEffect(() => {
-    const filteredSuggestions = suggestions ? suggestions.filter((suggestion) =>
-      suggestion.toLowerCase().startsWith(internalWord.toLowerCase()) && suggestion.toLowerCase() !== internalWord.toLowerCase()
-    ).slice(0, 2) : [];
+    if (focused && suggestions && internalWord.length > 0) { 
+        const filteredSuggestions = suggestions.filter((suggestion) =>
+        suggestion.toLowerCase().startsWith(internalWord.toLowerCase()) && suggestion.toLowerCase() !== internalWord.toLowerCase()
+      ).slice(0, 3); 
 
-    setCurrentSuggestions(filteredSuggestions);
-  }, [internalWord, suggestions]);
+      setCurrentSuggestions(filteredSuggestions);
+    } else {
+      setCurrentSuggestions([]); 
+    }
+  }, [internalWord, suggestions, focused]);
 
 
   const handleTextChange = (newWord: string) => {
@@ -46,54 +71,51 @@ const SheetText: FC<SheetTextProps> = forwardRef(({ value, onChangeText, onTextR
   };
 
   const handleBlur = () => {
-    onChangeText(internalWord);
+    onChangeText(internalWord); 
     setFocused(false);
   };
 
+  const handleFocus = () => {
+    setFocused(true);
+  }
+
   const handleSuggestionPress = (suggestion: string) => {
     setInternalWord(suggestion);
+    onChangeText(suggestion); 
     setCurrentSuggestions([]);
-    onChangeText(suggestion);
+    inputRef.current?.blur(); 
   };
+
+  const InputComponent = Platform.OS === 'ios' ? BottomSheetTextInput : TextInput;
 
   return (
     <View>
       <View style={[styles.inputContainer, style]}>
-        {Platform.OS == 'ios' ?
-          <BottomSheetTextInput
-            ref={inputRef}
-            style={styles.input}
-            cursorColor={colors.primary}
-            autoCapitalize={'none'}
-            autoCorrect={true}
-            placeholder={placeholder}
-            value={internalWord}
-            onChangeText={handleTextChange}
-            onBlur={handleBlur}
-          /> :
-          <TextInput
-            ref={inputRef}
-            style={styles.input}
-            cursorColor={colors.primary}
-            autoCorrect={true}
-            autoCapitalize={'none'}
-            textContentType={'none'}
-            placeholder={placeholder}
-            value={internalWord}
-            onFocus={setFocused}
-            onChangeText={handleTextChange}
-            onBlur={handleBlur}
-          />
-        }
+        <InputComponent
+          ref={inputRef}
+          style={styles.input}
+          placeholderTextColor={colors.placeholder} 
+          cursorColor={colors.primary}
+          autoCapitalize={autoCapitalize} 
+          autoCorrect={!secureTextEntry} 
+          placeholder={placeholder}
+          value={internalWord}
+          onChangeText={handleTextChange}
+          onBlur={handleBlur}
+          onFocus={handleFocus} 
+          secureTextEntry={secureTextEntry} 
+          onSubmitEditing={onSubmitEditing} 
+        />
       </View>
-      {currentSuggestions.length > 0 && focused && (
+      {currentSuggestions.length > 0 && ( 
         <FlatList
           data={currentSuggestions}
           keyboardShouldPersistTaps={'always'}
-          keyExtractor={(index) => index.toString()}
+          keyExtractor={(item, index) => `${item}-${index}`} 
           renderItem={({ item }) => (
             <Pressable onPress={() => handleSuggestionPress(item)}>
               <View style={styles.suggestionItem}>
+                <Text style={styles.suggestionText}>{item}</Text> 
               </View>
             </Pressable>
           )}
@@ -108,29 +130,38 @@ const getStyles = (colors: any) => StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: colors.inputBackground || colors.background,
+    borderRadius: 10, 
   },
   input: {
     flex: 1,
-    fontFamily: `Montserrat-Regular`,
-    color: colors.primary300,
-    paddingLeft: MARGIN_HORIZONTAL,
+    fontFamily: `Montserrat-Regular`, 
+    color: colors.text || colors.primary300, 
+    paddingHorizontal: MARGIN_HORIZONTAL,
     fontSize: 16,
-    height: 42,
+    height: 48, 
   },
   suggestionsList: {
-    marginTop: 10,
-    borderColor: colors.border,
+    backgroundColor: colors.card, 
+    borderRadius: 5,
+    marginTop: Platform.OS === 'ios' ? 0 : -10, 
+    marginHorizontal: 5,
+    maxHeight: 150, 
+    elevation: 3, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   suggestionItem: {
-    marginTop: 5,
-    backgroundColor: colors.background,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: 12,
+    paddingHorizontal: MARGIN_HORIZONTAL,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   suggestionText: {
-    fontSize: 14,
-    color: colors.primary300,
+    fontSize: 15,
+    color: colors.text,
   },
 });
 
