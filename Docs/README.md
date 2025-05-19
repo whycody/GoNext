@@ -3,11 +3,11 @@
 
 ![Stars](https://img.shields.io/github/stars/gonext?style=flat-square)
 ![Version](https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square)
-![JavaScript](https://img.shields.io/badge/TypeScript-51.7%25-orange?style=flat-square)
+![JavaScript](https://img.shields.io/badge/JavaScript-51.7%25-orange?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-15.6%25-orange?style=flat-square)
-![CSS](https://img.shields.io/badge/Python-21.8%25-orange?style=flat-square)
+![CSS](https://img.shields.io/badge/CSS-21.8%25-orange?style=flat-square)
 ![Python](https://img.shields.io/badge/Python-10.4%25-orange?style=flat-square)
-![Others](https://img.shields.io/badge/Python-0.5%25-orange?style=flat-square)
+![Others](https://img.shields.io/badge/Others-0.5%25-orange?style=flat-square)
 ![Repo Size](https://img.shields.io/github/repo-size/whycody/gonext?style=flat-square)
 
 ![Created At](https://img.shields.io/badge/created%20at-march%202025-informational?style=flat-square)
