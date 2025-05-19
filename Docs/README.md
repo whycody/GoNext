@@ -3,8 +3,11 @@
 
 ![Stars](https://img.shields.io/github/stars/gonext?style=flat-square)
 ![Version](https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square)
-![TypeScript](https://img.shields.io/badge/TypeScript-45.5%25-blue?style=flat-square)
-![Python](https://img.shields.io/badge/Python-54.5%25-blue?style=flat-square)
+![JavaScript](https://img.shields.io/badge/TypeScript-51.7%25-orange?style=flat-square)
+![TypeScript](https://img.shields.io/badge/TypeScript-15.6%25-orange?style=flat-square)
+![CSS](https://img.shields.io/badge/Python-21.8%25-orange?style=flat-square)
+![Python](https://img.shields.io/badge/Python-10.4%25-orange?style=flat-square)
+![Others](https://img.shields.io/badge/Python-0.5%25-orange?style=flat-square)
 ![Repo Size](https://img.shields.io/github/repo-size/whycody/gonext?style=flat-square)
 
 ![Created At](https://img.shields.io/badge/created%20at-march%202025-informational?style=flat-square)
@@ -21,6 +24,7 @@
 - [Architecture and Design](#architecture-and-design)
     - [Domain model](#domain-model)
 - [Risk Plan](#risk-plan)
+- [Security Threats](#security-threats)
 - [Pre-Game](#pre-game)
 - [Release plan](#release-plan)
     - [Release 1](#release-1)
@@ -190,7 +194,40 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
     - Action: Use secure authentication practices.
     - Action: Perform security audits and penetration testing before release.
 
+## Security Threats
+### Threats list and our threat mitigation
+  - T1 - Hardcoded Secrets and Credentials
+    - Threat: If API keys, tokens, or passwords are hardcoded into the codebase, they can be exposed publicly, leading to unauthorized access.
+    - Mitigation: We ensured that all secrets are stored securely using environment variables.
+      
+  - T2 - Insecure Authentication
+    - Threat: Without proper authentication mechanisms, unauthorized users might gain access to restricted areas of the application.
+    - Mitigation: When creating an account, we force user to create a strong password, by checking whether it contains 8 characters(including 1 lowecase letter, 1 uppercase letter, 1 number and 1 special symbol). All the passwords are hashed via Django side with adding salt and stored securely. 
+   
+  - T3 - Lack of Input Validation
+    - Threat: Improper input validation can lead to vulnerabilities like SQL injection or cross-site scripting (XSS).
+    - Mitigation: We validate and sanitize all user inputs on both client and server sides.
 
+  - T4 - Use of Vulnerable Dependencies
+    - Threat: Outdated or vulnerable third-party packages can introduce security flaws.
+    - Mitigation: We regularly audit dependencies using 'npm audit'.
+
+  - T5 - Inadequate Logging and Monitoring
+    - Threat: Without proper logging, detecting and responding to security incidents becomes challenging.
+    - Mitigation: We implemented comprehensive logging for critical actions and monitor logs regularly.
+
+  - T6 - Cross-Origin Resource Sharing (CORS) Misconfigurations
+    - Threat: A poorly configured CORS policy can expose endpoints to unauthorized origins.
+    - Mitigation: We defined strict Access-Control-Allow-Origin policies.
+
+  - T7 - Rate Limiting and Brute-Force Protection
+    - Threat: Login endpoints or APIs could be targeted by bots trying to guess credentials.
+    - Mitigation: We implemented rate limiting.
+   
+  - T8 - Possible JWT token leak
+    - Threat: Insecurely stored or incorrectly verified tokens can be hijacked or forged.
+    - Mitigation: We hash tokens and add SALT for propper security
+   
 ## Pre-Game
 
 ### Sprint 0 Plan
