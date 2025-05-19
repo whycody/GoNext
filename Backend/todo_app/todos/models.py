@@ -22,12 +22,13 @@ class CustomUser(AbstractUser):
 class Group(models.Model):
     name = models.CharField(max_length=100, unique=True)
     members = models.ManyToManyField(get_user_model(), related_name='custom_groups')
+    icon = models.CharField(max_length=100, blank=True, default='')
+    color = models.CharField(max_length=50, blank=True, default='')
     admins = models.ManyToManyField( # Zamiana na ManyToManyField
         get_user_model(),
         related_name='administered_groups', # Nazwa relacji zwrotnej może pozostać
         blank=True # Pozwala grupie istnieć bez żadnych adminów (opcjonalne, ale często przydatne)
     )
-
 
     def __str__(self):
         return self.name
@@ -41,8 +42,6 @@ class ToDo(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     priority = models.IntegerField(default=2)
-    category = models.CharField(max_length=100, blank=True)
-    due_date = models.DateField(null=True, blank=True)
     is_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

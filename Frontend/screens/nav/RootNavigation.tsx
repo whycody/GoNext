@@ -7,6 +7,7 @@ import SettingsScreen from "../SettingsScreen";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import TaskViewScreen from "../TaskViewScreen";
 import { useTheme } from "@react-navigation/native";
+import GroupDetailsScreen from "../GroupDetailsScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -18,6 +19,7 @@ const RootNavigation = () => {
     <Stack.Navigator initialRouteName="RootNavigation" screenOptions={{ headerShown: false, navigationBarColor: colors.card }}>
       <Stack.Screen name="RootNavigation" component={TabNavigation} />
       <Stack.Screen name="TaskView" component={TaskViewScreen} />
+      <Stack.Screen name="GroupDetails" component={GroupDetailsScreen} />
     </Stack.Navigator>
   );
 }

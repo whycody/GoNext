@@ -1,14 +1,15 @@
-import { useState } from "react";
 import { useTasks } from "./useTasks";
 import { useGroups } from "./useGroups";
+import { useEffect, useState } from "react";
 import { TaskItem } from "../types/Task";
 
 export const useTaskItems = () => {
-  const tasks = useTasks();
   const groups = useGroups();
+  const { tasks, loadTasks } = useTasks();
+  const [globalTaskItems, setGlobalTaskItems] = useState<TaskItem[]>([]);
 
-  const [taskItems] = useState<TaskItem[]>(
-    tasks.map((task) => {
+  useEffect(() => {
+    const newTaskItems: TaskItem[] = tasks.map((task) => {
       const group = groups.find((g) => g.id === task.groupId);
       return {
         id: task.id,
@@ -18,8 +19,10 @@ export const useTaskItems = () => {
         groupName: group ? group.name : "Nieznana grupa",
         isCompleted: task.isCompleted,
       };
-    })
-  );
+    });
 
-  return taskItems;
+    setGlobalTaskItems(newTaskItems);
+  }, [tasks, groups]);
+
+  return { globalTaskItems, loadTasks };
 };

@@ -199,7 +199,6 @@ def get_filtered_todos(request, user=None):
 
     return queryset
 
-
 # Returning tasks assigned directly to the user (not belonging to any group)
 class ToDoByUserView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -207,8 +206,8 @@ class ToDoByUserView(APIView):
 
     def get(self, request):
         todos = get_filtered_todos(request)
-        todos_without_group = todos.filter(group=None)
-        return Response(ToDoSerializer(todos_without_group, many=True).data, status=status.HTTP_200_OK)
+        serializer = ToDoSerializer(todos, many=True) # Upewnij się, że masz poprawny import
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # Returning tasks assigned to the user, grouped by their respective groups
