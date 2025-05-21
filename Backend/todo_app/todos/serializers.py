@@ -83,7 +83,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
         Kontekst 'group' jest przekazywany z GroupSerializer.
         """
         group = self.context.get('group')
-        if group and group.admins.filter(pk=obj.pk).exists(): 
+        if group and group.admins.filter(id=obj.id).exists(): 
             return 'admin'
         return 'user'
 
@@ -93,7 +93,7 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'members'] 
+        fields = ['id', 'name','icon','color', 'members'] 
 
     def get_members(self, obj): 
         """
@@ -116,7 +116,7 @@ class GroupSerializer(serializers.ModelSerializer):
         
         current_user = request.user
         
-        group = Group.objects.create(name=validated_data['name'])
+        group = Group.objects.create(**validated_data)
         
         group.admins.add(current_user)
         group.members.add(current_user)
