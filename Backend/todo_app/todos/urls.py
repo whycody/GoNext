@@ -28,4 +28,7 @@ urlpatterns = [
     path('invitations/<str:token>/accept', AcceptInvitationView.as_view(), name='invitation-accept'),
     path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset'),
     path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path('groups/<int:group_id>/members/<int:user_id>/', ManageGroupMemberView.as_view(), name='group-manage-member'), # DELETE to remove
+    path('groups/<int:group_id>/admins/<int:user_id>/', ManageGroupAdminView.as_view(), name='group-manage-admin'),    # POST to promote, DELETE to demote
+    path('password/change/', ChangePasswordView.as_view(), name='auth-password-change'),
 ]

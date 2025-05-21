@@ -1,7 +1,8 @@
-from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth import get_user_model, authenticate, update_session_auth_hash 
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.encoding import force_str, force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -20,16 +21,23 @@ from drf_yasg.utils import swagger_auto_schema
 
 from todo_app.settings import EMAIL_HOST_USER
 from .models import ToDo, Group, Invitation, Device
-from .serializers import InvitationCreateSerializer, LoginSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ToDoSerializer, UserSerializer, GroupSerializer
+from .serializers import ChangePasswordSerializer, InvitationCreateSerializer, LoginSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ToDoSerializer, UserSerializer, GroupSerializer
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_username, get_client_ip_address
 from todos.utils import lockout_response 
-from .permissions import IsGroupAdminOrMemberReadOnly 
+from .permissions import IsGroupAdmin, IsGroupAdminOrMemberReadOnly, IsTaskOwnerOrGroupMember 
+from django.db.models import Q
 
 # Endpoint user-info
 class UserInfoView(APIView):
     permission_classes = [AllowAny]  # Dostęp dla wszystkich
-
+    @swagger_auto_schema(
+        operation_description=(
+            "Zwraca nazwę użytkownika (username) oraz status weryfikacji jego adresu email "
+            "('verified' lub 'not_verified'), jeśli użytkownik jest uwierzytelniony. "
+            "Jeśli użytkownik nie jest uwierzytelniony, zwraca błąd 401."
+        ),
+    )
     def get(self, request):
         if request.user.is_authenticated:
             return Response({
@@ -37,7 +45,6 @@ class UserInfoView(APIView):
                 "status": "verified" if request.user.is_verified else "not_verified"
             }, status=status.HTTP_200_OK)
         return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
-
 
 # Rozszerzenie modelu użytkownika
 class RegisterView(generics.CreateAPIView):
@@ -51,9 +58,8 @@ class RegisterView(generics.CreateAPIView):
 
     def send_verification_email(self, user):
         token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        # Zmiana z localhosta na azure
-        verify_url = f"https://gonext-a7hthre4g0avd7fr.polandcentral-01.azurewebsites.net/verify-email/{uid}/{token}/"
+        uid = urlsafe_base64_encode(force_bytes(user.id))
+        verify_url = f"{settings.FRONTEND_URL}/verify-email/{uid}/{token}/"
 
         subject = "Verify your email"
         message = f"Click the link to verify: {verify_url}"
@@ -68,7 +74,7 @@ class VerifyEmailView(APIView):
     def get(self, request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
-            user = get_user_model().objects.get(pk=uid)
+            user = get_user_model().objects.get(id=uid)
         except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
             return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -173,33 +179,45 @@ class LoginView(APIView):
 
 
 # Filtering tasks by user, group, and priority
-def get_filtered_todos(request, user=None):
-    """
-    Filters tasks based on the user, group, and priority.
-    """
-    queryset = ToDo.objects.all()
+def get_filtered_todos(request, requesting_user=None):
+    if not requesting_user:
+        requesting_user = request.user
 
-    if user:
-        queryset = queryset.filter(user=user)
+    if not requesting_user or not requesting_user.is_authenticated:
+        return ToDo.objects.none()
+
+    base_queryset = ToDo.objects.all()
+
+    if not requesting_user.is_superuser:
+        base_queryset = base_queryset.filter(
+            Q(user=requesting_user) | 
+            (Q(group__members=requesting_user) & Q(user__isnull=True))
+        ).distinct()
+
+    group_id_param = request.query_params.get('group_id')
+    if group_id_param:
+        try:
+            base_queryset = base_queryset.filter(group_id=int(group_id_param))
+        except ValueError:
+            return ToDo.objects.none()
+
+    priority_param = request.query_params.get('priority')
+    if priority_param:
+        try:
+            base_queryset = base_queryset.filter(priority=int(priority_param))
+        except ValueError:
+            pass 
+
+    ordering_param = request.query_params.get('ordering')
+    if ordering_param:
+        allowed_ordering = ['title', '-title', 'priority', '-priority', 'created_at', '-created_at', 'is_completed', '-is_completed']
+        if ordering_param in allowed_ordering:
+            base_queryset = base_queryset.order_by(ordering_param)
     else:
-        if not request.user.is_superuser:
-            queryset = queryset.filter(user=request.user)
+        base_queryset = base_queryset.order_by('-created_at') # Domyślne sortowanie
 
-    group_id = request.query_params.get('group_id')
-    if group_id:
-        queryset = queryset.filter(group_id=group_id)
+    return base_queryset
 
-    priority = request.query_params.get('priority')
-    if priority:
-        queryset = queryset.filter(priority=priority)
-
-    ordering = request.query_params.get('ordering')
-    if ordering:
-        queryset = queryset.order_by(ordering)
-
-    return queryset
-
-# Returning tasks assigned directly to the user (not belonging to any group)
 class ToDoByUserView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -217,70 +235,104 @@ class ToDoByGroupView(APIView):
 
     def get(self, request):
         user = request.user
-        todos = ToDo.objects.filter(user=user, group__isnull=False)
-        serializer = ToDoSerializer(todos, many=True)
+        todos = ToDo.objects.filter(
+            group__members=user, 
+            user__isnull=True # Tylko zadania faktycznie przypisane do grupy
+        ).distinct()
+        
+        # Opcjonalne dodatkowe filtrowanie, jeśli potrzebne
+        group_id_param = request.query_params.get('group_id')
+        if group_id_param:
+            try:
+                todos = todos.filter(group_id=int(group_id_param))
+            except ValueError:
+                todos = ToDo.objects.none()
+
+        priority_param = request.query_params.get('priority')
+        if priority_param:
+            try:
+                todos = todos.filter(priority=int(priority_param))
+            except ValueError:
+                pass
+
+        ordering_param = request.query_params.get('ordering')
+        if ordering_param:
+            allowed_ordering = ['title', '-title', 'priority', '-priority', 'created_at', '-created_at', 'is_completed', '-is_completed']
+            if ordering_param in allowed_ordering:
+                todos = todos.order_by(ordering_param)
+        else:
+            todos = todos.order_by('-created_at')
+
+
+        serializer = ToDoSerializer(todos, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # Task detail view – allows updating and deleting a task
 class ToDoDetailView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-    serializer_class = ToDoSerializer
+    permission_classes = [IsAuthenticated, IsTaskOwnerOrGroupMember] 
+    serializer_class = ToDoSerializer # Używasz swojego oryginalnego ToDoSerializer
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
+        user = self.request.user
+        if not user.is_authenticated:
+            return ToDo.objects.none()
+        if user.is_superuser:
             return ToDo.objects.all()
-        return ToDo.objects.filter(user=self.request.user)
-
+        return ToDo.objects.filter(
+            Q(user=user) | (Q(group__members=user) & Q(user__isnull=True))
+        ).distinct()
 
 # User creates a task only for themselves (no group assignment)
 class ToDoListCreateView(generics.ListCreateAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    serializer_class = ToDoSerializer
+    serializer_class = ToDoSerializer # Używasz swojego oryginalnego ToDoSerializer
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
-            return ToDo.objects.all()
-        return ToDo.objects.filter(user=self.request.user)
+        """
+        Zwraca listę zadań dla zalogowanego użytkownika.
+        Obejmuje zadania osobiste użytkownika oraz zadania współdzielone
+        z grup, do których użytkownik należy.
+        """
+        # Używamy funkcji get_filtered_todos, która zawiera już poprawną logikę
+        # filtrowania zadań osobistych i grupowych dla danego użytkownika.
+        # Funkcja ta powinna być zdefiniowana w tym samym pliku lub zaimportowana.
+        return get_filtered_todos(self.request)
 
     def perform_create(self, serializer):
-        user = self.request.user
-        data = self.request.data
-        group_id = data.get('group')
-        user_id = data.get('user')
+        """
+        Tworzy nowe zadanie.
+        - Jeśli w żądaniu podano 'group_id', tworzy jedno współdzielone zadanie dla tej grupy.
+        - W przeciwnym razie tworzy zadanie osobiste dla zalogowanego użytkownika.
+        """
+        requesting_user = self.request.user
+        
+        # serializer.validated_data['group'] będzie instancją Group lub None
+        # dzięki użyciu source='group' w polu 'group_id' Twojego ToDoSerializer.
+        group_instance = serializer.validated_data.get('group') 
 
-        # Admin users have full control
-        if user.is_superuser:
-            if group_id:
-                try:
-                    group_instance = Group.objects.get(id=group_id)
-                except Group.DoesNotExist:
-                    raise exceptions.NotFound("Group not found")
-                for member in group_instance.members.all():
-                    ToDo.objects.create(
-                        user=member,
-                        group=group_instance,
-                        title=data['title'],
-                        description=data.get('description', ''),
-                        priority=int(data.get('priority', 2)),
-                        due_date=data.get('due_date')
-                    )
-                return
-            elif user_id:
-                try:
-                    target_user = get_user_model().objects.get(id=user_id)
-                except get_user_model().DoesNotExist:
-                    raise exceptions.NotFound("User not found")
-                serializer.save(user=target_user)
-                return
+        final_user_to_assign = None
+        final_group_to_assign = None
 
-        # Regular users cannot assign tasks to others or to a group.
-        if group_id or user_id:
-            raise exceptions.PermissionDenied("You cannot assign tasks to others or to a group.")
+        if group_instance:
+            # Klient podał 'group_id' (przez pole 'group' w validated_data).
+            # Tworzymy zadanie grupowe.
+            # Sprawdzamy uprawnienia: np. czy użytkownik jest członkiem grupy.
+            if not group_instance.members.filter(id=requesting_user.id).exists():
+                raise exceptions.PermissionDenied(
+                    "Nie należysz do tej grupy lub nie masz uprawnień do tworzenia dla niej zadań."
+                )
+            final_group_to_assign = group_instance
+            # final_user_to_assign pozostaje None dla zadania grupowego
+        else:
+            # Klient NIE podał 'group_id'. Tworzymy zadanie osobiste.
+            final_user_to_assign = requesting_user
+            # final_group_to_assign pozostaje None dla zadania osobistego
 
-        serializer.save(user=user)
+        serializer.save(user=final_user_to_assign, group=final_group_to_assign)
+
 
 
 # View for admins – list of groups
@@ -295,14 +347,17 @@ class GroupListView(generics.ListAPIView):
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsGroupAdminOrMemberReadOnly] 
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
+    serializer_class = GroupSerializer # Twój GroupSerializer
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        # Debug: możesz usunąć poniższy print w produkcji
-        print(queryset)
-        return queryset
+        user = self.request.user
+        if not user.is_authenticated: # Dodatkowe zabezpieczenie
+            return Group.objects.none()
+            
+        if user.is_superuser:
+            return Group.objects.all()
+        # Użytkownik widzi grupy, do których należy (jako członek lub admin)
+        return Group.objects.filter(Q(members=user) | Q(admins=user)).distinct()
 
 
 # View for admins – create a new group
@@ -340,7 +395,16 @@ class InvitationCreateView(APIView):
                 group = Group.objects.get(id=group_id)
             except Group.DoesNotExist:
                 return Response({"error": "Group not found"}, status=status.HTTP_400_BAD_REQUEST)
-
+            
+            is_member_or_admin = group.members.filter(id=request.user.id).exists() or \
+                                 group.admins.filter(id=request.user.id).exists()
+            
+            if not (request.user.is_superuser or is_member_or_admin):
+                return Response(
+                    {"error": "You must be a member or admin of this group to create invitations."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
             expiration_date = timezone.now() + timedelta(days=expiration_days)
             invitation = Invitation.objects.create(
                 group=group,
@@ -393,8 +457,9 @@ class AcceptInvitationView(APIView):
         except Invitation.DoesNotExist:
             return Response({"error": "Invitation not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        if invitation.expiration_date < timezone.now():
-            return Response({"error": "Invitation has expired"}, status=status.HTTP_400_BAD_REQUEST)
+        if not invitation.is_valid():
+            return Response({"error": "Invitation is invalid, expired, or has reached its maximum use limit."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         user = request.user
         group = invitation.group
@@ -557,13 +622,13 @@ class PasswordResetRequestView(APIView):
         email = serializer.validated_data['email']
         User = get_user_model()
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(email=email, is_active=True, is_verified=True)
         except User.DoesNotExist:
             # Nie ujawniamy, że e‑mail nie istnieje
             return Response({"message": "Jeśli konto istnieje, otrzymasz wiadomość e‑mail."})
 
         token = default_token_generator.make_token(user)
-        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        uidb64 = urlsafe_base64_encode(force_bytes(user.id))
         reset_url = f"{settings.FRONTEND_URL}/password-reset-confirm/{uidb64}/{token}/"
 
         subject = "Reset hasła"
@@ -583,7 +648,7 @@ class PasswordResetConfirmView(APIView):
         """
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
-            user = get_user_model().objects.get(pk=uid)
+            user = get_user_model().objects.get(id=uid)
         except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
             return Response({'error': 'Invalid link.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -606,7 +671,7 @@ class PasswordResetConfirmView(APIView):
 
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
-            user = get_user_model().objects.get(pk=uid)
+            user = get_user_model().objects.get(id=uid)
         except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
             return Response({"error": "Link jest nieprawidłowy."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -616,3 +681,158 @@ class PasswordResetConfirmView(APIView):
         user.set_password(new_password)
         user.save()
         return Response({"message": "Hasło zostało zmienione pomyślnie."}, status=status.HTTP_200_OK)
+    
+User = get_user_model() # Upewnij się, że User jest zdefiniowany
+
+class ManageGroupMemberView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsGroupAdmin] # Tylko admin grupy może zarządzać
+
+    @swagger_auto_schema(
+        tags=['Groups Management'],
+        operation_description="Remove a member from the group. Group admins cannot remove themselves if they are the last admin.",
+        responses={
+            200: "Member removed successfully.",
+            403: "Forbidden - Not a group admin or trying to remove last admin.",
+            404: "Not Found - Group or User not found, or User not a member."
+        }
+    )
+    def delete(self, request, group_id, user_id):
+        group = get_object_or_404(Group, id=group_id)
+        user_to_remove = get_object_or_404(User, id=user_id)
+
+        # Sprawdzenie, czy użytkownik do usunięcia jest członkiem
+        if not group.members.filter(id=user_to_remove.id).exists():
+            return Response({"error": "User is not a member of this group."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Admin nie może usunąć samego siebie, jeśli jest ostatnim adminem
+        if user_to_remove == request.user and group.admins.count() == 1 and group.admins.filter(id=request.user.id).exists():
+            return Response({"error": "You cannot remove yourself as the last administrator of the group."}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Jeśli usuwany użytkownik jest adminem, a jest ich więcej niż jeden LUB usuwany nie jest żądającym
+        if group.admins.filter(id=user_to_remove.id).exists():
+            if group.admins.count() == 1: # Jeśli jest jedynym adminem (i nie jest to request.user, co sprawdziliśmy wyżej)
+                 return Response({"error": "Cannot remove the only administrator of the group. Promote another admin first."}, status=status.HTTP_403_FORBIDDEN)
+            group.admins.remove(user_to_remove)
+        
+        group.members.remove(user_to_remove)
+        return Response({"message": f"User {user_to_remove.username} removed from group {group.name}."}, status=status.HTTP_200_OK)
+
+
+class ManageGroupAdminView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsGroupAdmin] # Tylko admin grupy może zarządzać innymi adminami
+
+    @swagger_auto_schema(
+        tags=['Groups Management'],
+        operation_description="Promote a group member to be an administrator.",
+        responses={
+            200: "User promoted to administrator.",
+            403: "Forbidden - Not a group admin.",
+            404: "Not Found - Group or User not found, or User not a member.",
+            409: "Conflict - User is already an administrator."
+        }
+    )
+    def post(self, request, group_id, user_id): # Promowanie na admina
+        group = get_object_or_404(Group, id=group_id)
+        user_to_promote = get_object_or_404(User, id=user_id)
+
+        if not group.members.filter(id=user_to_promote.id).exists():
+            return Response({"error": "User is not a member of this group and cannot be promoted."}, status=status.HTTP_404_NOT_FOUND)
+        
+        if group.admins.filter(id=user_to_promote.id).exists():
+            return Response({"error": "User is already an administrator of this group."}, status=status.HTTP_409_CONFLICT)
+
+        group.admins.add(user_to_promote)
+        # Upewnij się, że jest też członkiem (powinien już być)
+        if not group.members.filter(id=user_to_promote.id).exists():
+            group.members.add(user_to_promote) # Dodatkowe zabezpieczenie
+
+        return Response({"message": f"User {user_to_promote.username} promoted to administrator in group {group.name}."}, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        tags=['Groups Management'],
+        operation_description="Demote a group administrator to a regular member. Group admins cannot demote themselves if they are the last admin.",
+        responses={
+            200: "Administrator demoted successfully.",
+            403: "Forbidden - Not a group admin or trying to demote last admin.",
+            404: "Not Found - Group or User not found, or User not an admin."
+        }
+    )
+    def delete(self, request, group_id, user_id): # Degradacja admina
+        group = get_object_or_404(Group, id=group_id)
+        admin_to_demote = get_object_or_404(User, id=user_id)
+
+        if not group.admins.filter(id=admin_to_demote.id).exists():
+            return Response({"error": "User is not an administrator of this group."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Admin nie może zdegradować samego siebie, jeśli jest ostatnim adminem
+        if admin_to_demote == request.user and group.admins.count() == 1:
+            return Response({"error": "You cannot demote yourself as the last administrator. Promote another admin first or delete the group."}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Upewnij się, że po degradacji zostanie przynajmniej jeden admin, chyba że to superuser usuwa admina
+        if group.admins.count() == 1 and not request.user.is_superuser:
+             return Response({"error": "Cannot demote the only administrator of the group unless you are a superuser. Promote another admin first."}, status=status.HTTP_403_FORBIDDEN)
+
+
+        group.admins.remove(admin_to_demote)
+        # Użytkownik pozostaje członkiem grupy
+        return Response({"message": f"Administrator {admin_to_demote.username} demoted to member in group {group.name}."}, status=status.HTTP_200_OK)
+
+class ChangePasswordView(generics.GenericAPIView): # Użycie GenericAPIView dla łatwiejszego dostępu do serializera
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChangePasswordSerializer
+    authentication_classes = [JWTAuthentication] # Upewnij się, że jest zgodne
+
+    @swagger_auto_schema(
+        operation_description=(
+            "Pozwala zalogowanemu użytkownikowi na zmianę swojego hasła. "
+            "Wymagane jest podanie starego hasła oraz dwukrotnie nowego hasła. "
+            "Nowe hasło musi być różne od starego hasła. "
+            "Opcjonalnie można podać 'current_device_id', aby zachować bieżącą sesję 'zapamiętaj mnie'; "
+            "w przeciwnym razie wszystkie inne sesje 'zapamiętaj mnie' tego użytkownika zostaną unieważnione."
+        ),
+        request_body=ChangePasswordSerializer,
+        responses={
+            status.HTTP_200_OK: openapi.Response("Hasło zostało pomyślnie zmienione."),
+            status.HTTP_400_BAD_REQUEST: openapi.Response("Błąd walidacji danych (np. stare hasło nie pasuje, nowe hasła się nie zgadzają, nowe hasło jest za słabe)."),
+            status.HTTP_401_UNAUTHORIZED: openapi.Response("Brak uwierzytelnienia.")
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        # Przekazujemy 'request' do kontekstu serializera, aby miał dostęp do 'user'
+        serializer = self.get_serializer(data=request.data, context={'request': request}) 
+        serializer.is_valid(raise_exception=True)
+
+        old_password = serializer.validated_data.get('old_password')
+        new_password = serializer.validated_data.get('new_password1') # new_password2 jest już sprawdzone w serializatorze
+        current_device_id = serializer.validated_data.get('current_device_id')
+
+        # Sprawdzenie starego hasła
+        if not user.check_password(old_password):
+            return Response({"old_password": ["Podane stare hasło jest nieprawidłowe."]}, status=status.HTTP_400_BAD_REQUEST)
+        
+        #Sprawdzenie, czy nowe hasło różni się od starego
+        if user.check_password(new_password):
+            return Response({"new_password1": ["Nowe hasło musi być inne niż stare hasło."]}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ustawienie nowego hasła
+        user.set_password(new_password)
+        user.save()
+
+        # Ważne: Aktualizuje hash sesji, aby użytkownik nie został wylogowany
+        # z bieżącej sesji opartej na sesjach Django (np. w panelu admina lub API przeglądarki).
+        # Dla JWT bezpośrednio nie unieważnia tokenów, ale jest dobrą praktyką.
+        update_session_auth_hash(request, user)
+
+        # Unieważnienie innych sesji "zapamiętaj mnie" (wpisów Device)
+        # poprzez usunięcie odpowiednich rekordów Device.
+        devices_query = Device.objects.filter(user=user)
+        if current_device_id:
+            # Zachowaj bieżącą sesję "remember me", jeśli klient podał jej ID
+            devices_query = devices_query.exclude(device_id=current_device_id)
+        
+        devices_query.delete() # Usuń wszystkie pozostałe (lub wszystkie, jeśli current_device_id nie podano)
+
+        return Response({"detail": "Hasło zostało pomyślnie zmienione. Wylogowano z pozostałych, zapamiętanych urządzeń."}, status=status.HTTP_200_OK)

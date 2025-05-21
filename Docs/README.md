@@ -3,8 +3,11 @@
 
 ![Stars](https://img.shields.io/github/stars/gonext?style=flat-square)
 ![Version](https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square)
-![TypeScript](https://img.shields.io/badge/TypeScript-45.5%25-blue?style=flat-square)
-![Python](https://img.shields.io/badge/Python-54.5%25-blue?style=flat-square)
+![JavaScript](https://img.shields.io/badge/JavaScript-51.7%25-orange?style=flat-square)
+![TypeScript](https://img.shields.io/badge/TypeScript-15.6%25-orange?style=flat-square)
+![CSS](https://img.shields.io/badge/CSS-21.8%25-orange?style=flat-square)
+![Python](https://img.shields.io/badge/Python-10.4%25-orange?style=flat-square)
+![Others](https://img.shields.io/badge/Others-0.5%25-orange?style=flat-square)
 ![Repo Size](https://img.shields.io/github/repo-size/whycody/gonext?style=flat-square)
 
 ![Created At](https://img.shields.io/badge/created%20at-march%202025-informational?style=flat-square)
@@ -16,11 +19,12 @@
 - [Vision and Scope](#vision-and-scope)
 - [Requirements](#requirements)
     - [Use case diagram](#use-case-diagram)
-    - [Mockups](#mockups)
+    - [User Stories](#user-stories)
+    - [App usage demonstrations](#app-usage-demonstrations)
 - [Definition of Done](#definition-of-done)
-- [Architecture and Design](#architecture-and-design)
-    - [Domain model](#domain-model)
+- [Cloud Services](#cloud-services)
 - [Risk Plan](#risk-plan)
+- [Security Threats](#security-threats)
 - [Pre-Game](#pre-game)
 - [Release plan](#release-plan)
     - [Release 1](#release-1)
@@ -44,8 +48,6 @@
 
 ### Vision statement
 
-<!--The app is designed to be minimalistic and user-friendly, allowing easy task management and progress tracking. Users can set schedules, monitor completion percentages, and maintain streaks for consistent habits. The app rewards task and habit completions with badges.-->
-<!-- The goal of this project is to create an app that will help them remember their resolutions, habits and budgeting goals. It will be an easy way of keeping track of your achievements providing a sense of acomplishement with every finished task. Visualizing your spending will also help with sticking to your saving goals and enable you to track your expenses. We want to help others and ourselves stick to our goals and live the best life we can. -->
 The purpose of the project is to create a mobile application that manages the prioretary list of user tasks and tasks of groups to which the user belongs.
 
 ### Functions
@@ -92,25 +94,25 @@ Creating Groups/Managing Groups:
 
 ***
 
-### Mockups
-
-### User Story 1
-
-<!--![User Story 1](imgs/1_updated.png) - wzór linka do User Story 1-->
-
-### User Story 2 
-
-<!--![User Story 2](imgs/2_updated.png) - wzór linka do User Story 2-->
-
-***
-
-### User Stories
+## User Stories
 
 - User story 1(Registration/Logging in): As a user, I want to register/log in to the application, so that I can use it for my personal purposes.
 - User story 2(Creating tasks): As a user, I want to create tasks, so that I keep track on my personal objectives.
 - User story 3(Managing tasks): As a user, I want to assign a priority level to a task, edit it, or delete it so that I have a clear overview of all task details.
 - User story 4(Creating groups): As a user, I want to create a group so that I can collaborate on tasks with other group members.
 - User story 5(Managing groups): As a group admin, I want to set other members as admins or remove them from the group so that I can maintain proper group management.
+
+***
+
+## App usage demonstrations
+
+### User Story 1
+
+<!--![User Story 1](imgs/1_updated.png) - GIF filmik US1-->
+
+### User Story 2 
+
+<!--![User Story 2](imgs/2_updated.png) - GIF filmik US2-->
 
 ***
 
@@ -122,13 +124,48 @@ Creating Groups/Managing Groups:
 1. All tasks completed
 2. US is accepted by the client  
 3. The code merged into the main branch  
+
 ***
 
-## Architecture and Design
+## Cloud Services
 
-### Domain model
+The project uses following cloud servises:
+- Azure App Service
+- Azure Database for PostgreSQL
 
-<!--![Domain Model](imgs/ModelodeDominio.PNG)-->
+Let's dive into them.
+
+### Azure App Service
+Azure App Service is a Platform-as-a-Service (PaaS) offering to host web applications, REST APIs, and mobile backends. It is running RESTful APIs for mobile or web applications.
+Benefits:
+- Free access
+- Managed runtime and scaling
+- Built-in CI/CD integration
+- SSL/TLS support by default
+- Easy deployment via GitHub
+
+Scaling and performance:
+- Autoscaling based on CPU/memory usage or schedule
+- Load balancing and traffic management
+
+### Azure Database for PostgreSQL
+A managed relational database built on PostgreSQL with automated maintenance, backups, and scaling.
+Benefits: 
+- Built-in high availability (zone-redundant)
+- Automated patching and backup
+- Private endpoint support
+- Encryption at rest and in transit
+
+Scaling and performance:
+- Vertical scaling (compute and storage) without downtime
+
+
+### Compliance and Certifications
+In addition, both services comply with major standards:
+- ISO/IEC 27001
+- SOC 1, 2, and 3
+- HIPAA
+- GDPR
 
 ***
 
@@ -136,35 +173,13 @@ Creating Groups/Managing Groups:
 
 ### Success Threshold 
 
-<!---
-The project fails if:
- Essential features such as habit tracking, visual progress insights, task and habit management, reminders, and goal setting are incomplete or not functioning as intended.
-Users find it difficult to navigate the app or encounter usability issues, leading to dissatisfaction and disengagement.
-Reminders are unreliable, causing users to miss their tasks and habits frequently.
-Milestone tracking for goals is confusing or not visually represented clearly, leading to user frustration.
-
-- The "must" user stories are not developed
-- The app is not in a working condition upon release.
-The team is not satisfied with the app and their work on the project, based on a questionare at the last meeting before final release. -->
-
 The project is considered to be successful if:
-<!--- By the final release date, all essential features, namely habit tracking, task and habit management and reminders, are fully implemented and pass acceptance tests without critical defects.
-Users find the app intuitive, user-friendly, and engaging, leading to positive feedback and a high level of satisfaction.
-Reminders are delivered accurately and on time, ensuring users can effectively manage their tasks and habits.
-Milestone tracking for goals is visually appealing, easy to understand, and provides users with a sense of achievement and progress. -->
-
 - All user stories are completed, including assigned tasks.
 - All team members contributed equally to the project.
 - The team is satisfied with the application and their work on the project,
 
-<!-- - The interface of the app it appealing to most group members and clients. -->
-
 ### Risk List
 
-<!-- - RSK1 - PxI: 4x5=20; Inaccurate Time and Effort Estimations
-  - Risk: The team lacks experience in estimating the time and effort required for tasks, leading to underestimations or overestimations, resulting in unforeseen project delays.
-  - Impact: 5
-  - Likelihood: 4 -->
   - RSK1 - PxI: 4×4=16; Unequal Contribution from Team Members
     - Risk: Some team members may take on more responsibilities than others, causing workload imbalance and potential dissatisfaction.
     - Impact: 4
@@ -181,15 +196,52 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
     - Likelihood: 4
 
 ### Actions for risk mitigations (PxI>=20)
-
-<!-- - R1 - Generative IA (LLM) can hallucinate:
-    - Action: Provide users knowlegde of the limitations of generative AI and address potential inaccuracies in outputs.
-    - Action: Keep the LLM updated with the latest information, secure version and best practices to minimize inaccuracies.
-    - Action: Provide the LLM with a structured template that includes accurate user information and other essential details. -->
-  - R3 - Security Vulnerabilities in Authentication Flow:
+  - RSK3 - Security Vulnerabilities in Authentication Flow:
     - Action: Use secure authentication practices.
     - Action: Perform security audits and penetration testing before release.
+      
+***
 
+## Security Threats
+
+### Threats list and our threat mitigation
+
+  - T1 - Hardcoded Secrets and Credentials
+    - Threat: If API keys, tokens, or passwords are hardcoded into the codebase, they can be exposed publicly, leading to unauthorized access.
+    - Mitigation: We ensured that all secrets are stored securely using environment variables.
+      
+  - T2 - Insecure Authentication
+    - Threat: Without proper authentication mechanisms, unauthorized users might gain access to restricted areas of the application.
+    - Mitigation 1: When creating an account, we force user to create a strong password, by checking whether it contains 8 characters(including 1 lowecase letter, 1 uppercase letter, 1 number and 1 special symbol).
+    - Mitigation 2: All credentials are hashed via Django side with adding salt and stored securely in the database. While trying to log in, the system compares hashed credentials.
+   
+  - T3 - Lack of Input Validation
+    - Threat: Improper input validation can lead to vulnerabilities like SQL injection or cross-site scripting (XSS).
+    - Mitigation 1: We validate and sanitize all user inputs on both client and server sides.
+    - Mitigation 2: Trying to log in, built-in serialiser checks whether all fields sent by user have correct type.
+
+  - T4 - Use of Vulnerable Dependencies
+    - Threat: Outdated or vulnerable third-party packages can introduce security flaws.
+    - Mitigation: We regularly audit dependencies using 'npm audit'.
+
+  - T5 - Inadequate Logging and Monitoring
+    - Threat: Without proper logging, detecting and responding to security incidents becomes challenging.
+    - Mitigation: We implemented comprehensive logging for critical actions and monitor logs regularly.
+
+  - T6 - Cross-Origin Resource Sharing (CORS) Misconfigurations
+    - Threat: A poorly configured CORS policy can expose endpoints to unauthorized origins.
+    - Mitigation: We defined strict Access-Control-Allow-Origin policies.
+
+  - T7 - Rate Limiting and Brute-Force Protection
+    - Threat: Login endpoints or APIs could be targeted by bots trying to guess credentials.
+    - Mitigation 1: We implemented rate limiting.
+    - Mitigation 2: While trying to log it, the system checks if there were unsuccessful login tries before for the following IP and username and whether axes blocked access to the app for this user.
+   
+  - T8 - Possible JWT token leak
+    - Threat: Insecurely stored or incorrectly verified tokens can be hijacked or forged.
+    - Mitigation: We hash tokens and add SALT for propper security.
+
+***
 
 ## Pre-Game
 
@@ -202,13 +254,14 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
     - Task2 - Write the Vision and Scope
     - Task3 - Write the Requirements
     - Task4 - Write DoD
-    - Task5 - Write the Architecture and Design
-    - Task6 - Write the Risk Plan
+    - Task5 - Write the Risk Plan
+    - Task6 - Write the Security Threats
     - Task7 - Write the Pre-Gane
     - Task8 - Write Release Plan
     - Task9 - Write Product increments
-    - Task10 - Create US, estimate difficulty(SML), prioretize(MoSCoW), sort
+    - Task10 - Create US
     - Task11 - Create a repository
+    - Task12 - Write the Cloud Services
 
 ***
 
@@ -216,7 +269,7 @@ Milestone tracking for goals is visually appealing, easy to understand, and prov
 
 ### Release 1
 
-- Goal: We define the most important features of the project that are necessary for the minimum operation of the application: <!-- MVP - Developed US1, US3, US4, US6 with a working interface. -->
+- Goal: We define the most important features of the project that are necessary for the minimum operation of the application: 
     - Registration
     - Logging in
     - Creating tasks
