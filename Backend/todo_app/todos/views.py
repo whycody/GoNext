@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth import get_user_model, authenticate, update_session_auth_hash 
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
@@ -21,14 +21,12 @@ from drf_yasg.utils import swagger_auto_schema
 
 from todo_app.settings import EMAIL_HOST_USER
 from .models import ToDo, Group, Invitation, Device
-from .serializers import InvitationCreateSerializer, LoginSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ToDoSerializer, UserSerializer, GroupSerializer
+from .serializers import ChangePasswordSerializer, InvitationCreateSerializer, LoginSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ToDoSerializer, UserSerializer, GroupSerializer
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_username, get_client_ip_address
 from todos.utils import lockout_response 
 from .permissions import IsGroupAdmin, IsGroupAdminOrMemberReadOnly, IsTaskOwnerOrGroupMember 
 from django.db.models import Q
-
-from todos import permissions
 
 # Endpoint user-info
 class UserInfoView(APIView):
@@ -780,3 +778,61 @@ class ManageGroupAdminView(APIView):
         group.admins.remove(admin_to_demote)
         # Użytkownik pozostaje członkiem grupy
         return Response({"message": f"Administrator {admin_to_demote.username} demoted to member in group {group.name}."}, status=status.HTTP_200_OK)
+
+class ChangePasswordView(generics.GenericAPIView): # Użycie GenericAPIView dla łatwiejszego dostępu do serializera
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChangePasswordSerializer
+    authentication_classes = [JWTAuthentication] # Upewnij się, że jest zgodne
+
+    @swagger_auto_schema(
+        operation_description=(
+            "Pozwala zalogowanemu użytkownikowi na zmianę swojego hasła. "
+            "Wymagane jest podanie starego hasła oraz dwukrotnie nowego hasła. "
+            "Nowe hasło musi być różne od starego hasła. "
+            "Opcjonalnie można podać 'current_device_id', aby zachować bieżącą sesję 'zapamiętaj mnie'; "
+            "w przeciwnym razie wszystkie inne sesje 'zapamiętaj mnie' tego użytkownika zostaną unieważnione."
+        ),
+        request_body=ChangePasswordSerializer,
+        responses={
+            status.HTTP_200_OK: openapi.Response("Hasło zostało pomyślnie zmienione."),
+            status.HTTP_400_BAD_REQUEST: openapi.Response("Błąd walidacji danych (np. stare hasło nie pasuje, nowe hasła się nie zgadzają, nowe hasło jest za słabe)."),
+            status.HTTP_401_UNAUTHORIZED: openapi.Response("Brak uwierzytelnienia.")
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        # Przekazujemy 'request' do kontekstu serializera, aby miał dostęp do 'user'
+        serializer = self.get_serializer(data=request.data, context={'request': request}) 
+        serializer.is_valid(raise_exception=True)
+
+        old_password = serializer.validated_data.get('old_password')
+        new_password = serializer.validated_data.get('new_password1') # new_password2 jest już sprawdzone w serializatorze
+        current_device_id = serializer.validated_data.get('current_device_id')
+
+        # Sprawdzenie starego hasła
+        if not user.check_password(old_password):
+            return Response({"old_password": ["Podane stare hasło jest nieprawidłowe."]}, status=status.HTTP_400_BAD_REQUEST)
+        
+        #Sprawdzenie, czy nowe hasło różni się od starego
+        if user.check_password(new_password):
+            return Response({"new_password1": ["Nowe hasło musi być inne niż stare hasło."]}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ustawienie nowego hasła
+        user.set_password(new_password)
+        user.save()
+
+        # Ważne: Aktualizuje hash sesji, aby użytkownik nie został wylogowany
+        # z bieżącej sesji opartej na sesjach Django (np. w panelu admina lub API przeglądarki).
+        # Dla JWT bezpośrednio nie unieważnia tokenów, ale jest dobrą praktyką.
+        update_session_auth_hash(request, user)
+
+        # Unieważnienie innych sesji "zapamiętaj mnie" (wpisów Device)
+        # poprzez usunięcie odpowiednich rekordów Device.
+        devices_query = Device.objects.filter(user=user)
+        if current_device_id:
+            # Zachowaj bieżącą sesję "remember me", jeśli klient podał jej ID
+            devices_query = devices_query.exclude(device_id=current_device_id)
+        
+        devices_query.delete() # Usuń wszystkie pozostałe (lub wszystkie, jeśli current_device_id nie podano)
+
+        return Response({"detail": "Hasło zostało pomyślnie zmienione. Wylogowano z pozostałych, zapamiętanych urządzeń."}, status=status.HTTP_200_OK)
