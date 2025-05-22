@@ -36,9 +36,6 @@ yarn-error.*
 *.tsbuildinfo
 
 *.env
-
-*.pyc
-staticfiles/
 **/__pycache__/
 __pycache__/
 .vscode/settings.json
