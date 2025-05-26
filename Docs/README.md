@@ -25,6 +25,7 @@
 - [Cloud Services](#cloud-services)
 - [Risk Plan](#risk-plan)
 - [Security Threats](#security-threats)
+- [Migration](#migration)
 - [Pre-Game](#pre-game)
 - [Release plan](#release-plan)
     - [Release 1](#release-1)
@@ -257,6 +258,10 @@ Risk list contains most probably occurring issues during app development. We int
   - T8 - Possible JWT token leak
     - Threat: Insecurely stored or incorrectly verified tokens can be hijacked or forged.
     - Mitigation: We hash tokens and add SALT for propper security.
+
+***
+## Migration
+Because the configuration of cloud services on Azure required time in the beginning of the project and there wasn't a lot of time available to work on, the app was developed localy and then migrated to Azure. The process consisted of first configuring a simple postgresql database which the team could connect to while working on the app (with web server running locally). After that a fork was made from the default repository and using github actions we had a working deployment to Azure app service with our backend running there. With the whole setup configured all that was left was to point the frontend URLs to Azure on development setups.
 
 ***
 
