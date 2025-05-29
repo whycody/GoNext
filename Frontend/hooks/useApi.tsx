@@ -88,6 +88,18 @@ export const changeUserPassword = async (
   }
 };
 
+export const getInfo = async () => {
+  try {
+    return await apiCall({
+      method: 'GET',
+      url: '/info/',
+    });
+  } catch (e) {
+    console.error('/info/', e);
+    return [];
+  }
+}
+
 // Tasks handling
 
 export const getUserTodos = async (): Promise<TaskModel[]> => {
