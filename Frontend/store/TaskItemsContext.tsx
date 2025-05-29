@@ -47,7 +47,7 @@ export const TaskItemsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         description: task.description,
         priority: task.priority,
         groupId: task.groupId,
-        groupName: group ? group.name : "Nieznana grupa",
+        groupName: task.groupId == null ? 'Personal' : group ? group.name : "Nieznana grupa",
         isCompleted: task.isCompleted,
       };
     });

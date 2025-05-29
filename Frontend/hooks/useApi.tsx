@@ -208,6 +208,23 @@ export const createGroup = async (
   }
 }
 
+export const updateGroup = async (group: Group) => {
+  try {
+    return await apiCall({
+      method: 'PUT',
+      url: `/groups/${group.id}/`,
+      data: {
+        name: group.name,
+        icon: group.icon,
+        color: group.color,
+      },
+    });
+  } catch (e) {
+    console.error(`PUT /groups/${group.id}/`, e);
+    return [];
+  }
+}
+
 export const toggleTodoCompleted = async (id: number, currentValue: boolean) => {
   try {
     return await apiCall({
