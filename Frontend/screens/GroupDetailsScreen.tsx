@@ -1,9 +1,9 @@
-import { useRoute, useTheme } from "@react-navigation/native";
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRoute, useTheme, useNavigation } from "@react-navigation/native";
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, Alert } from "react-native";
 import GroupsView from "../components/GroupsView";
 import { useGroupsContext } from "../store/GroupsContext";
 import { useTaskItemsContext } from "../store/TaskItemsContext";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import UserView from "../components/UserView";
 import TaskItemsList from "../components/TaskItemsList";
@@ -12,7 +12,7 @@ import { MARGIN_HORIZONTAL, MARGIN_VERTICAL } from "../src/constants";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { addUserTodo, updateGroup } from "../hooks/useApi";
+import { addUserTodo, updateGroup, leaveGroup } from "../hooks/useApi";
 import InviteUserBottomSheet from "../sheets/InviteUserBottomSheet";
 import { Task } from "../types/Task";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
@@ -25,6 +25,7 @@ const GroupDetailsScreen = () => {
   const { colors } = useTheme();
   const { groups, syncGroups } = useGroupsContext();
   const { taskItems, tasks, syncTaskItems } = useTaskItemsContext();
+  const navigation = useNavigation();
   const styles = getStyles(colors);
 
   const route = useRoute();
@@ -60,8 +61,27 @@ const GroupDetailsScreen = () => {
   }
 
   const handleLeaveGroupPress = () => {
-
-  }
+    Alert.alert(
+      "Leave group",
+      "Are you sure you want to leave this group?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Leave",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await leaveGroup(group.id);
+              await syncGroups();
+              navigation.goBack();
+            } catch (e: any) {
+              Alert.alert("Error", e?.response?.data?.error || "Could not leave group.");
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const handleTaskAdd = () => {
     handleTaskBottomSheetRef.current?.present();
@@ -150,11 +170,11 @@ const GroupDetailsScreen = () => {
           onPress={handleUserInvitation}
         />
         <Pressable style={styles.buttonContainer} onPress={handleLeaveGroupPress}>
-          <Text style={styles.buttonLabel}>Opuść</Text>
+          <Text style={styles.buttonLabel}>Leave</Text>
         </Pressable>
         {isAdmin &&
           <Pressable style={styles.buttonContainer} onPress={handleEditGroupPress}>
-            <Text style={styles.buttonLabel}>Edytuj</Text>
+            <Text style={styles.buttonLabel}>Edit</Text>
           </Pressable>
         }
       </View>
