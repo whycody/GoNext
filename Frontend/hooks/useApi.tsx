@@ -1,15 +1,21 @@
 import { apiCall } from "../utils/ApiHandler";
 import { Task, TaskModel } from "../types/Task";
 import { Group, GroupModel } from "../types/Group";
+import * as Application from 'expo-application';
 
 // Authentication
 
+const getDeviceId = () => {
+  return Application.getAndroidId() || Application.nativeApplicationVersion || '';
+};
+
 export const loginToApp = async (username: string, password: string, rememberMe: boolean) => {
   try {
+    const deviceId = getDeviceId();
     return await apiCall({
       method: 'POST',
       url: '/login/',
-      data: { username, password, remember_me: rememberMe }
+      data: { username, password, remember_me: rememberMe, device_id: deviceId }
     }, false);
   } catch (e) {
     console.error('/login/', e);
@@ -81,6 +87,18 @@ export const changeUserPassword = async (
     return null;
   }
 };
+
+export const getInfo = async () => {
+  try {
+    return await apiCall({
+      method: 'GET',
+      url: '/info/',
+    });
+  } catch (e) {
+    console.error('/info/', e);
+    return [];
+  }
+}
 
 // Tasks handling
 
