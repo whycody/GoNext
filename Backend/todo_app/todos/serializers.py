@@ -31,36 +31,11 @@ class ToDoSerializer(serializers.ModelSerializer):
             'priority',
             'is_completed',
             'group_id',
-            'group_name',
-            'user_id',                
+            'group_name',               
             'created_at',
         ]
         read_only_fields = ['id', 'created_at']
 
-    def validate(self, data):
-        # W `data` będziemy mieli klucze 'user' i 'group' (jeśli zostały podane w żądaniu),
-        # ponieważ użyliśmy `source='user'` dla pola `user_id` i `source='group'` dla pola `group_id`.
-        
-        # Pobieramy efektywne wartości użytkownika i grupy, biorąc pod uwagę,
-        # czy jest to tworzenie nowego obiektu, czy aktualizacja istniejącego.
-        effective_user = data.get('user', None)
-        effective_group = data.get('group', None)
-
-        if self.instance:  # Oznacza, że jest to aktualizacja (PUT/PATCH)
-            # Jeśli pole nie zostało jawnie przekazane w żądaniu PATCH,
-            # używamy istniejącej wartości z instancji modelu.
-            if 'user' not in data: # Klucz 'user' nieobecny w `data` (bo `user_id` nie było w payload)
-                effective_user = self.instance.user
-            if 'group' not in data: # Klucz 'group' nieobecny w `data` (bo `group_id` nie było w payload)
-                effective_group = self.instance.group
-        
-        # Logika walidacji z modelu ToDo.clean()
-        if not effective_user and not effective_group:
-            raise serializers.ValidationError('Zadanie musi być przypisane do użytkownika lub grupy.')
-        if effective_user and effective_group:
-            raise serializers.ValidationError('Zadanie nie może być przypisane zarówno do użytkownika, jak i do grupy.')
-        
-        return data
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
