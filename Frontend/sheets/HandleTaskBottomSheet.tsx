@@ -34,7 +34,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
     const [description, setDescription] = useState("");
     const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
 
-    const [selectedGroup, setSelectedGroup] = useState<string | number>("");
+    const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
     const [groups, setGroups] = useState<Group[]>([]);
 
     const priorityMap: { [key: number]: TaskPriority } = {
@@ -49,20 +49,6 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
       [TaskPriority.HIGH]: 3,
     };
 
-    const loadTaskFromApi = async () => {
-      if (taskId) {
-        const task: TaskModel | null = await getUserTodo(taskId);
-        if (!task) return;
-
-        setTitle(task.title);
-        setDescription(task.description);
-        setPriority(priorityMap[task.priority] || TaskPriority.MEDIUM);
-
-        setSelectedGroup(task.group ?? "");
-      }
-    }
-
-
     useEffect(() => {
       const fetchGroupsAndTask = async () => {
         const userGroups = await getUserGroups();
@@ -75,13 +61,16 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
             setDescription(task.description);
             setPriority(priorityMap[task.priority] || TaskPriority.MEDIUM);
 
-            const groupId = typeof task.group === "object" && task.group !== null
-              ? task.group.id
-              : task.group ?? "";
+            const groupId =
+              task.group_id === null
+                ? null
+                : typeof task.group_id === "number"
+                ? task.group_id
+                : null;
             setSelectedGroup(groupId);
           }
         } else {
-          setSelectedGroup("");
+          setSelectedGroup(null);
         }
       };
 
@@ -97,14 +86,14 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
         description: descriptionInputRef.current?.getWord(),
         priority: reversePriorityMap[priority],
         isCompleted: false,
-        groupId: 1
+        groupId: selectedGroup
       } as Task);
 
       if (clearForm) {
         setTitle("");
         setDescription("");
         setPriority(TaskPriority.MEDIUM);
-        setSelectedGroup("");
+        setSelectedGroup(null);
         titleInputRef.current?.focus();
       } else {
         (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
@@ -154,8 +143,8 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
               onValueChange={(itemValue) => setSelectedGroup(itemValue)}
             >
               <Picker.Item
-                label={`Select a group... (${groups.length})`}
-                value=""
+                label={`Personal (${groups.length + 1})`}
+                value={null}
                 color="gray"
               />
               {groups.map((group) => (

@@ -117,6 +117,7 @@ export const updateUserTodo = async (task: Task) => {
         title: task.title,
         description: task.description,
         priority: task.priority,
+        group: task.groupId
       },
     });
   } catch (e) {
