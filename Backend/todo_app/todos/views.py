@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.auth import get_user_model, authenticate, update_session_auth_hash 
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
@@ -126,14 +127,24 @@ class LoginView(APIView):
         username = validated_data.get('username')
         password = validated_data.get('password')
         remember_me = validated_data.get('remember_me', False)
-        device_id = validated_data.get('device_id') or None
+        device_id_from_client = validated_data.get('device_id') or None
 
         if AxesProxyHandler.is_locked(request):
             return lockout_response(request, credentials={"username": username})
 
-        if remember_me and not device_id:
-            # Domyślny identyfikator, warto podmienić na generowanie unikalnego identyfikatora
-            device_id = "test-device-id-6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+        # Zmienne do przechowywania device_id
+        generated_device_id_on_server = None 
+        device_id_to_store = None
+        
+        if remember_me:
+            if not device_id_from_client:
+                # Klient chce "remember_me", ale nie dostarczył device_id.
+                # Generujemy je na serwerze.
+                generated_device_id_on_server = str(uuid.uuid4())
+                device_id_to_store = generated_device_id_on_server
+            else:
+                # Klient dostarczył device_id
+                device_id_to_store = device_id_from_client
 
         user = authenticate(request=request, username=username, password=password)
         if user:
@@ -150,7 +161,12 @@ class LoginView(APIView):
             # Generowanie tokenów przy użyciu dedykowanej funkcji
             refresh, access_token = create_new_tokens(user, remember_me)
 
-            if device_id:
+            response_data = {
+                                'access': str(access_token),
+                                'refresh': str(refresh),
+                            }
+
+            if device_id_to_store:
                  # Ustal czas trwania sesji na podstawie flagi remember_me
                  # Pobierz skonfigurowany długi czas życia z ustawień (np. 30 dni)
                  refresh_lifetime_setting = settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME', timedelta(days=30))
@@ -163,7 +179,7 @@ class LoginView(APIView):
                  # dla tej kombinacji użytkownika i urządzenia
                  Device.objects.update_or_create(
                      user=user,
-                     device_id=device_id,
+                     device_id=device_id_to_store,
                      defaults={
                          'refresh_token': str(refresh),
                          # 'created_at' ustawi się samo dzięki auto_now_add=True w modelu
@@ -171,10 +187,10 @@ class LoginView(APIView):
                          'remember_me': remember_me 
                      }
                  )
-            return Response({
-                'access': str(access_token),
-                'refresh': str(refresh),
-            }, status=status.HTTP_200_OK)
+                 # Jeśli serwer wygenerował device_id, dodaj je do odpowiedzi
+                 if generated_device_id_on_server:
+                    response_data['device_id'] = generated_device_id_on_server
+            return Response(response_data, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
 

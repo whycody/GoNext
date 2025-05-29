@@ -3,7 +3,7 @@ import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-n
 import GroupsView from "../components/GroupsView";
 import { useGroupsContext } from "../store/GroupsContext";
 import { useTaskItemsContext } from "../store/TaskItemsContext";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import UserView from "../components/UserView";
 import TaskItemsList from "../components/TaskItemsList";
@@ -37,6 +37,10 @@ const GroupDetailsScreen = () => {
   const handleGroupBottomSheetRef = useRef<BottomSheetModal>(null);
   const inviteUserBottomSheetRef = useRef<BottomSheetModal>(null);
 
+  useEffect(() => {
+    setGroupTaskItems(taskItems.filter((item) => item.groupId == groupId));
+  }, [taskItems]);
+
   if (!group) {
     return (
       <View style={styles.root}>
@@ -68,6 +72,11 @@ const GroupDetailsScreen = () => {
     await syncTaskItems();
   }
 
+  const handleDataChange = async () => {
+    console.log("Data changed");
+    await syncTaskItems();
+  }
+
   const onGroupEdit = async (id: number, name: string, icon: string, color: string, members: string[]) => {
     const res = await updateGroup({ id, name, icon, color });
     await syncGroups();
@@ -90,7 +99,7 @@ const GroupDetailsScreen = () => {
       <HandleTaskBottomSheet
         ref={handleTaskBottomSheetRef}
         taskId={null}
-        onTaskHandle={handleTaskAdd}
+        onTaskHandle={handleTask}
         selectedGroupId={group ? group.name : undefined}
       />
       <GroupsView
@@ -120,7 +129,7 @@ const GroupDetailsScreen = () => {
           taskItems={groupTaskItems}
           setTaskItems={setGroupTaskItems}
           selectedCategory={Categories.GROUP}
-          onDataChange={syncTaskItems}
+          onDataChange={handleDataChange}
           displayHeader={false}
         />
       </ScrollView>
