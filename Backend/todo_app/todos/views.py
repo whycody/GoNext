@@ -858,3 +858,51 @@ class ChangePasswordView(generics.GenericAPIView): # Użycie GenericAPIView dla 
         devices_query.delete() # Usuń wszystkie pozostałe (lub wszystkie, jeśli current_device_id nie podano)
 
         return Response({"detail": "Hasło zostało pomyślnie zmienione. Wylogowano z pozostałych, zapamiętanych urządzeń."}, status=status.HTTP_200_OK)
+
+class LeaveGroupView(APIView):
+    """
+    Pozwala uwierzytelnionemu użytkownikowi opuścić grupę, której jest członkiem.
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated] # Użytkownik musi być zalogowany
+
+    @swagger_auto_schema(
+        tags=['Groups Management'], # Umieść w odpowiedniej kategorii Swaggera
+        operation_id='group_leave',
+        operation_description="Pozwala uwierzytelnionemu użytkownikowi opuścić grupę, której jest członkiem.",
+        responses={
+            200: "Pomyślnie opuszczono grupę.",
+            403: "Zabronione - np. próba opuszczenia grupy jako ostatni administrator.",
+            404: "Nie znaleziono - Grupa nie istnieje lub użytkownik nie jest jej członkiem."
+        }
+    )
+    def delete(self, request, group_id):
+        user_to_leave = request.user
+        group = get_object_or_404(Group, id=group_id)
+
+        # Sprawdź, czy użytkownik jest członkiem grupy
+        if not group.members.filter(id=user_to_leave.id).exists():
+            return Response(
+                {"error": "Nie jesteś członkiem tej grupy."},
+                status=status.HTTP_404_NOT_FOUND # Lub status.HTTP_403_FORBIDDEN
+            )
+
+        is_admin = group.admins.filter(id=user_to_leave.id).exists()
+
+        if is_admin and group.admins.count() == 1:
+            return Response(
+                {"error": "Nie możesz opuścić grupy, ponieważ jesteś jej ostatnim administratorem. "
+                          "Najpierw mianuj innego administratora lub usuń grupę."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Usuń użytkownika z listy członków grupy
+        group.members.remove(user_to_leave)
+
+        if is_admin:
+            group.admins.remove(user_to_leave)
+
+        return Response(
+            {"message": f"Pomyślnie opuściłeś grupę '{group.name}'."},
+            status=status.HTTP_200_OK
+        )
