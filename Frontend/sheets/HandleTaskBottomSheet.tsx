@@ -6,7 +6,7 @@ import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import { Picker } from "@react-native-picker/picker";
-import { getUserTodo } from "../hooks/useApi";
+import { getUserTodo, getUserGroups } from "../hooks/useApi";
 import { Task, TaskModel } from "../types/Task";
 import { useGroupsContext } from "../store/GroupsContext";
 
@@ -34,8 +34,8 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
     const [description, setDescription] = useState("");
     const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
 
-    const [selectedGroup, setSelectedGroup] = useState("");
-    const { groups } = useGroupsContext();
+    const [selectedGroup, setSelectedGroup] = useState<string | number>("");
+    const [groups, setGroups] = useState<Group[]>([]);
 
     const priorityMap: { [key: number]: TaskPriority } = {
       1: TaskPriority.LOW,
@@ -56,15 +56,37 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
 
         setTitle(task.title);
         setDescription(task.description);
-
         setPriority(priorityMap[task.priority] || TaskPriority.MEDIUM);
-        setSelectedGroup(task.group);
+
+        setSelectedGroup(task.group ?? "");
       }
     }
 
+
     useEffect(() => {
-      loadTaskFromApi();
-    }, [taskId, groups]);
+      const fetchGroupsAndTask = async () => {
+        const userGroups = await getUserGroups();
+        setGroups(userGroups);
+
+        if (taskId) {
+          const task: TaskModel | null = await getUserTodo(taskId);
+          if (task) {
+            setTitle(task.title);
+            setDescription(task.description);
+            setPriority(priorityMap[task.priority] || TaskPriority.MEDIUM);
+
+            const groupId = typeof task.group === "object" && task.group !== null
+              ? task.group.id
+              : task.group ?? "";
+            setSelectedGroup(groupId);
+          }
+        } else {
+          setSelectedGroup("");
+        }
+      };
+
+      fetchGroupsAndTask();
+    }, [taskId]);
 
     const handleAdd = (clearForm: boolean) => {
       if (!title) return;
@@ -131,9 +153,13 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
               selectedValue={selectedGroup}
               onValueChange={(itemValue) => setSelectedGroup(itemValue)}
             >
-              <Picker.Item label="Select a group..." value="" color="gray"/>
+              <Picker.Item
+                label={`Select a group... (${groups.length})`}
+                value=""
+                color="gray"
+              />
               {groups.map((group) => (
-                <Picker.Item key={group.id} label={group.name} value={group.name}/>
+                <Picker.Item key={group.id} label={group.name} value={group.id} />
               ))}
             </Picker>
           </View>
