@@ -55,13 +55,19 @@ const refreshAccessToken = async (options: any, header: boolean = false) => {
 };
 
 export const apiCall = async <T>(
-  options: { method: string; url: string; data?: object | string }, header: boolean = true, refreshed: boolean = false): Promise<T> => {
+  options: {
+    method: string;
+    url: string;
+    data?: object | string
+  }, header: boolean = true, refreshed: boolean = false): Promise<T> => {
 
+  if (!accessToken) {
+    await loadToken();
+  }
+  
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-
-  console.log(options.method, options.url, accessToken);
 
   if (accessToken && header) {
     headers['Authorization'] = `Bearer ${accessToken}`;
