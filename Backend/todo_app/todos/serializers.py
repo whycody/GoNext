@@ -7,12 +7,6 @@ from django.contrib.auth.password_validation import validate_password
 User = get_user_model()  # Pobieramy nasz niestandardowy model użytkownika
 
 class ToDoSerializer(serializers.ModelSerializer):
-    user_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        source='user',  # Mapuje to pole serializera na pole 'user' w modelu ToDo
-        allow_null=True,
-        required=False  # Zadanie może być przypisane do grupy zamiast użytkownika
-    )
     group_id = serializers.PrimaryKeyRelatedField(
         source='group',  # Nazwa pola ForeignKey w modelu ToDo
         queryset=Group.objects.all(), # Queryset dla modelu Group
