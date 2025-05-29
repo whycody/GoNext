@@ -7,25 +7,28 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import AuthProvider from "./utils/AuthProvider";
 import { TaskItemsProvider } from "./store/TaskItemsContext";
+import { GroupsProvider } from "./store/GroupsContext";
 
 export default function App() {
   return (
     <>
       <StatusBar/>
       <SafeAreaProvider>
-        <TaskItemsProvider>
-          <GestureHandlerRootView>
-            <SafeAreaView style={styles.container}>
-              <BottomSheetModalProvider>
-                <NavigationContainer>
-                  <AuthProvider>
-                    <RootNavigation/>
-                  </AuthProvider>
-                </NavigationContainer>
-              </BottomSheetModalProvider>
-            </SafeAreaView>
-          </GestureHandlerRootView>
-        </TaskItemsProvider>
+        <GroupsProvider>
+          <TaskItemsProvider>
+            <GestureHandlerRootView>
+              <SafeAreaView style={styles.container}>
+                <BottomSheetModalProvider>
+                  <NavigationContainer>
+                    <AuthProvider>
+                      <RootNavigation/>
+                    </AuthProvider>
+                  </NavigationContainer>
+                </BottomSheetModalProvider>
+              </SafeAreaView>
+            </GestureHandlerRootView>
+          </TaskItemsProvider>
+        </GroupsProvider>
       </SafeAreaProvider>
     </>
   );

@@ -1,10 +1,10 @@
 import { useTasks } from "./useTasks";
-import { useGroups } from "./useGroups";
 import { useEffect, useState } from "react";
 import { TaskItem } from "../types/Task";
+import { useGroupsContext } from "../store/GroupsContext";
 
 export const useTaskItems = () => {
-  const groups = useGroups();
+  const { groups } = useGroupsContext();
   const { tasks, loadTasks } = useTasks();
   const [globalTaskItems, setGlobalTaskItems] = useState<TaskItem[]>([]);
 

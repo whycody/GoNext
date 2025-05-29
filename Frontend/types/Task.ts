@@ -22,9 +22,9 @@ export type TaskModel = {
   title: string;
   created_at: string;
   description: string;
-  due_date: string;
-  group: string;
+  group_id: string;
+  group_name: string;
   is_completed: boolean;
-  priority: number;
-  user: string;
+  priority: 1 | 2 | 3;
+  user_id: string;
 }

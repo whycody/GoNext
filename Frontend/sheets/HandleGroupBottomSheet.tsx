@@ -5,7 +5,7 @@ import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
-import { useGroups } from "../hooks/useGroups";
+import { useGroupsContext } from "../store/GroupsContext";
 
 interface HandleGroupBottomSheetProps {
   groupId?: number;
@@ -33,7 +33,7 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
   ({ groupId, onGroupAdd, onGroupEdit, onChangeIndex }, ref) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
-    const groups = useGroups();
+    const { groups } = useGroupsContext();
 
     const nameInputRef = useRef<SheetTextRef>(null);
     const [name, setName] = useState("");
@@ -61,11 +61,11 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
     }, [groupId, groups, selectEmoji, emojis]);
 
     const handleAdd = (clearForm: boolean) => {
-      if (!name || !selectedEmoji || !selectedColor) return;
+      if (!nameInputRef.current?.getWord() || !selectedEmoji || !selectedColor) return;
       if (groupId) {
-        onGroupEdit(groupId, name, selectedEmoji, selectedColor, members);
+        onGroupEdit(groupId, nameInputRef.current?.getWord(), selectedEmoji, selectedColor, members);
       } else {
-        onGroupAdd(name, selectedEmoji, selectedColor, members);
+        onGroupAdd(nameInputRef.current?.getWord(), selectedEmoji, selectedColor, members);
       }
       if (clearForm) {
         setName("");
