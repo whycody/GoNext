@@ -225,6 +225,18 @@ export const updateGroup = async (group: Group) => {
   }
 }
 
+export const leaveGroup = async (groupId: number) => {
+  try {
+    return await apiCall({
+      method: 'DELETE',
+      url: `/groups/${groupId}/leave/`,
+    });
+  } catch (e) {
+    console.error(`DELETE /groups/${groupId}/leave/`, e);
+    throw e;
+  }
+};
+
 export const toggleTodoCompleted = async (id: number, currentValue: boolean) => {
   try {
     return await apiCall({
