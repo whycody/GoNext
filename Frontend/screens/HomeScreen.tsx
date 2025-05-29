@@ -11,6 +11,7 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { addUserTodo } from "../hooks/useApi";
 import { useTaskItems } from "../hooks/useTaskItems";
 import TaskItemsList from "../components/TaskItemsList";
+import { useTaskItemsContext } from "../store/TaskItemsContext";
 
 export enum Categories {
   PRIORITY = 'Priority',
@@ -25,23 +26,23 @@ const HomeScreen = () => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const handleTaskBottomSheetRef = useRef<BottomSheetModal>(null);
-  const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
-  const { globalTaskItems, loadTasks } = useTaskItems();
+  const [currentTaskItems, setCurrentTaskItems] = useState<TaskItem[]>([]);
+  const { taskItems, syncTaskItems } = useTaskItemsContext();
 
   const handleFABPress = () => {
     handleTaskBottomSheetRef.current?.present();
   }
 
   useEffect(() => {
-    if (!globalTaskItems || globalTaskItems.length == 0) return;
-    setTaskItems(globalTaskItems);
+    if (!taskItems || taskItems.length == 0) return;
+    setCurrentTaskItems(taskItems);
     setLoading(false);
-  }, [globalTaskItems]);
+  }, [taskItems]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     setLoading(true);
-    await loadTasks();
+    await syncTaskItems();
     setRefreshing(false);
     setLoading(false);
   };
@@ -49,7 +50,7 @@ const HomeScreen = () => {
   const handleTask = async (task: Task) => {
     setLoading(true);
     await addUserTodo(task);
-    await loadTasks();
+    await syncTaskItems();
     setLoading(false);
   }
 
@@ -91,9 +92,9 @@ const HomeScreen = () => {
           />
         }
         <TaskItemsList
-          taskItems={taskItems}
-          setTaskItems={setTaskItems}
-          onDataChange={loadTasks}
+          taskItems={currentTaskItems}
+          setTaskItems={setCurrentTaskItems}
+          onDataChange={syncTaskItems}
           selectedCategory={selectedCategory}
         />
       </ScrollView>
