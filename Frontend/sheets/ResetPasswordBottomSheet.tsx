@@ -7,7 +7,7 @@ import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput"; 
 
 interface ResetPasswordBottomSheetProps {
-  onPasswordReset: (newPassword: string) => void; 
+  onPasswordReset: (oldPassword: string, newPassword1: string, newPassword2: string) => void; 
   onChangeIndex?: (index: number) => void;
 }
 
@@ -35,9 +35,11 @@ const ResetPasswordBottomSheet = forwardRef<BottomSheetModal, ResetPasswordBotto
     const { colors } = useTheme();
     const styles = getStyles(colors);
 
+    const oldPasswordInputRef = useRef<SheetTextRef>(null);
     const newPasswordInputRef = useRef<SheetTextRef>(null);
     const confirmPasswordInputRef = useRef<SheetTextRef>(null);
 
+    const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -46,6 +48,12 @@ const ResetPasswordBottomSheet = forwardRef<BottomSheetModal, ResetPasswordBotto
     const handleReset = () => {
       setError(null);
       setPasswordStrengthError(null);
+
+      if (!oldPassword) {
+        setError("Old password cannot be empty.");
+        oldPasswordInputRef.current?.focus();
+        return;
+      }
 
       if (!newPassword) {
         setError("New password cannot be empty.");
@@ -72,7 +80,8 @@ const ResetPasswordBottomSheet = forwardRef<BottomSheetModal, ResetPasswordBotto
         return;
       }
 
-      onPasswordReset(newPassword);
+      onPasswordReset(oldPassword, newPassword, confirmPassword);
+      setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
       Alert.alert("Success!", "Password has been reset.");
@@ -97,12 +106,13 @@ const ResetPasswordBottomSheet = forwardRef<BottomSheetModal, ResetPasswordBotto
         onChange={(index: number) => {
           onChangeIndex?.(index);
           if (index === -1) {
+            setOldPassword("");
             setNewPassword("");
             setConfirmPassword("");
             setError(null);
             setPasswordStrengthError(null);
           } else if (index >= 0) {
-            setTimeout(() => newPasswordInputRef.current?.focus(), 100);
+            setTimeout(() => oldPasswordInputRef.current?.focus(), 100);
           }
         }}
         containerComponent={renderContainerComponent}
@@ -110,7 +120,20 @@ const ResetPasswordBottomSheet = forwardRef<BottomSheetModal, ResetPasswordBotto
         handleIndicatorStyle={{ backgroundColor: colors.primary, borderRadius: 0 }}
       >
         <BottomSheetScrollView style={styles.root} contentContainerStyle={styles.contentContainer}>
-          <Text style={styles.title}>Reset password 🔐</Text>
+          <Text style={styles.title}>Change password 🔐</Text>
+
+          <SheetText
+            ref={oldPasswordInputRef}
+            placeholder="Old password"
+            value={oldPassword}
+            onChangeText={(text) => {
+              setOldPassword(text);
+              if (error) setError(null); 
+            }}
+            secureTextEntry
+            style={styles.input}
+            autoFocus
+          />
 
           <SheetText
             ref={newPasswordInputRef}
@@ -140,7 +163,6 @@ const ResetPasswordBottomSheet = forwardRef<BottomSheetModal, ResetPasswordBotto
           />
           {error && <Text style={styles.errorText}>{error}</Text>}
 
-
           <View style={styles.buttonContainer}>
             <Pressable
               onPress={handleReset}
@@ -149,7 +171,7 @@ const ResetPasswordBottomSheet = forwardRef<BottomSheetModal, ResetPasswordBotto
                 { backgroundColor: pressed ? colors.border : colors.primary },
               ]}
             >
-              <Text style={styles.buttonText}>Reset password</Text>
+              <Text style={styles.buttonText}>Change password</Text>
             </Pressable>
           </View>
         </BottomSheetScrollView>
@@ -174,7 +196,7 @@ const getStyles = (colors: any) =>
     },
     input: {
       marginBottom: 8, 
-      paddingVertical: 12,
+      paddingVertical: 5,
       borderRadius: 10,
     },
     errorText: {

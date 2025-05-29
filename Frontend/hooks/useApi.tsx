@@ -56,6 +56,32 @@ export const logoutFromApp = async (refreshToken: string) => {
   }
 }
 
+export const changeUserPassword = async (
+  oldPassword: string,
+  newPassword1: string,
+  newPassword2: string,
+  currentDeviceId?: string 
+) => {
+  try {
+    const data: any = {
+      old_password: oldPassword,
+      new_password1: newPassword1,
+      new_password2: newPassword2,
+    };
+    if (currentDeviceId !== undefined) {
+      data.current_device_id = currentDeviceId;
+    }
+    return await apiCall({
+      method: 'POST',
+      url: '/password/change/', 
+      data: data,               
+    });
+  } catch (e) {
+    console.error('/password/change/', e);
+    return null;
+  }
+};
+
 // Tasks handling
 
 export const getUserTodos = async (): Promise<TaskModel[]> => {

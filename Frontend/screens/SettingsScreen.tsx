@@ -6,6 +6,7 @@ import SettingsHeader from "../components/SettingsHeader";
 import SettingsButton from "../components/SettingsButton";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import ResetPasswordBottomSheet from "../sheets/ResetPasswordBottomSheet"; 
+import { changeUserPassword } from "../hooks/useApi";
 
 const SettingsScreen = () => {
   const authContext = useContext(AuthContext);
@@ -64,7 +65,12 @@ const SettingsScreen = () => {
 
       <ResetPasswordBottomSheet
         ref={resetPasswordSheetRef}
-        onPasswordReset={handlePasswordReset}
+        onPasswordReset={async (oldPassword, newPassword1, newPassword2) => {
+          const response = await changeUserPassword(oldPassword, newPassword1, newPassword2);
+          if (response && response.message) {
+            Alert.alert("Success", response.message);
+          } 
+        }}
       />
     </View>
   );
