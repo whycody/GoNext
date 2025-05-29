@@ -1,17 +1,19 @@
 import { FlatList, StyleSheet, View } from "react-native";
 import GroupsHeader from "../components/GroupsHeader"; 
-import GroupsView from "../components/GroupsView"; 
-import { useGroupStats } from "../hooks/useGroupStats"; 
+import GroupsView from "../components/GroupsView";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
 import InviteUserBottomSheet from "../sheets/InviteUserBottomSheet";
 import { useState, useRef } from "react";
-import { createGroup } from "../hooks/useApi"; 
+import { createGroup } from "../hooks/useApi";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { useGroupsContext } from "../store/GroupsContext";
+import { useTaskItemsContext } from "../store/TaskItemsContext";
 
 const GroupsScreen = () => {
-  const [refreshGroups, setRefreshGroups] = useState(0);
-  const groups = useGroupStats(refreshGroups);
+  const { tasks } = useTaskItemsContext();
+  const { groups, syncGroups } = useGroupsContext();
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const navigation = useNavigation();
@@ -23,9 +25,8 @@ const GroupsScreen = () => {
 
   const handleGroupAdd = async (name: string, icon: string, color: string, members: string[]) => {
     const result = await createGroup(name, icon, color);
-    if (result) {
-      setRefreshGroups(r => r + 1); 
-    }
+    handleGroupBottomSheetRef.current?.dismiss();
+    await syncGroups();
   };
 
   const handleGroupEdit = (id: number, name: string, icon: string, color: string, members: string[]) => {
@@ -59,8 +60,8 @@ const GroupsScreen = () => {
           <GroupsView
             index={index}
             group={item}
-            taskCount={item.taskCount} 
-            memberCount={item.memberCount} 
+            taskCount={tasks.filter((task) => task.groupId == item.id).length}
+            memberCount={item.members.length}
             onGroupPress={() => navigation.navigate("GroupDetails", { groupId: item.id })}
             onLongPress={() => handleGroupLongPress(item.id)} 
           />

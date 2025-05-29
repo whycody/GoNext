@@ -1,6 +1,6 @@
 import { apiCall } from "../utils/ApiHandler";
 import { Task, TaskModel } from "../types/Task";
-import { GroupModel } from "../types/Group";
+import { Group, GroupModel } from "../types/Group";
 
 // Authentication
 
@@ -147,7 +147,7 @@ export const addUserTodo = async (task: Task) => {
 
 // Groups handling
 
-export const getUserGroups = async (): Promise<GroupModel[]> => {
+export const getUserGroups = async (): Promise<Group[]> => {
   try {
     return await apiCall({
       method: 'GET',
@@ -217,7 +217,7 @@ export const toggleTodoCompleted = async (id: number, currentValue: boolean) => 
       },
     });
   } catch (e) {
-    console.error(`PATCH /todos/${id}/, e`);
+    console.error(`PATCH /todos/${id}/, `, e);
     return null;
   }
 }

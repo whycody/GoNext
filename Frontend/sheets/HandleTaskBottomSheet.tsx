@@ -6,9 +6,9 @@ import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import { Picker } from "@react-native-picker/picker";
-import { useGroups } from "../hooks/useGroups";
 import { getUserTodo } from "../hooks/useApi";
 import { Task, TaskModel } from "../types/Task";
+import { useGroupsContext } from "../store/GroupsContext";
 
 interface HandleTaskBottomSheetProps {
   taskId: number | null,
@@ -35,8 +35,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
     const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
 
     const [selectedGroup, setSelectedGroup] = useState("");
-
-    const groups = useGroups();
+    const { groups } = useGroupsContext();
 
     const priorityMap: { [key: number]: TaskPriority } = {
       1: TaskPriority.LOW,
