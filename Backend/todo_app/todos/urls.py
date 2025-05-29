@@ -21,7 +21,8 @@ urlpatterns = [
     path('todos/', ToDoListCreateView.as_view(), name='todo-list-create'),
 
     # CRUD for groups – available only for admin
-    path('groups/', GroupListView.as_view(), name='group-list'),
+    path('groups/admin/', GroupListView.as_view(), name='admin-group-list'),
+    path('groups/', MyGroupsListView.as_view(), name='group-list'),
     path('groups/<int:pk>/', GroupDetailView.as_view(), name='group-detail'),
     path('groups/create/', GroupCreateView.as_view(), name='group-create'),
     path('invitations/create/', InvitationCreateView.as_view(), name='invitation-create'),
