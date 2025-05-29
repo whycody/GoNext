@@ -25,7 +25,6 @@
 - [Cloud Services](#cloud-services)
 - [Risk Plan](#risk-plan)
 - [Security Threats](#security-threats)
-- [Migration](#migration)
 - [Pre-Game](#pre-game)
 - [Release plan](#release-plan)
     - [Release 1](#release-1)
@@ -167,23 +166,7 @@ In addition, both services comply with major standards:
 - SOC 1, 2, and 3
 - HIPAA
 - GDPR
-  
 
-### Cloud service safety
-Azure App Service offers a robust security framework with built-in features and integrations to protect applications and data. While it provides a strong baseline of security, users are responsible for configuring and maintaining their own security settings for the highest level of protection.
-- HTTPS Enforcement: App Service automatically forces HTTPS connections, ensuring encrypted communication between the client and the server.
-- TLS/SSL Certificates: Users can add TLS/SSL certificates for custom domains to maintain secure connections, particularly when using HTTPS. 
-- Data Residency: App Service Environments store data within the region where they are deployed.
-- Managed Identities: These identities allow App Service apps to securely access secrets in Azure Key Vault without needing to store credentials in code or app settings.
-- Key Vault Integration: Users can use Key Vault to securely store and manage secrets like database credentials and API keys.
-
-
-Azure Database for PostgreSQL offers robust security features to protect your data, both in transit and at rest. It leverages encryption, authentication, and access control to ensure a secure environment. Data at rest is encrypted using FIPS 140-2 validated cryptographic modules, while data in transit is protected with SSL/TLS. 
-- Encryption at Rest: Azure Database for PostgreSQL uses FIPS 140-2 validated cryptographic modules to encrypt data stored on disk, including backups and temporary files.
-- Encryption in Transit: Data is encrypted during transmission using Secure Sockets Layer (SSL) and Transport Layer Security (TLS).
-- VNet Integration: You can integrate your PostgreSQL server with Azure's virtual network (VNet) for private access, preventing public exposure.
-
- 
 ***
 
 ## Risk Plan
@@ -196,7 +179,6 @@ The project is considered to be successful if:
 - The team is satisfied with the application and their work on the project,
 
 ### Risk List
-Risk list contains most probably occurring issues during app development. We introduce risk scaling depending on their impact on app's functionality and its likelihood of occurrence. Impact and Likelihood are measured in skale 1(least) to 5(most). Then using formula "RSK1 = PxI" we calculate how dangerous the risk is for the app. We set a risk threshold equals 20, meaning that every risk with risk score >= 20 is considered to be dangerous and needed to be mitigated. 
 
   - RSK1 - PxI: 4×4=16; Unequal Contribution from Team Members
     - Risk: Some team members may take on more responsibilities than others, causing workload imbalance and potential dissatisfaction.
@@ -258,10 +240,6 @@ Risk list contains most probably occurring issues during app development. We int
   - T8 - Possible JWT token leak
     - Threat: Insecurely stored or incorrectly verified tokens can be hijacked or forged.
     - Mitigation: We hash tokens and add SALT for propper security.
-
-***
-## Migration
-Because the configuration of cloud services on Azure required time in the beginning of the project and there wasn't a lot of time available to work on, the app was developed localy and then migrated to Azure. The process consisted of first configuring a simple postgresql database which the team could connect to while working on the app (with web server running locally). After that a fork was made from the default repository and using github actions we had a working deployment to Azure app service with our backend running there. With the whole setup configured all that was left was to point the frontend URLs to Azure on development setups.
 
 ***
 
