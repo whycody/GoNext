@@ -42,6 +42,7 @@ class UserInfoView(APIView):
         if request.user.is_authenticated:
             return Response({
                 "username": request.user.username,
+                "user_id": request.user.id,
                 "status": "verified" if request.user.is_verified else "not_verified"
             }, status=status.HTTP_200_OK)
         return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
