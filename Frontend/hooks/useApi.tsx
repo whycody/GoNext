@@ -4,12 +4,12 @@ import { GroupModel } from "../types/Group";
 
 // Authentication
 
-export const loginToApp = async (username: string, password: string) => {
+export const loginToApp = async (username: string, password: string, rememberMe: boolean) => {
   try {
     return await apiCall({
       method: 'POST',
       url: '/login/',
-      data: { username, password, remember_me: true }
+      data: { username, password, remember_me: rememberMe }
     }, false);
   } catch (e) {
     console.error('/login/', e);
