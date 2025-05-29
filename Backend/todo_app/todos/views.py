@@ -342,6 +342,27 @@ class GroupListView(generics.ListAPIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
+class MyGroupsListView(generics.ListAPIView):
+    """
+    Widok API zwracający listę grup, do których należy
+    aktualnie uwierzytelniony użytkownik (jako członek lub administrator grupy).
+    """
+    serializer_class = GroupSerializer
+    # Użyj odpowiedniej klasy authentykacji JWT, której używasz w projekcie
+    # Przykład dla Djoser:
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated] 
+
+    def get_queryset(self):
+        """
+        Ta metoda zwraca queryset grup przefiltrowany dla aktualnego użytkownika.
+        Użytkownik zobaczy grupy, w których jest członkiem ('members')
+        lub administratorem ('admins').
+        """
+        user = self.request.user
+        if user.is_authenticated: # Dodatkowe sprawdzenie, choć permission_classes już to robi
+            return Group.objects.filter(Q(members=user) | Q(admins=user)).distinct()
+        return Group.objects.none() # Dla nieuwierzytelnionych użytkowników (teoretycznie nie powinno tu dojść)
 
 # View for admins – group detail view
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):

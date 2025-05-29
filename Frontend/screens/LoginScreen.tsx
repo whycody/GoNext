@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, KeyboardAvoidingView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, KeyboardAvoidingView, ActivityIndicator, Pressable } from "react-native";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import { FC, useEffect, useState } from "react";
 import AuthTextInput from "../components/AuthTextInput";
 
 type LoginProps = {
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, rememberMe: boolean) => Promise<void>;
   authError: string | null;
 }
 
@@ -16,6 +16,7 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
   const [warning, setWarning] = useState<string | null>(null);
   const [username, setUsername] = useState<string>('admin');
   const [password, setPassword] = useState<string>('haslo123');
+  const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
   const filled = username.length > 0 && password.length > 0;
   const nav = useNavigation();
@@ -23,7 +24,7 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
   const handleLoginPress = async () => {
     if (!filled || loading) return;
     setLoading(true);
-    await login(username, password);
+    await login(username, password, rememberMe);
     setLoading(false);
   }
 
@@ -57,6 +58,19 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
           style={{ marginTop: 10 }}
           textContentType={'password'}
         />
+        <Pressable
+          style={styles.checkboxContainer}
+          onPress={() => setRememberMe((prev) => !prev)}
+          disabled={loading}
+        >
+          <View style={[
+            styles.checkbox,
+            rememberMe && { backgroundColor: colors.primary, borderColor: colors.primary }
+          ]}>
+            {rememberMe && <Text style={styles.checkboxTick}>✓</Text>}
+          </View>
+          <Text style={styles.checkboxLabel}>Remember me</Text>
+        </Pressable>
         <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 10 }}>
           {warning}
         </Text>
@@ -96,6 +110,33 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   inputsContainer: {
     marginTop: 40,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+    backgroundColor: 'transparent',
+  },
+  checkboxTick: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 12,
+    lineHeight: 15,
+  },
+  checkboxLabel: {
+    fontSize: 13,
+    color: colors.text,
   },
   label: {
     fontSize: 13,

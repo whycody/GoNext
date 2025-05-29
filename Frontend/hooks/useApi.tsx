@@ -1,15 +1,15 @@
 import { apiCall } from "../utils/ApiHandler";
 import { Task, TaskModel } from "../types/Task";
-import { GroupModel } from "../types/Group";
+import { Group, GroupModel } from "../types/Group";
 
 // Authentication
 
-export const loginToApp = async (username: string, password: string) => {
+export const loginToApp = async (username: string, password: string, rememberMe: boolean) => {
   try {
     return await apiCall({
       method: 'POST',
       url: '/login/',
-      data: { username, password, remember_me: true }
+      data: { username, password, remember_me: rememberMe }
     }, false);
   } catch (e) {
     console.error('/login/', e);
@@ -55,6 +55,32 @@ export const logoutFromApp = async (refreshToken: string) => {
     return null;
   }
 }
+
+export const changeUserPassword = async (
+  oldPassword: string,
+  newPassword1: string,
+  newPassword2: string,
+  currentDeviceId?: string 
+) => {
+  try {
+    const data: any = {
+      old_password: oldPassword,
+      new_password1: newPassword1,
+      new_password2: newPassword2,
+    };
+    if (currentDeviceId !== undefined) {
+      data.current_device_id = currentDeviceId;
+    }
+    return await apiCall({
+      method: 'POST',
+      url: '/password/change/', 
+      data: data,               
+    });
+  } catch (e) {
+    console.error('/password/change/', e);
+    return null;
+  }
+};
 
 // Tasks handling
 
@@ -121,7 +147,7 @@ export const addUserTodo = async (task: Task) => {
 
 // Groups handling
 
-export const getUserGroups = async (): Promise<GroupModel[]> => {
+export const getUserGroups = async (): Promise<Group[]> => {
   try {
     return await apiCall({
       method: 'GET',
@@ -191,7 +217,7 @@ export const toggleTodoCompleted = async (id: number, currentValue: boolean) => 
       },
     });
   } catch (e) {
-    console.error(`PATCH /todos/${id}/, e`);
+    console.error(`PATCH /todos/${id}/, `, e);
     return null;
   }
 }

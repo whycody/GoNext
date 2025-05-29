@@ -37,17 +37,17 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = async (username: string, password: string) => {
-    setAuthError(null);
-    const res = await loginToApp(username, password);
-    if (res) {
-      setTokens(res.access, res.refresh);
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-      setAuthError('Invalid username or password');
-    }
+  const login = async (username: string, password: string, rememberMe: boolean) => {
+  setAuthError(null);
+  const res = await loginToApp(username, password, rememberMe);
+  if (res) {
+    setTokens(res.access, res.refresh);
+    setIsAuthenticated(true);
+  } else {
+    setIsAuthenticated(false);
+    setAuthError('Invalid username or password');
   }
+}
 
   const register = async (username: string, email: string, password: string) => {
     setRegisterError(null);

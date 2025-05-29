@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { Task, TaskItem, TaskModel } from "../types/Task";
-import { useGroups } from "../hooks/useGroups";
 import { getUserTodos } from "../hooks/useApi";
+import { useGroupsContext } from "./GroupsContext";
 
 type TaskItemsContextType = {
+  tasks: Task[];
   taskItems: TaskItem[];
   syncTaskItems: () => Promise<void>;
 };
@@ -11,7 +12,7 @@ type TaskItemsContextType = {
 const TaskItemsContext = createContext<TaskItemsContextType | undefined>(undefined);
 
 export const TaskItemsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const groups = useGroups();
+  const { groups } = useGroupsContext();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
 
@@ -22,9 +23,8 @@ export const TaskItemsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         id: taskModel.id,
         title: taskModel.title,
         description: taskModel.description,
-        priority:
-          taskModel.priority >= 1 && taskModel.priority <= 3 ? taskModel.priority : 1,
-        date: new Date(taskModel.due_date),
+        priority: taskModel.priority >= 1 && taskModel.priority <= 3 ? taskModel.priority : 1,
+        date: new Date(taskModel.created_at),
         isCompleted: taskModel.is_completed,
         groupId: 0,
       }));
@@ -54,7 +54,7 @@ export const TaskItemsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [tasks, groups]);
 
   return (
-    <TaskItemsContext.Provider value={{ taskItems, syncTaskItems: loadTasks }}>
+    <TaskItemsContext.Provider value={{ tasks, taskItems, syncTaskItems: loadTasks }}>
       {children}
     </TaskItemsContext.Provider>
   );
