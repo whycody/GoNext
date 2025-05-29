@@ -136,7 +136,7 @@ export const addUserTodo = async (task: Task) => {
         description: task.description,
         priority: task.priority,
         is_completed: task.isCompleted,
-        group: task.groupId
+        group_id: task.groupId
       },
     });
   } catch (e) {

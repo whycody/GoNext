@@ -13,6 +13,7 @@ export type TaskItem = {
   title: string;
   description: string;
   priority: 1 | 2 | 3;
+  groupId: string;
   groupName: string;
   isCompleted: boolean;
 };

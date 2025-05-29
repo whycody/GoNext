@@ -26,7 +26,7 @@ export const TaskItemsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         priority: taskModel.priority >= 1 && taskModel.priority <= 3 ? taskModel.priority : 1,
         date: new Date(taskModel.created_at),
         isCompleted: taskModel.is_completed,
-        groupId: 0,
+        groupId: taskModel.group_id,
       }));
       setTasks(mappedTasks);
     } catch (error) {
@@ -46,6 +46,7 @@ export const TaskItemsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         title: task.title,
         description: task.description,
         priority: task.priority,
+        groupId: task.groupId,
         groupName: group ? group.name : "Nieznana grupa",
         isCompleted: task.isCompleted,
       };

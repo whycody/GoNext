@@ -1,5 +1,5 @@
-import { FlatList, StyleSheet, View } from "react-native";
-import GroupsHeader from "../components/GroupsHeader"; 
+import { FlatList, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import GroupsHeader from "../components/GroupsHeader";
 import GroupsView from "../components/GroupsView";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
@@ -17,11 +17,18 @@ const GroupsScreen = () => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const navigation = useNavigation();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [selectedGroupName, setSelectedGroupName] = useState<string | null>(null); 
+  const [selectedGroupName, setSelectedGroupName] = useState<string | null>(null);
 
   const handleGroupBottomSheetRef = useRef<BottomSheetModal>(null);
   const inviteUserBottomSheetRef = useRef<BottomSheetModal>(null);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await syncGroups();
+    setRefreshing(false);
+  }
 
   const handleGroupAdd = async (name: string, icon: string, color: string, members: string[]) => {
     const result = await createGroup(name, icon, color);
@@ -38,36 +45,48 @@ const GroupsScreen = () => {
   };
 
   const handleGroupLongPress = (id: number) => {
-    const group = groups.find((g) => g.id === id); 
-    setSelectedGroupId(id); 
+    const group = groups.find((g) => g.id === id);
+    setSelectedGroupId(id);
     setSelectedGroupName(group?.name || null);
-    inviteUserBottomSheetRef.current?.present(); 
+    inviteUserBottomSheetRef.current?.present();
   };
 
   const handleFABPress = () => {
-    setSelectedGroupId(null); 
-    handleGroupBottomSheetRef.current?.present(); 
+    setSelectedGroupId(null);
+    handleGroupBottomSheetRef.current?.present();
   };
 
   return (
-    <View style={styles.container}>
-      <GroupsHeader style={{ paddingHorizontal: 20, paddingTop: 30, paddingBottom: 30 }} /> 
-      <FlatList
-        style={{ marginTop: 2 }}
-        data={groups}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item, index }) => (
-          <GroupsView
-            index={index}
-            group={item}
-            taskCount={tasks.filter((task) => task.groupId == item.id).length}
-            memberCount={item.members.length}
-            onGroupPress={() => navigation.navigate("GroupDetails", { groupId: item.id })}
-            onLongPress={() => handleGroupLongPress(item.id)} 
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            progressViewOffset={240}
           />
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+        }>
+        <GroupsHeader style={{ paddingHorizontal: 20, paddingTop: 30, paddingBottom: 30 }}/>
+        <FlatList
+          style={{ marginTop: 2 }}
+          data={groups}
+          scrollEnabled={false}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item, index }) => (
+            <GroupsView
+              index={index}
+              group={item}
+              taskCount={tasks.filter((task) => task.groupId == item.id).length}
+              memberCount={item.members.length}
+              onGroupPress={() => navigation.navigate("GroupDetails", { groupId: item.id })}
+              onLongPress={() => handleGroupLongPress(item.id)}
+            />
+          )}
+          ItemSeparatorComponent={() => <View style={styles.separator}/>}
+        />
+
+      </ScrollView>
       <FAB
         style={styles.fab}
         icon="plus"
@@ -75,14 +94,14 @@ const GroupsScreen = () => {
         onPress={handleFABPress}
       />
       <HandleGroupBottomSheet
-        ref={handleGroupBottomSheetRef} 
-        groupId={selectedGroupId} 
-        onGroupAdd={handleGroupAdd} 
-        onGroupEdit={handleGroupEdit} 
+        ref={handleGroupBottomSheetRef}
+        groupId={selectedGroupId}
+        onGroupAdd={handleGroupAdd}
+        onGroupEdit={handleGroupEdit}
       />
       <InviteUserBottomSheet
-        ref={inviteUserBottomSheetRef} 
-        onSendInvitation={handleSendInvitation} 
+        ref={inviteUserBottomSheetRef}
+        onSendInvitation={handleSendInvitation}
         groupName={selectedGroupName}
         groupId={selectedGroupId}
       />
@@ -97,7 +116,7 @@ const getStyles = (colors: any) =>
       backgroundColor: colors.background,
     },
     separator: {
-      height: 1, 
+      height: 1,
       backgroundColor: colors.background,
     },
     fab: {

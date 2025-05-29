@@ -32,4 +32,5 @@ urlpatterns = [
     path('groups/<int:group_id>/members/<int:user_id>/', ManageGroupMemberView.as_view(), name='group-manage-member'), # DELETE to remove
     path('groups/<int:group_id>/admins/<int:user_id>/', ManageGroupAdminView.as_view(), name='group-manage-admin'),    # POST to promote, DELETE to demote
     path('password/change/', ChangePasswordView.as_view(), name='auth-password-change'),
+    path('groups/<int:group_id>/leave/', LeaveGroupView.as_view(), name='group-leave'),
 ]
