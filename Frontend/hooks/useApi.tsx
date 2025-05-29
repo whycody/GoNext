@@ -38,10 +38,11 @@ export const registerToApp = async (username: string, email: string, password: s
 
 export const refreshUserAccessToken = async (refreshToken: string) => {
   try {
+    const deviceId = getDeviceId();
     return await apiCall({
       method: 'POST',
       url: '/token/refresh/',
-      data: { refresh_token: refreshToken, device_id: 'test-device-id-6ba7b810-9dad-11d1-80b4-00c04fd430c8' }
+      data: { refresh_token: refreshToken, device_id: deviceId }
     }, false, true);
   } catch (e) {
     console.error('/token/refresh/', e);
@@ -51,10 +52,11 @@ export const refreshUserAccessToken = async (refreshToken: string) => {
 
 export const logoutFromApp = async (refreshToken: string) => {
   try {
+    const deviceId = getDeviceId();
     return await apiCall({
       method: 'POST',
       url: '/token/logout/',
-      data: { refresh_token: refreshToken, device_id: 'test-device-id-6ba7b810-9dad-11d1-80b4-00c04fd430c8' }
+      data: { refresh_token: refreshToken, device_id: deviceId }
     });
   } catch (e) {
     console.error('/token/logout/', e);
@@ -69,14 +71,13 @@ export const changeUserPassword = async (
   currentDeviceId?: string 
 ) => {
   try {
+    const deviceId = getDeviceId();
     const data: any = {
       old_password: oldPassword,
       new_password1: newPassword1,
       new_password2: newPassword2,
+      current_device_id: deviceId,
     };
-    if (currentDeviceId !== undefined) {
-      data.current_device_id = currentDeviceId;
-    }
     return await apiCall({
       method: 'POST',
       url: '/password/change/', 

@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import UserView from "../components/UserView";
 import TaskItemsList from "../components/TaskItemsList";
 import { Categories } from "./HomeScreen";
-import { MARGIN_HORIZONTAL, MARGIN_VERTICAL } from "../src/constants";
+import { MARGIN_HORIZONTAL } from "../src/constants";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -16,6 +16,7 @@ import { addUserTodo, updateGroup, leaveGroup } from "../hooks/useApi";
 import InviteUserBottomSheet from "../sheets/InviteUserBottomSheet";
 import { Task } from "../types/Task";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
+import { useAuthContext } from "../utils/AuthProvider";
 
 type GroupDetailsProps = {
   groupId: string;
@@ -27,6 +28,7 @@ const GroupDetailsScreen = () => {
   const { taskItems, tasks, syncTaskItems } = useTaskItemsContext();
   const navigation = useNavigation();
   const styles = getStyles(colors);
+  const { user } = useAuthContext();
 
   const route = useRoute();
   const groupId = (route.params as GroupDetailsProps)?.groupId || 1;
@@ -37,6 +39,9 @@ const GroupDetailsScreen = () => {
   const handleTaskBottomSheetRef = useRef<BottomSheetModal>(null);
   const handleGroupBottomSheetRef = useRef<BottomSheetModal>(null);
   const inviteUserBottomSheetRef = useRef<BottomSheetModal>(null);
+
+  const currentUser = group?.members.find((member) => member.id == user?.user_id)
+  const isAdmin = currentUser && currentUser.role == 'admin';
 
   useEffect(() => {
     setGroupTaskItems(taskItems.filter((item) => item.groupId == groupId));
@@ -49,8 +54,6 @@ const GroupDetailsScreen = () => {
       </View>
     );
   }
-
-  const isAdmin = true;
 
   const handleUserInvitation = () => {
     inviteUserBottomSheetRef.current?.present();
@@ -112,7 +115,8 @@ const GroupDetailsScreen = () => {
       />
       <InviteUserBottomSheet
         ref={inviteUserBottomSheetRef}
-        onSendInvitation={() => {}}
+        onSendInvitation={() => {
+        }}
         groupName={group.name}
         groupId={group.id}
       />
@@ -156,18 +160,17 @@ const GroupDetailsScreen = () => {
       <View style={styles.bottomBarContainer}>
         <FAB
           visible={isAdmin}
-          style={{ position: 'absolute', right: 30, bottom: 150, backgroundColor: colors.background }}
-          icon="plus"
-          color={colors.primary}
-          onPress={handleTaskAdd}
-          size={'small'}
-        />
-        <FAB
-          visible={isAdmin}
-          style={{ position: 'absolute', right: 20, bottom: 80, backgroundColor: colors.background }}
+          style={{ position: 'absolute', right: 28, bottom: 150, backgroundColor: colors.background }}
           icon="account-multiple-plus-outline"
           color={colors.primary}
           onPress={handleUserInvitation}
+          size={'small'}
+        />
+        <FAB
+          style={{ position: 'absolute', right: 20, bottom: 80, backgroundColor: colors.background }}
+          icon="plus"
+          color={colors.primary}
+          onPress={handleTaskAdd}
         />
         <Pressable style={styles.buttonContainer} onPress={handleLeaveGroupPress}>
           <Text style={styles.buttonLabel}>Leave</Text>
