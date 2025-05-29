@@ -1,13 +1,20 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
 import { Alert, Text } from 'react-native';
 import { getRefreshToken, loadToken, removeTokens, setAccessToken, setRefreshToken } from './ApiHandler';
 import LoginScreen from "../screens/LoginScreen";
-import { getUserTodos, loginToApp, logoutFromApp, registerToApp } from "../hooks/useApi";
+import { getInfo, loginToApp, logoutFromApp, registerToApp } from "../hooks/useApi";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import RegisterScreen from "../screens/RegisterScreen";
 
+type User = {
+  username: string;
+  user_id: string;
+  status: string;
+}
+
 interface AuthContextType {
+  user: User | null;
   isAuthenticated: boolean;
   logout: () => Promise<boolean>;
 }
@@ -20,6 +27,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const nav = useNavigation();
   const { colors } = useTheme();
 
@@ -27,8 +35,11 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const checkAuth = async () => {
       try {
         await loadToken();
-        const res = await getUserTodos();
-        setIsAuthenticated(!!res && res.length > 0);
+        const res = await getInfo();
+        if(res) {
+          setUser(res);
+          setIsAuthenticated(true);
+        } else setIsAuthenticated(false);
       } catch {
         setIsAuthenticated(false);
       }
@@ -82,7 +93,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   if (isAuthenticated === null) return <Text>Ładowanie...</Text>;
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, logout }}>
       {isAuthenticated ? children :
         <Stack.Navigator
           initialRouteName="Login"
@@ -99,6 +110,14 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       }
     </AuthContext.Provider>
   );
+};
+
+export const useAuthContext = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuthContext must be used within an AuthProvider');
+  }
+  return context;
 };
 
 export default AuthProvider;

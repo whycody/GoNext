@@ -11,12 +11,13 @@ export const useTaskItems = () => {
   useEffect(() => {
     const newTaskItems: TaskItem[] = tasks.map((task) => {
       const group = groups.find((g) => g.id === task.groupId);
+      console.log(task.groupId)
       return {
         id: task.id,
         title: task.title,
         description: task.description,
         priority: task.priority,
-        groupName: group ? group.name : "Nieznana grupa",
+        groupName: task.groupId == null ? 'Personal' : group ? group.name : "Nieznana grupa",
         isCompleted: task.isCompleted,
       };
     });

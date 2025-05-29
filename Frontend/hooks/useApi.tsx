@@ -1,15 +1,21 @@
 import { apiCall } from "../utils/ApiHandler";
 import { Task, TaskModel } from "../types/Task";
 import { Group, GroupModel } from "../types/Group";
+import * as Application from 'expo-application';
 
 // Authentication
 
+const getDeviceId = () => {
+  return Application.getAndroidId() || Application.nativeApplicationVersion || '';
+};
+
 export const loginToApp = async (username: string, password: string, rememberMe: boolean) => {
   try {
+    const deviceId = getDeviceId();
     return await apiCall({
       method: 'POST',
       url: '/login/',
-      data: { username, password, remember_me: rememberMe }
+      data: { username, password, remember_me: rememberMe, device_id: deviceId }
     }, false);
   } catch (e) {
     console.error('/login/', e);
@@ -82,6 +88,18 @@ export const changeUserPassword = async (
   }
 };
 
+export const getInfo = async () => {
+  try {
+    return await apiCall({
+      method: 'GET',
+      url: '/info/',
+    });
+  } catch (e) {
+    console.error('/info/', e);
+    return [];
+  }
+}
+
 // Tasks handling
 
 export const getUserTodos = async (): Promise<TaskModel[]> => {
@@ -117,6 +135,7 @@ export const updateUserTodo = async (task: Task) => {
         title: task.title,
         description: task.description,
         priority: task.priority,
+        group: task.groupId
       },
     });
   } catch (e) {
@@ -206,6 +225,35 @@ export const createGroup = async (
     return null;
   }
 }
+
+export const updateGroup = async (group: Group) => {
+  try {
+    return await apiCall({
+      method: 'PUT',
+      url: `/groups/${group.id}/`,
+      data: {
+        name: group.name,
+        icon: group.icon,
+        color: group.color,
+      },
+    });
+  } catch (e) {
+    console.error(`PUT /groups/${group.id}/`, e);
+    return [];
+  }
+}
+
+export const leaveGroup = async (groupId: number) => {
+  try {
+    return await apiCall({
+      method: 'DELETE',
+      url: `/groups/${groupId}/leave/`,
+    });
+  } catch (e) {
+    console.error(`DELETE /groups/${groupId}/leave/`, e);
+    throw e;
+  }
+};
 
 export const toggleTodoCompleted = async (id: number, currentValue: boolean) => {
   try {
