@@ -9,7 +9,6 @@ import TaskView from "./TaskView";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
 import { toggleTodoCompleted, updateUserTodo } from "../hooks/useApi";
-import { useTaskItems } from "../hooks/useTaskItems";
 
 type TaskItemsListProps = {
   taskItems: TaskItem[];
@@ -25,7 +24,6 @@ const TaskItemsList: FC<TaskItemsListProps> = ({ taskItems, setTaskItems, onData
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const handleTaskBottomSheetRef = useRef<BottomSheetModal>(null);
-  const { loadTasks } = useTaskItems();
 
   const groupedTaskItems = () => {
     const grouped = taskItems.reduce((acc, task) => {
@@ -63,6 +61,7 @@ const TaskItemsList: FC<TaskItemsListProps> = ({ taskItems, setTaskItems, onData
     const newTask = { ...taskItems.find(task => task.id === id) } as TaskItem;
     newTask.isCompleted = !newTask.isCompleted;
     setTaskItems(taskItems.map(task => task.id === id ? newTask : task));
+    onDataChange?.();
   }
 
   const renderTaskItem = ({ index, item }: { index: number, item: TaskItem }) => (
@@ -91,7 +90,7 @@ const TaskItemsList: FC<TaskItemsListProps> = ({ taskItems, setTaskItems, onData
   const handleTask = async (task: Task) => {
     setLoading(true);
     await updateUserTodo(task);
-    onDataChange();
+    onDataChange?.();
     setLoading(false);
   }
 
