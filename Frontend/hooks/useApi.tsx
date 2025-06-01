@@ -2,6 +2,7 @@ import { apiCall } from "../utils/ApiHandler";
 import { Task, TaskModel } from "../types/Task";
 import { Group, GroupModel } from "../types/Group";
 import * as Application from 'expo-application';
+import axios from "axios";
 
 // Authentication
 
@@ -99,6 +100,11 @@ export const getInfo = async () => {
     console.error('/info/', e);
     return [];
   }
+}
+
+export async function promoteUserToAdmin(groupId: number, userId: number) {
+  const url = `/groups/${groupId}/admins/${userId}/`;
+  return axios.post(url, {});
 }
 
 // Tasks handling

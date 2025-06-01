@@ -18,6 +18,7 @@ import { Task } from "../types/Task";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
 import { useAuthContext } from "../utils/AuthProvider";
 import HandleUserBottomSheet from "../sheets/HandleUserBottomSheet"
+import { promoteUserToAdmin } from "../hooks/useApi";
 
 type GroupDetailsProps = {
   groupId: string;
@@ -116,16 +117,25 @@ const GroupDetailsScreen = () => {
     await syncGroups();
   };
 
-  const handleUserPress = (user: any) => {
-    setSelectedUser(user);
-    handleUserBottomSheetRef.current?.present();
-  };
+  const handleUserPress = (item: any) => {
+  setSelectedUser({
+    id: item.id,
+    name: item.username, 
+    email: item.email,
+    isAdmin: item.role === "admin" || item.isAdmin,
+  });
+  handleUserBottomSheetRef.current?.present();
+};
 
-  const handlePromote = (userId: number) => {
-    console.log("Promote user", userId);
-    // tutaj dodaj logikę promowania użytkownika
+  const handlePromote = async (userId: number) => {
+  try {
+    await promoteUserToAdmin(group.id, userId); 
+    await syncGroups(); 
     handleUserBottomSheetRef.current?.dismiss();
-  };
+  } catch (e: any) {
+    Alert.alert("Błąd", e?.response?.data?.error || "Nie udało się awansować użytkownika.");
+  }
+};
 
   const handleDemote = (userId: number) => {
     console.log("Demote user", userId);

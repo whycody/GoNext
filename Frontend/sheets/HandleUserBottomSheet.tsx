@@ -4,6 +4,8 @@ import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@g
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
+import { promoteUserToAdmin } from "../hooks/useApi";
+
 
 interface HandleUserBottomSheetProps {
   user: {
@@ -45,18 +47,18 @@ const HandleUserBottomSheet = forwardRef<BottomSheetModal, HandleUserBottomSheet
         handleIndicatorStyle={{ backgroundColor: colors.primary, borderRadius: 0 }}
       >
         <BottomSheetScrollView style={styles.root} scrollEnabled={false}>
-          <Text style={{ fontSize: 19, fontWeight: "bold", marginBottom: 16 }}>
-            Manage User
-          </Text>
           <View style={{ marginBottom: 16 }}>
-            <Text style={{ fontWeight: "bold" }}>Name:</Text>
-            <Text>{user.name}</Text>
-            <Text style={{ fontWeight: "bold", marginTop: 8 }}>Email:</Text>
-            <Text>{user.email}</Text>
+            <Text style={{ fontSize: 19, fontWeight: "bold" }}>
+              Manage User
+              <Text style={{ fontSize: 17, marginLeft: 10, color: colors.primary, fontWeight: "bold" }}>
+                {"  "}{user.name}
+              </Text>
+            </Text>
+          </View>
+          <View style={{ marginBottom: 16 }}>
             <Text style={{ fontWeight: "bold", marginTop: 8 }}>Role:</Text>
             <Text>{user.isAdmin ? "Admin" : "Member"}</Text>
           </View>
-
           {user.isAdmin ? (
             <Pressable
               onPress={() => onDemote(user.id)}
