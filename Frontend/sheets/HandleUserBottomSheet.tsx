@@ -46,7 +46,7 @@ const HandleUserBottomSheet = forwardRef<BottomSheetModal, HandleUserBottomSheet
         backgroundStyle={{ backgroundColor: colors.card }}
         handleIndicatorStyle={{ backgroundColor: colors.primary, borderRadius: 0 }}
       >
-        <BottomSheetScrollView style={styles.root} scrollEnabled={false}>
+        <BottomSheetScrollView style={styles.root} scrollEnabled={false} contentContainerStyle={{ paddingBottom: 20 }}>
           <View style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 19, fontWeight: "bold" }}>
               Manage User
