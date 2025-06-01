@@ -35,7 +35,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     try {
       await loadToken();
       const res = await getInfo();
-      if (res) {
+      if (res.user_id) {
         setUser(res);
         setIsAuthenticated(true);
       } else setIsAuthenticated(false);
