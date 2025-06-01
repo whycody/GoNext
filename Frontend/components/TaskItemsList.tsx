@@ -8,7 +8,7 @@ import { Categories } from "../screens/HomeScreen";
 import TaskView from "./TaskView";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
-import { toggleTodoCompleted, updateUserTodo } from "../hooks/useApi";
+import { deleteUserTodo, toggleTodoCompleted, updateUserTodo } from "../hooks/useApi";
 
 type TaskItemsListProps = {
   taskItems: TaskItem[];
@@ -87,6 +87,13 @@ const TaskItemsList: FC<TaskItemsListProps> = ({ taskItems, setTaskItems, onData
     }
   }
 
+  const handleTaskRemove = async (id: number) => {
+    setLoading(true);
+    await deleteUserTodo(id);
+    onDataChange?.();
+    setLoading(false);
+  }
+
   const handleTask = async (task: Task) => {
     setLoading(true);
     await updateUserTodo(task);
@@ -100,6 +107,7 @@ const TaskItemsList: FC<TaskItemsListProps> = ({ taskItems, setTaskItems, onData
         ref={handleTaskBottomSheetRef}
         taskId={selectedTaskId}
         onTaskHandle={handleTask}
+        onTaskRemove={handleTaskRemove}
       />
       <FlatList
         scrollEnabled={false}

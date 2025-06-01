@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useCallback, useRef, forwardRef } from "react";
-import { Text, Platform, StyleSheet, View, Pressable } from "react-native";
+import { Text, Platform, StyleSheet, View, Pressable, Alert } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import { Picker } from "@react-native-picker/picker";
-import { getUserTodo, getUserGroups } from "../hooks/useApi";
+import { getUserTodo, getUserGroups, deleteUserTodo } from "../hooks/useApi";
 import { Task, TaskModel } from "../types/Task";
 import { Group } from "../types/Group";
+import { useTaskItems } from "../hooks/useTaskItems";
 
 interface HandleTaskBottomSheetProps {
   taskId: number | null,
   onTaskHandle: (task: Task) => void;
+  onTaskRemove?: (taskId: number) => void;
   onChangeIndex?: (index: number) => void;
   selectedGroupId?: number;
 }
@@ -24,7 +26,7 @@ export enum TaskPriority {
 }
 
 const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomSheetProps>(
-  ({ taskId, onTaskHandle, onChangeIndex, selectedGroupId }, ref) => {
+  ({ taskId, onTaskHandle, onTaskRemove, onChangeIndex, selectedGroupId }, ref) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
 
@@ -104,6 +106,17 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
       } else {
         (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
       }
+    };
+
+    const handleRemove = async () => {
+      if (!taskId) return;
+
+      Alert.alert('Remove task', 'Are you sure you want to remove this task?', [{ text: 'Cancel', style: 'cancel' }, {
+        text: 'Remove', style: 'destructive', onPress: async () => {
+          onTaskRemove?.(taskId);
+          (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
+        }
+      }]);
     };
 
     const renderBackdrop = useCallback((props: any) =>
@@ -195,17 +208,29 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
 
           <View style={{ marginBottom: 20 }}>
             {taskId ? (
-              <Pressable
-                onPress={() => handleAdd(false)}
-                style={{
-                  backgroundColor: colors.primary,
-                  paddingVertical: 12,
-                  borderRadius: 8,
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ color: "white", fontWeight: "bold" }}>Edit task</Text>
-              </Pressable>
+              <>
+                <Pressable
+                  onPress={() => handleAdd(false)}
+                  style={{
+                    backgroundColor: colors.primary,
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: "white", fontWeight: "bold" }}>Edit task</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => handleRemove()}
+                  style={{
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: colors.primary, fontWeight: "bold" }}>Remove</Text>
+                </Pressable>
+              </>
             ) : (
               <>
                 <Pressable
