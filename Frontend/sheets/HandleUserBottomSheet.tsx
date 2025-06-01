@@ -95,7 +95,7 @@ const HandleUserBottomSheet = forwardRef<BottomSheetModal, HandleUserBottomSheet
                   alignItems: "center",
                 }}
               >
-                <Text style={{ color: "white", fontWeight: "bold", marginBottom: 20 }}>Remove from Group</Text>
+                <Text style={{ color: "white", fontWeight: "bold"}}>Remove from Group</Text>
               </Pressable>
             </>
           )}
