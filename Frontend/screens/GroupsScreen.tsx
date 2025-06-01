@@ -37,6 +37,10 @@ const GroupsScreen = () => {
     console.log("Group edited:", { id, name, icon, color, members });
   };
 
+  const handleJoiningGroupPress = () => {
+
+  }
+
   const handleFABPress = () => {
     setSelectedGroupId(null);
     handleGroupBottomSheetRef.current?.present();
@@ -72,6 +76,13 @@ const GroupsScreen = () => {
         />
 
       </ScrollView>
+      <FAB
+        style={{ position: "absolute", zIndex: 20, right: 29, bottom: 90, backgroundColor: colors.background }}
+        icon="account-multiple-plus-outline"
+        color={colors.primary}
+        onPress={handleJoiningGroupPress}
+        size="small"
+      />
       <FAB
         style={styles.fab}
         icon="plus"
