@@ -1,14 +1,15 @@
-import { FlatList, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { FlatList, RefreshControl, ScrollView, StyleSheet, View, Alert } from "react-native";
 import GroupsHeader from "../components/GroupsHeader";
 import GroupsView from "../components/GroupsView";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
 import { useState, useRef } from "react";
-import { createGroup } from "../hooks/useApi";
+import { createGroup, acceptGroupInvitation } from "../hooks/useApi";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useGroupsContext } from "../store/GroupsContext";
 import { useTaskItemsContext } from "../store/TaskItemsContext";
+import AcceptInvitationBottomSheet from "../sheets/AcceptInvitationBottomSheet";
 
 const GroupsScreen = () => {
   const { tasks } = useTaskItemsContext();
@@ -20,6 +21,7 @@ const GroupsScreen = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
 
   const handleGroupBottomSheetRef = useRef<BottomSheetModal>(null);
+  const acceptInvitationBottomSheetRef = useRef<BottomSheetModal>(null);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -38,8 +40,25 @@ const GroupsScreen = () => {
   };
 
   const handleJoiningGroupPress = () => {
+    acceptInvitationBottomSheetRef.current?.present();
+  };
 
-  }
+  
+  const handleInvitationAccepted = async (token: string) => {
+    try {
+      const response = await acceptGroupInvitation(token);
+      if (response?.message) {
+        Alert.alert("Success", response.message);
+      } else if (response?.error) {
+        Alert.alert("Error", response.error);
+      } else {
+        Alert.alert("Error", "Unknown response from server.");
+      }
+      await syncGroups();
+    } catch (e) {
+      Alert.alert("Error", "Failed to accept invitation.");
+    }
+  };
 
   const handleFABPress = () => {
     setSelectedGroupId(null);
@@ -94,6 +113,10 @@ const GroupsScreen = () => {
         groupId={selectedGroupId}
         onGroupAdd={handleGroupAdd}
         onGroupEdit={handleGroupEdit}
+      />
+      <AcceptInvitationBottomSheet
+        ref={acceptInvitationBottomSheetRef}
+        onAccept={handleInvitationAccepted}
       />
     </View>
   );

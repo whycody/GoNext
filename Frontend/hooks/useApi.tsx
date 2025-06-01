@@ -138,6 +138,18 @@ export async function removeUserFromGroup(groupId: number, userId: number) {
   }
 }
 
+export const acceptGroupInvitation = async (token: string) => {
+  try {
+    return await apiCall({
+      method: 'POST',
+      url: `/invitations/${token}/accept`,
+    });
+  } catch (e) {
+    console.error(`/invitations/${token}/accept`, e);
+    throw e;
+  }
+}
+
 // Tasks handling
 
 export const getUserTodos = async (): Promise<TaskModel[]> => {
