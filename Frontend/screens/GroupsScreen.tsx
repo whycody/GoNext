@@ -4,7 +4,6 @@ import GroupsView from "../components/GroupsView";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
-import InviteUserBottomSheet from "../sheets/InviteUserBottomSheet";
 import { useState, useRef } from "react";
 import { createGroup } from "../hooks/useApi";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -19,10 +18,8 @@ const GroupsScreen = () => {
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [selectedGroupName, setSelectedGroupName] = useState<string | null>(null);
 
   const handleGroupBottomSheetRef = useRef<BottomSheetModal>(null);
-  const inviteUserBottomSheetRef = useRef<BottomSheetModal>(null);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -38,17 +35,6 @@ const GroupsScreen = () => {
 
   const handleGroupEdit = (id: number, name: string, icon: string, color: string, members: string[]) => {
     console.log("Group edited:", { id, name, icon, color, members });
-  };
-
-  const handleSendInvitation = (email: string) => {
-    console.log(`Invitation sent to ${email} for group ID: ${selectedGroupId}`);
-  };
-
-  const handleGroupLongPress = (id: number) => {
-    const group = groups.find((g) => g.id === id);
-    setSelectedGroupId(id);
-    setSelectedGroupName(group?.name || null);
-    inviteUserBottomSheetRef.current?.present();
   };
 
   const handleFABPress = () => {
@@ -80,7 +66,6 @@ const GroupsScreen = () => {
               taskCount={tasks.filter((task) => task.groupId == item.id).length}
               memberCount={item.members.length}
               onGroupPress={() => navigation.navigate("GroupDetails", { groupId: item.id })}
-              onLongPress={() => handleGroupLongPress(item.id)}
             />
           )}
           ItemSeparatorComponent={() => <View style={styles.separator}/>}
@@ -98,12 +83,6 @@ const GroupsScreen = () => {
         groupId={selectedGroupId}
         onGroupAdd={handleGroupAdd}
         onGroupEdit={handleGroupEdit}
-      />
-      <InviteUserBottomSheet
-        ref={inviteUserBottomSheetRef}
-        onSendInvitation={handleSendInvitation}
-        groupName={selectedGroupName}
-        groupId={selectedGroupId}
       />
     </View>
   );

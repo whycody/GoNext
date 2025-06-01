@@ -281,6 +281,19 @@ export const updateGroup = async (group: Group) => {
   }
 }
 
+export const removeGroup = async (groupId: number) => {
+  try {
+    return await apiCall({
+      method: 'DELETE',
+      url: `/groups/${groupId}/`,
+    });
+  } catch (e) {
+    console.error(`DELETE /groups/${groupId}`, e);
+    throw e;
+  }
+};
+
+
 export const leaveGroup = async (groupId: number) => {
   try {
     return await apiCall({

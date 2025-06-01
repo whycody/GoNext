@@ -12,7 +12,7 @@ import { MARGIN_HORIZONTAL } from "../src/constants";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { addUserTodo, updateGroup, leaveGroup } from "../hooks/useApi";
+import { addUserTodo, updateGroup, leaveGroup, removeGroup } from "../hooks/useApi";
 import InviteUserBottomSheet from "../sheets/InviteUserBottomSheet";
 import { Task } from "../types/Task";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
@@ -71,6 +71,36 @@ const GroupDetailsScreen = () => {
     handleGroupBottomSheetRef.current?.present();
   };
 
+  const handleGroupRemove = () => {
+    if (group.members.length > 1) {
+      Alert.alert("Remove group", "You cannot remove this group because there are still members in it.", [{
+        text: "Cancel",
+        style: "cancel"
+      },]);
+      return;
+    }
+
+    Alert.alert("Remove group", "Are you sure you want to remove this group? All tasks will be removed also.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await removeGroup(group.id);
+            await syncGroups();
+            navigation.goBack();
+          } catch (e: any) {
+            Alert.alert(
+              "Error",
+              e?.response?.data?.error || "Could not remove group."
+            );
+          }
+        },
+      },
+    ]);
+  }
+
   const handleLeaveGroupPress = () => {
     if (numberOfAdmins == 1) {
       Alert.alert("Leave group", "You cannot leave this group because you are the only admin.", [{
@@ -128,44 +158,44 @@ const GroupDetailsScreen = () => {
   };
 
   const handleUserPress = (item: any) => {
-  setSelectedUser({
-    id: item.id,
-    name: item.username, 
-    email: item.email,
-    isAdmin: item.role === "admin" || item.isAdmin,
-  });
-  handleUserBottomSheetRef.current?.present();
-};
+    setSelectedUser({
+      id: item.id,
+      name: item.username,
+      email: item.email,
+      isAdmin: item.role === "admin" || item.isAdmin,
+    });
+    handleUserBottomSheetRef.current?.present();
+  };
 
   const handlePromote = async (userId: number) => {
-  try {
-    await promoteUserToAdmin(group.id, userId); 
-    await syncGroups(); 
-    handleUserBottomSheetRef.current?.dismiss();
-  } catch (e: any) {
-    Alert.alert("Błąd", e?.response?.data?.error || "Nie udało się awansować użytkownika.");
-  }
-};
+    try {
+      await promoteUserToAdmin(group.id, userId);
+      await syncGroups();
+      handleUserBottomSheetRef.current?.dismiss();
+    } catch (e: any) {
+      Alert.alert("Błąd", e?.response?.data?.error || "Nie udało się awansować użytkownika.");
+    }
+  };
 
   const handleDemote = async (userId: number) => {
-  try {
-    await demoteUserFromAdmin(group.id, userId);
-    await syncGroups();
-    handleUserBottomSheetRef.current?.dismiss();
-  } catch (e: any) {
-    Alert.alert("Błąd", e?.response?.data?.error || "Nie udało się zdegradować użytkownika.");
-  }
-};
+    try {
+      await demoteUserFromAdmin(group.id, userId);
+      await syncGroups();
+      handleUserBottomSheetRef.current?.dismiss();
+    } catch (e: any) {
+      Alert.alert("Błąd", e?.response?.data?.error || "Nie udało się zdegradować użytkownika.");
+    }
+  };
 
   const handleRemove = async (userId: number) => {
-  try {
-    await removeUserFromGroup(group.id, userId);
-    await syncGroups();
-    handleUserBottomSheetRef.current?.dismiss();
-  } catch (e: any) {
-    Alert.alert("Błąd", e?.response?.data?.error || "Nie udało się usunąć użytkownika z grupy.");
-  }
-};
+    try {
+      await removeUserFromGroup(group.id, userId);
+      await syncGroups();
+      handleUserBottomSheetRef.current?.dismiss();
+    } catch (e: any) {
+      Alert.alert("Błąd", e?.response?.data?.error || "Nie udało się usunąć użytkownika z grupy.");
+    }
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -243,6 +273,14 @@ const GroupDetailsScreen = () => {
       />
 
       <View style={styles.bottomBarContainer}>
+        <FAB
+          visible={isAdmin}
+          style={{ position: "absolute", zIndex: 20, right: 29, bottom: 200, backgroundColor: colors.background }}
+          icon="trash-can-outline"
+          color={colors.primary}
+          onPress={handleGroupRemove}
+          size="small"
+        />
         <FAB
           visible={isAdmin}
           style={{ position: "absolute", zIndex: 20, right: 29, bottom: 150, backgroundColor: colors.background }}
