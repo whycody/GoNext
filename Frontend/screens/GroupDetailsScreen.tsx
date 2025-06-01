@@ -18,7 +18,7 @@ import { Task } from "../types/Task";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
 import { useAuthContext } from "../utils/AuthProvider";
 import HandleUserBottomSheet from "../sheets/HandleUserBottomSheet"
-import { promoteUserToAdmin, demoteUserFromAdmin } from "../hooks/useApi";
+import { promoteUserToAdmin, demoteUserFromAdmin, removeUserFromGroup } from "../hooks/useApi";
 
 type GroupDetailsProps = {
   groupId: string;
@@ -156,11 +156,15 @@ const GroupDetailsScreen = () => {
   }
 };
 
-  const handleRemove = (userId: number) => {
-    console.log("Remove user", userId);
-    // tutaj dodaj logikę usuwania użytkownika
+  const handleRemove = async (userId: number) => {
+  try {
+    await removeUserFromGroup(group.id, userId);
+    await syncGroups();
     handleUserBottomSheetRef.current?.dismiss();
-  };
+  } catch (e: any) {
+    Alert.alert("Błąd", e?.response?.data?.error || "Nie udało się usunąć użytkownika z grupy.");
+  }
+};
 
   return (
     <View style={{ flex: 1 }}>
