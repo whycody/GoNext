@@ -8,7 +8,7 @@ import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import { useGroupsContext } from "../store/GroupsContext";
 
 interface HandleGroupBottomSheetProps {
-  groupId?: number;
+  group?: Group;
   onGroupAdd: (name: string, icon: string, color: string, members: string[]) => void;
   onGroupEdit: (id: number, name: string, icon: string, color: string, members: string[]) => void;
   onChangeIndex?: (index: number) => void;
@@ -30,7 +30,7 @@ const useEmojiPicker = () => {
 };
 
 const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomSheetProps>(
-  ({ groupId, onGroupAdd, onGroupEdit, onChangeIndex }, ref) => {
+  ({ group, onGroupAdd, onGroupEdit, onChangeIndex }, ref) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
     const { groups } = useGroupsContext();
@@ -44,26 +44,29 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
     const colorOptions = ["#ff5733", "#33ff57", "#3357ff", "#ff33a8", "#040404", "#9632BF", "#53BFD4"];
 
     useEffect(() => {
-      if (groupId) {
-        const group = groups.find((g) => g.id === groupId);
-        if (group) {
-          setName(group.name);
-          setSelectedColor(group.color);
-          selectEmoji(group.icon);
-          setMembers(group.membersIds);
-        }
-      } else {
+    if (group) {
+      setName(group.name);
+      setSelectedColor(group.color);
+      selectEmoji(group.icon);
+      setMembers(group.membersIds);
+    } else {
         setName("");
         setSelectedColor("#ff5733");
         selectEmoji(emojis[0]);
         setMembers([]);
       }
-    }, [groupId, groups, selectEmoji, emojis]);
+    }, [group, selectEmoji, emojis]);
 
     const handleAdd = (clearForm: boolean) => {
       if (!nameInputRef.current?.getWord() || !selectedEmoji || !selectedColor) return;
-      if (groupId) {
-        onGroupEdit(groupId, nameInputRef.current?.getWord(), selectedEmoji, selectedColor, members);
+      if (group) {
+        onGroupEdit(
+          group.id, 
+          nameInputRef.current?.getWord(),
+          selectedEmoji,
+          selectedColor,
+          members
+        );
       } else {
         onGroupAdd(nameInputRef.current?.getWord(), selectedEmoji, selectedColor, members);
       }
@@ -100,7 +103,7 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
       >
         <BottomSheetScrollView style={styles.root} scrollEnabled={false}>
           <Text style={{ fontSize: 19, fontWeight: "bold", marginBottom: 16 }}>
-            {groupId ? "Edit Group" : "Add New Group"}
+            {group ? "Edit Group" : "Add New Group"}
           </Text>
 
           <SheetText
@@ -153,7 +156,7 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
           </View>
 
           <View style={{ marginBottom: 20 }}>
-            {groupId ? (
+            {group ? (
               <Pressable
                 onPress={() => handleAdd(false)}
                 style={{
