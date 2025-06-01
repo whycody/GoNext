@@ -1,5 +1,5 @@
 import { useRoute, useTheme, useNavigation } from "@react-navigation/native";
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, Alert } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View, Alert } from "react-native";
 import GroupsView from "../components/GroupsView";
 import { useGroupsContext } from "../store/GroupsContext";
 import { useTaskItemsContext } from "../store/TaskItemsContext";
@@ -106,6 +106,7 @@ const GroupDetailsScreen = () => {
   };
 
   const handleTask = async (task: Task) => {
+    console.log('Adding task', task);
     await addUserTodo(task);
     await syncTaskItems();
   };
@@ -185,7 +186,7 @@ const GroupDetailsScreen = () => {
         ref={handleTaskBottomSheetRef}
         taskId={null}
         onTaskHandle={handleTask}
-        selectedGroupId={group ? group.name : undefined}
+        selectedGroupId={group.id}
       />
 
       <GroupsView
@@ -266,10 +267,6 @@ const GroupDetailsScreen = () => {
         )}
       </View>
 
-      <HandleTaskBottomSheet ref={handleTaskBottomSheetRef} onSubmit={handleTask}/>
-      <HandleGroupBottomSheet ref={handleGroupBottomSheetRef} group={group} onEdit={onGroupEdit}/>
-      <InviteUserBottomSheet ref={inviteUserBottomSheetRef} groupId={group.id} onSendInvitation={() => {
-      }}/>
       {selectedUser && (
         <HandleUserBottomSheet
           ref={handleUserBottomSheetRef}

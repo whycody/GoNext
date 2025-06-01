@@ -8,12 +8,13 @@ import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import { Picker } from "@react-native-picker/picker";
 import { getUserTodo, getUserGroups } from "../hooks/useApi";
 import { Task, TaskModel } from "../types/Task";
-import { useGroupsContext } from "../store/GroupsContext";
+import { Group } from "../types/Group";
 
 interface HandleTaskBottomSheetProps {
   taskId: number | null,
   onTaskHandle: (task: Task) => void;
   onChangeIndex?: (index: number) => void;
+  selectedGroupId?: number;
 }
 
 export enum TaskPriority {
@@ -23,7 +24,7 @@ export enum TaskPriority {
 }
 
 const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomSheetProps>(
-  ({ taskId, onTaskHandle, onChangeIndex }, ref) => {
+  ({ taskId, onTaskHandle, onChangeIndex, selectedGroupId }, ref) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
 
@@ -34,8 +35,12 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
     const [description, setDescription] = useState("");
     const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
 
-    const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
+    const [selectedGroup, setSelectedGroup] = useState<number | null>(selectedGroupId ?? null);
     const [groups, setGroups] = useState<Group[]>([]);
+
+    useEffect(() => {
+      console.log(selectedGroup)
+    }, [selectedGroup]);
 
     const priorityMap: { [key: number]: TaskPriority } = {
       1: TaskPriority.LOW,
@@ -65,12 +70,10 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
               task.group_id === null
                 ? null
                 : typeof task.group_id === "number"
-                ? task.group_id
-                : null;
+                  ? task.group_id
+                  : null;
             setSelectedGroup(groupId);
           }
-        } else {
-          setSelectedGroup(null);
         }
       };
 
@@ -78,7 +81,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
     }, [taskId]);
 
     const handleAdd = (clearForm: boolean) => {
-      if (!title) return;
+      if (!titleInputRef.current?.getWord()) return;
 
       onTaskHandle({
         id: taskId,
@@ -89,9 +92,12 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
         groupId: selectedGroup
       } as Task);
 
+      titleInputRef.current?.clearWord();
+      descriptionInputRef.current?.clearWord();
+      setTitle("");
+      setDescription("");
+
       if (clearForm) {
-        setTitle("");
-        setDescription("");
         setPriority(TaskPriority.MEDIUM);
         setSelectedGroup(null);
         titleInputRef.current?.focus();
@@ -148,7 +154,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
                 color="gray"
               />
               {groups.map((group) => (
-                <Picker.Item key={group.id} label={group.name} value={group.id} />
+                <Picker.Item key={group.id} label={group.name} value={group.id}/>
               ))}
             </Picker>
           </View>
