@@ -46,6 +46,7 @@ const GroupDetailsScreen = () => {
 
   const currentUser = group?.members.find((member) => member.id == user?.user_id)
   const isAdmin = currentUser && currentUser.role == 'admin';
+  const numberOfAdmins = group?.members.filter((member) => member.role == 'admin').length || 0;
   const handleUserBottomSheetRef = useRef<BottomSheetModal>(null);
 
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -71,6 +72,14 @@ const GroupDetailsScreen = () => {
   };
 
   const handleLeaveGroupPress = () => {
+    if (numberOfAdmins == 1) {
+      Alert.alert("Leave group", "You cannot leave this group because you are the only admin.", [{
+        text: "Cancel",
+        style: "cancel"
+      },]);
+      return;
+    }
+
     Alert.alert("Leave group", "Are you sure you want to leave this group?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -170,90 +179,72 @@ const GroupDetailsScreen = () => {
         onTaskHandle={handleTask}
         selectedGroupId={group ? group.name : undefined}
       />
+
       <GroupsView
         index={0}
         group={group}
         taskCount={tasks.filter((task) => task.groupId == group.id).length}
         memberCount={group.members.length}
-        onGroupPress={() => {}}
+        onGroupPress={() => {
+        }}
       />
-      <ScrollView style={{ flex: 1 }}>
-        <View style={styles.headerContainer}>
-          <Ionicons name={"person-circle"} size={28} color={colors.primary} />
-          <Text style={styles.header}>Members of group</Text>
-        </View>
-        <FlatList
-          data={group.members}
-          keyExtractor={(item) => item.id?.toString() ?? item.email}
-          renderItem={({ item }) => (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingVertical: 4,
-                backgroundColor: "white",
-              }}
-            >
-              <UserView member={item} />
-              {isAdmin && (
-                <View style={{ flex: 1, alignItems: "flex-end" }}>
-                  <Pressable
-                    style={{
-                      padding: 15,
-                      borderRadius: 16,
-                      marginRight: 8,
-                    }}
-                    onPress={() => handleUserPress(item)}
-                    hitSlop={8}
-                  >
-                    <Ionicons name="pencil" size={25} color={colors.primary} />
-                  </Pressable>
-                </View>
-              )}
+      <FlatList
+        data={group.members}
+        keyExtractor={(item) => item.id?.toString() ?? item.email}
+        renderItem={({ item }) => (
+          <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 4, backgroundColor: "white" }}>
+            <UserView member={item}/>
+            {isAdmin && (
+              <View style={{ flex: 1, alignItems: "flex-end" }}>
+                <Pressable
+                  style={{ padding: 15, borderRadius: 16, marginRight: 8 }}
+                  onPress={() => handleUserPress(item)}
+                  hitSlop={8}
+                >
+                  <Ionicons name="pencil" size={25} color={colors.primary}/>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        )}
+        ListHeaderComponent={
+          <>
+            <View style={styles.headerContainer}>
+              <Ionicons name="person-circle" size={28} color={colors.primary}/>
+              <Text style={styles.header}>Members of group</Text>
             </View>
-          )}
-        />
-        <View style={styles.headerContainer}>
-          <Ionicons name={"clipboard"} size={24} color={colors.primary} />
-          <Text style={styles.header}>List of tasks</Text>
-        </View>
-        <TaskItemsList
-          taskItems={groupTaskItems}
-          setTaskItems={setGroupTaskItems}
-          selectedCategory={Categories.GROUP}
-          onDataChange={handleDataChange}
-          displayHeader={false}
-        />
-      </ScrollView>
+          </>
+        }
+        ListFooterComponent={
+          <>
+            <View style={styles.headerContainer}>
+              <Ionicons name="clipboard" size={24} color={colors.primary}/>
+              <Text style={styles.header}>List of tasks</Text>
+            </View>
+            <TaskItemsList
+              taskItems={groupTaskItems}
+              setTaskItems={setGroupTaskItems}
+              selectedCategory={Categories.GROUP}
+              onDataChange={handleDataChange}
+              displayHeader={false}
+            />
+            <View style={{ height: 180 }}/>
+          </>
+        }
+      />
+
       <View style={styles.bottomBarContainer}>
         <FAB
           visible={isAdmin}
-          style={{ position: 'absolute', right: 28, bottom: 150, backgroundColor: colors.background }}
+          style={{ position: "absolute", zIndex: 20, right: 29, bottom: 150, backgroundColor: colors.background }}
           icon="account-multiple-plus-outline"
-          style={{
-            position: "absolute",
-            right: 30,
-            bottom: 150,
-            backgroundColor: colors.background,
-          }}
-          icon="plus"
           color={colors.primary}
           onPress={handleUserInvitation}
-          size={'small'}
-          onPress={handleTaskAdd}
-          size={"small"}
+          size="small"
         />
         <FAB
-          style={{ position: 'absolute', right: 20, bottom: 80, backgroundColor: colors.background }}
+          style={{ position: "absolute", zIndex: 20, right: 20, bottom: 80, backgroundColor: colors.background }}
           icon="plus"
-          visible={isAdmin}
-          style={{
-            position: "absolute",
-            right: 20,
-            bottom: 80,
-            backgroundColor: colors.background,
-          }}
-          icon="account-multiple-plus-outline"
           color={colors.primary}
           onPress={handleTaskAdd}
         />
@@ -267,9 +258,10 @@ const GroupDetailsScreen = () => {
         )}
       </View>
 
-      <HandleTaskBottomSheet ref={handleTaskBottomSheetRef} onSubmit={handleTask} />
-      <HandleGroupBottomSheet ref={handleGroupBottomSheetRef} group={group} onEdit={onGroupEdit} />
-      <InviteUserBottomSheet ref={inviteUserBottomSheetRef} groupId={group.id} />
+      <HandleTaskBottomSheet ref={handleTaskBottomSheetRef} onSubmit={handleTask}/>
+      <HandleGroupBottomSheet ref={handleGroupBottomSheetRef} group={group} onEdit={onGroupEdit}/>
+      <InviteUserBottomSheet ref={inviteUserBottomSheetRef} groupId={group.id} onSendInvitation={() => {
+      }}/>
       {selectedUser && (
         <HandleUserBottomSheet
           ref={handleUserBottomSheetRef}
@@ -282,6 +274,7 @@ const GroupDetailsScreen = () => {
       )}
     </View>
   );
+
 };
 
 const getStyles = (colors: any) =>
