@@ -214,6 +214,18 @@ export const addUserTodo = async (task: Task) => {
   }
 }
 
+export const deleteUserTodo = async (id: number) => {
+  try {
+    return await apiCall({
+      method: 'DELETE',
+      url: `/todos/${id}/`,
+    });
+  } catch (e) {
+    console.error(`DELETE /todos/${id}/`, e);
+    throw e;
+  }
+}
+
 // Groups handling
 
 export const getUserGroups = async (): Promise<Group[]> => {
