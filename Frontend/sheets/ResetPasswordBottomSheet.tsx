@@ -4,87 +4,58 @@ import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@g
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants"; 
-import SheetText, { SheetTextRef } from "../components/SheetTextInput"; 
+import SheetText, { SheetTextRef } from "../components/SheetTextInput";
+import { resetPassword } from "../hooks/useApi";
 
-interface ResetPasswordBottomSheetProps {
-  onPasswordReset: (oldPassword: string, newPassword1: string, newPassword2: string) => void; 
+interface ChangePasswordBottomSheetProps {
   onChangeIndex?: (index: number) => void;
 }
 
-const validatePasswordStrength = (password: string): string | null => {
-  if (password.length < 8) {
-    return "Your password must be at least 8 characters long.";
+const validateEmail = (email: string): string | null => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email) {
+    return "Email nie może być pusty.";
   }
-  if (!/[A-Z]/.test(password)) {
-    return "Your password must contain at least one uppercase letter.";
+  if (!emailRegex.test(email)) {
+    return "Podaj poprawny adres e-mail.";
   }
-  if (!/[a-z]/.test(password)) {
-    return "Your password must contain at least one lowercase letter.";
-  }
-  if (!/[0-9]/.test(password)) {
-    return "Your password must contain at least one number.";
-  }
-  if (!/[^A-Za-z0-9]/.test(password)) {
-    return "Your password must contain at least one special character.";
-  }
-  return null; 
+  return null;
 };
 
-const ResetPasswordBottomSheet = forwardRef<BottomSheetModal, ResetPasswordBottomSheetProps>(
-  ({ onPasswordReset, onChangeIndex }, ref) => {
+const ChangePasswordBottomSheet = forwardRef<BottomSheetModal, ChangePasswordBottomSheetProps>(
+  ({ onChangeIndex }, ref) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
 
-    const oldPasswordInputRef = useRef<SheetTextRef>(null);
-    const newPasswordInputRef = useRef<SheetTextRef>(null);
-    const confirmPasswordInputRef = useRef<SheetTextRef>(null);
-
-    const [oldPassword, setOldPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
+    const emailInputRef = useRef<SheetTextRef>(null);
+    const [email, setEmail] = useState("");
     const [error, setError] = useState<string | null>(null);
-    const [passwordStrengthError, setPasswordStrengthError] = useState<string | null>(null);
+    const [emailValidationError, setEmailValidationError] = useState<string | null>(null);
 
-    const handleReset = () => {
+    const handleReset = async () => {
+      const currentEmail = emailInputRef?.current?.getWord() || "";
       setError(null);
-      setPasswordStrengthError(null);
+      setEmailValidationError(null);
 
-      if (!oldPassword) {
-        setError("Old password cannot be empty.");
-        oldPasswordInputRef.current?.focus();
+      if (!currentEmail) {
+        setError("Email cannot be empty.");
+        emailInputRef.current?.focus();
         return;
       }
 
-      if (!newPassword) {
-        setError("New password cannot be empty.");
-        newPasswordInputRef.current?.focus();
+      const emailValidationError = validateEmail(currentEmail);
+
+      if (emailValidationError) {
+        setEmailValidationError(emailValidationError);
+        emailInputRef.current?.focus();
         return;
       }
 
-      const strengthValidationError = validatePasswordStrength(newPassword);
-      if (strengthValidationError) {
-        setPasswordStrengthError(strengthValidationError);
-        newPasswordInputRef.current?.focus();
-        return;
-      }
+      const res = await resetPassword(currentEmail);
+      console.log(res);
+      setEmail("");
 
-      if (!confirmPassword) {
-        setError("Password confirmation cannot be empty.");
-        confirmPasswordInputRef.current?.focus();
-        return;
-      }
-      if (newPassword !== confirmPassword) {
-        setError("Passwords do not match.");
-        setConfirmPassword("");
-        confirmPasswordInputRef.current?.focus();
-        return;
-      }
-
-      onPasswordReset(oldPassword, newPassword, confirmPassword);
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      Alert.alert("Success!", "Password has been reset.");
+      Alert.alert("Success!", "Password has been reset. Check your email for further instructions.");
       (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
     };
 
@@ -106,13 +77,11 @@ const ResetPasswordBottomSheet = forwardRef<BottomSheetModal, ResetPasswordBotto
         onChange={(index: number) => {
           onChangeIndex?.(index);
           if (index === -1) {
-            setOldPassword("");
-            setNewPassword("");
-            setConfirmPassword("");
+            setEmail("");
             setError(null);
-            setPasswordStrengthError(null);
+            setEmailValidationError(null);
           } else if (index >= 0) {
-            setTimeout(() => oldPasswordInputRef.current?.focus(), 100);
+            setTimeout(() => emailInputRef.current?.focus(), 100);
           }
         }}
         containerComponent={renderContainerComponent}
@@ -120,47 +89,20 @@ const ResetPasswordBottomSheet = forwardRef<BottomSheetModal, ResetPasswordBotto
         handleIndicatorStyle={{ backgroundColor: colors.primary, borderRadius: 0 }}
       >
         <BottomSheetScrollView style={styles.root} contentContainerStyle={styles.contentContainer}>
-          <Text style={styles.title}>Change password 🔐</Text>
+          <Text style={styles.title}>Reset password 🔐</Text>
 
           <SheetText
-            ref={oldPasswordInputRef}
-            placeholder="Old password"
-            value={oldPassword}
+            ref={emailInputRef}
+            placeholder="Email"
+            value={email}
             onChangeText={(text) => {
-              setOldPassword(text);
+              setEmail(text);
               if (error) setError(null); 
             }}
-            secureTextEntry
             style={styles.input}
-            autoFocus
           />
+          {emailValidationError && <Text style={styles.errorText}>{emailValidationError}</Text>}
 
-          <SheetText
-            ref={newPasswordInputRef}
-            placeholder="New password"
-            value={newPassword}
-            onChangeText={(text) => {
-              setNewPassword(text);
-              if (passwordStrengthError) setPasswordStrengthError(null); 
-              if (error) setError(null); 
-            }}
-            secureTextEntry
-            style={styles.input}
-          />
-          {passwordStrengthError && <Text style={styles.errorText}>{passwordStrengthError}</Text>}
-
-          <SheetText
-            ref={confirmPasswordInputRef}
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChangeText={(text) => {
-                setConfirmPassword(text);
-                if (error) setError(null); 
-            }}
-            secureTextEntry
-            style={styles.input}
-            onSubmitEditing={handleReset}
-          />
           {error && <Text style={styles.errorText}>{error}</Text>}
 
           <View style={styles.buttonContainer}>
@@ -171,7 +113,7 @@ const ResetPasswordBottomSheet = forwardRef<BottomSheetModal, ResetPasswordBotto
                 { backgroundColor: pressed ? colors.border : colors.primary },
               ]}
             >
-              <Text style={styles.buttonText}>Change password</Text>
+              <Text style={styles.buttonText}>Reset password</Text>
             </Pressable>
           </View>
         </BottomSheetScrollView>
@@ -224,4 +166,4 @@ const getStyles = (colors: any) =>
     },
   });
 
-export default ResetPasswordBottomSheet;
+export default ChangePasswordBottomSheet;

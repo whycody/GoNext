@@ -68,7 +68,7 @@ export const changeUserPassword = async (
   oldPassword: string,
   newPassword1: string,
   newPassword2: string,
-  currentDeviceId?: string 
+  currentDeviceId?: string
 ) => {
   try {
     const deviceId = getDeviceId();
@@ -80,8 +80,8 @@ export const changeUserPassword = async (
     };
     return await apiCall({
       method: 'POST',
-      url: '/password/change/', 
-      data: data,               
+      url: '/password/change/',
+      data: data,
     });
   } catch (e) {
     console.error('/password/change/', e);
@@ -97,6 +97,19 @@ export const getInfo = async () => {
     });
   } catch (e) {
     console.error('/info/', e);
+    return [];
+  }
+}
+
+export const resetPassword = async (email: string) => {
+  try {
+    return await apiCall({
+      method: 'POST',
+      url: '/password-reset/',
+      data: { email }
+    }, false);
+  } catch (e) {
+    console.error('/password-reset/', e);
     return [];
   }
 }

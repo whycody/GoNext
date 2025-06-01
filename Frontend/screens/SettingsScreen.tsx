@@ -5,7 +5,7 @@ import { useTheme } from "@react-navigation/native";
 import SettingsHeader from "../components/SettingsHeader";
 import SettingsButton from "../components/SettingsButton";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import ResetPasswordBottomSheet from "../sheets/ResetPasswordBottomSheet"; 
+import ChangePasswordBottomSheet from "../sheets/ChangePasswordBottomSheet";
 import { changeUserPassword } from "../hooks/useApi";
 
 const SettingsScreen = () => {
@@ -63,7 +63,7 @@ const SettingsScreen = () => {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
 
-      <ResetPasswordBottomSheet
+      <ChangePasswordBottomSheet
         ref={resetPasswordSheetRef}
         onPasswordReset={async (oldPassword, newPassword1, newPassword2) => {
           const response = await changeUserPassword(oldPassword, newPassword1, newPassword2);
