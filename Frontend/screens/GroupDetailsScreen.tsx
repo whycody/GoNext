@@ -18,7 +18,7 @@ import { Task } from "../types/Task";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
 import { useAuthContext } from "../utils/AuthProvider";
 import HandleUserBottomSheet from "../sheets/HandleUserBottomSheet"
-import { promoteUserToAdmin } from "../hooks/useApi";
+import { promoteUserToAdmin, demoteUserFromAdmin } from "../hooks/useApi";
 
 type GroupDetailsProps = {
   groupId: string;
@@ -146,11 +146,15 @@ const GroupDetailsScreen = () => {
   }
 };
 
-  const handleDemote = (userId: number) => {
-    console.log("Demote user", userId);
-    // tutaj dodaj logikę degradacji użytkownika
+  const handleDemote = async (userId: number) => {
+  try {
+    await demoteUserFromAdmin(group.id, userId);
+    await syncGroups();
     handleUserBottomSheetRef.current?.dismiss();
-  };
+  } catch (e: any) {
+    Alert.alert("Błąd", e?.response?.data?.error || "Nie udało się zdegradować użytkownika.");
+  }
+};
 
   const handleRemove = (userId: number) => {
     console.log("Remove user", userId);

@@ -114,6 +114,18 @@ export async function promoteUserToAdmin(groupId: number, userId: number) {
   }
 }
 
+export async function demoteUserFromAdmin(groupId: number, userId: number) {
+  try {
+    return await apiCall({
+      method: 'DELETE',
+      url: `/groups/${groupId}/admins/${userId}/`,
+    });
+  } catch (e) {
+    console.error(`/groups/${groupId}/admins/${userId}/`, e);
+    throw e;
+  }
+}
+
 // Tasks handling
 
 export const getUserTodos = async (): Promise<TaskModel[]> => {
