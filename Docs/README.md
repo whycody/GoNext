@@ -113,13 +113,38 @@ Creating Groups/Managing Groups:
 ## App usage demonstrations
 
 ### User Story 1
-
 <!--![User Story 1](imgs/1_updated.png) - GIF filmik US1-->
 ![User Story 1](imgs/US1_1.JPG)
 
 ### User Story 2 
-
+![User Story 2](imgs/US2_1.JPG)
+![User Story 2](imgs/US2_2.JPG)
 <!--![User Story 2](imgs/2_updated.png) - GIF filmik US2-->
+
+### User Story 3 
+![User Story 3](imgs/US3_1.JPG)
+![User Story 3](imgs/US3_2.JPG)
+![User Story 3](imgs/US3_3.JPG)
+![User Story 3](imgs/US3_4.JPG)
+![User Story 3](imgs/US3_5.JPG)
+
+### User Story 4 
+![User Story 4](imgs/US4_1.JPG)
+
+### User Story 5
+![User Story 5](imgs/US5_1.JPG)
+
+### User Story 6
+![User Story 6](imgs/US6_1.JPG)
+
+### User Story 7
+![User Story 6](imgs/US7_1.JPG)
+
+### User Story 8
+![User Story 6](imgs/US8_1.JPG)
+
+### User Story 10
+![User Story 6](imgs/US10_1.JPG)
 
 ***
 
