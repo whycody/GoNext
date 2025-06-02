@@ -432,7 +432,8 @@ class InvitationCreateView(APIView):
         request_body=InvitationCreateSerializer,
         responses={
             201: "Invitation created successfully",
-            400: "Bad Request"
+            400: "Bad Request",
+            403: "Forbidden"    
         }
     )
     def post(self, request):
@@ -448,12 +449,11 @@ class InvitationCreateView(APIView):
             except Group.DoesNotExist:
                 return Response({"error": "Group not found"}, status=status.HTTP_400_BAD_REQUEST)
             
-            is_member_or_admin = group.members.filter(id=request.user.id).exists() or \
-                                 group.admins.filter(id=request.user.id).exists()
-            
-            if not (request.user.is_superuser or is_member_or_admin):
+            is_group_admin = group.admins.filter(id=request.user.id).exists()
+
+            if not (request.user.is_superuser or is_group_admin):
                 return Response(
-                    {"error": "You must be a member or admin of this group to create invitations."},
+                    {"error": "Tylko administrator tej grupy lub superużytkownik może tworzyć zaproszenia."},
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -474,14 +474,19 @@ class InvitationCreateView(APIView):
                     f"{invitation.token}\n\n"  # << Używamy bezpośrednio tokenu (krótkiego kodu)
                     f"Kod wygaśnie za {expiration_days} dni.\n"
                 )
+                try:
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[email],
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    # Logowanie błędu wysyłki emaila, ale kontynuacja, bo zaproszenie zostało stworzone
+                    logger = logging.getLogger(__name__) 
+                    logger.error(f"Nie udało się wysłać emaila z zaproszeniem do {email} dla grupy {group.name}: {e}")
 
-                send_mail(
-                    subject=subject,
-                    message=message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[email],
-                    fail_silently=False,
-                )
 
             return Response({
                 "message": "Invitation created successfully" + (", email sent" if email else ""),
@@ -736,8 +741,7 @@ class PasswordResetConfirmView(APIView):
             **request.data
         }
         serializer = PasswordResetConfirmSerializer(data=request.data) 
-        if not serializer.is_valid(): # Zmieniono na if not is_valid
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
 
         new_password = serializer.validated_data['new_password']
 
