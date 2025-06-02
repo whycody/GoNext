@@ -320,9 +320,11 @@ Because the configuration of cloud services on Azure required time in the beginn
 
 ### Release 2
 
-- Goal: Groups functionality, admin role:
+- Goal: Groups functionality, admin role, security issues:
     - Creating groups
     - Managing groups
+    - Fixing bugs
+    - UI improvement
 - Date: 02.06
 - Release: V2.0
 
@@ -408,7 +410,7 @@ Because the configuration of cloud services on Azure required time in the beginn
 
 #### Sprint Plan
 
-- Goal: Security improvments, password change, documentation.
+- Goal: Security improvments, password change, documentation, UI.
 
 - Date: from 5.05 to 11.05, 1 week
 
@@ -422,7 +424,7 @@ Because the configuration of cloud services on Azure required time in the beginn
 
 #### Sprint Plan
 
-- Goal: Documenation, reset password, API testing, settings.
+- Goal: Documenation, reset password, API testing, settings, UI.
 
 - Date: from 12.05 to 18.05, 1 week
 
@@ -438,7 +440,7 @@ Because the configuration of cloud services on Azure required time in the beginn
 
 #### Sprint Plan
 
-- Goal: Managing groups, backend security.
+- Goal: Managing groups, backend security, UI.
 
 - Date: from 19.05 to 25.05, 1 week
 
