@@ -97,6 +97,7 @@ WSGI_APPLICATION = 'todo_app.wsgi.application'
 # DRF + JWT configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -128,7 +129,9 @@ SWAGGER_SETTINGS = {
         }
     },
     'DEFAULT_INFO': 'todo_app.urls.api_info',
-    'USE_SESSION_AUTH': False,  # Hides the "login via Django session" button
+    'USE_SESSION_AUTH': True,  # Hides the "login via Django session" button
+    'LOGIN_URL': 'admin:login',     # Nazwa URL dla logowania w panelu admina
+    'LOGOUT_URL': 'admin:logout',
     'JSON_EDITOR': True,  # Optional: enables JSON editor in request body
 }
 

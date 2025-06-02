@@ -1,3 +1,4 @@
+import logging
 import random
 import uuid
 from django.contrib.auth import get_user_model, authenticate, update_session_auth_hash 
@@ -29,6 +30,8 @@ from axes.helpers import get_client_username, get_client_ip_address
 from todos.utils import lockout_response 
 from .permissions import IsGroupAdmin, IsGroupAdminOrMemberReadOnly, IsTaskOwnerOrGroupMember 
 from django.db.models import Q
+
+from rest_framework.exceptions import PermissionDenied
 
 # Endpoint user-info
 class UserInfoView(APIView):
@@ -149,15 +152,21 @@ class LoginView(APIView):
 
         user = authenticate(request=request, username=username, password=password)
         if user:
+            if user.is_superuser:
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Superuser '{user.username}' attempt to login via API blocked.")
+                raise PermissionDenied(
+                    ("Superadministratorzy mogą logować się tylko przez panel administracyjny Django.")
+                )
             # RESETUJ blokady dla tego requestu
-            username = get_client_username(request, credentials={'username': username})
+            username_for_axes = get_client_username(request, credentials={'username': username})
             ip_address = get_client_ip_address(request)
 
             # Reset prób logowania
             handler = AxesProxyHandler()
             handler.reset_attempts(
                 ip_address=ip_address,
-                username=username,
+                username=username_for_axes,
             )
             # Generowanie tokenów przy użyciu dedykowanej funkcji
             refresh, access_token = create_new_tokens(user, remember_me)
@@ -237,7 +246,7 @@ def get_filtered_todos(request, requesting_user=None):
     return base_queryset
 
 class ToDoByUserView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -248,7 +257,7 @@ class ToDoByUserView(APIView):
 
 # Returning tasks assigned to the user, grouped by their respective groups
 class ToDoByGroupView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -288,7 +297,7 @@ class ToDoByGroupView(APIView):
 
 # Task detail view – allows updating and deleting a task
 class ToDoDetailView(generics.RetrieveUpdateDestroyAPIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsTaskOwnerOrGroupMember] 
     serializer_class = ToDoSerializer # Używasz swojego oryginalnego ToDoSerializer
 
@@ -304,7 +313,7 @@ class ToDoDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 # User creates a task only for themselves (no group assignment)
 class ToDoListCreateView(generics.ListCreateAPIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = ToDoSerializer # Używasz swojego oryginalnego ToDoSerializer
 
@@ -355,7 +364,7 @@ class ToDoListCreateView(generics.ListCreateAPIView):
 
 # View for admins – list of groups
 class GroupListView(generics.ListAPIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminUser]
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
@@ -368,7 +377,7 @@ class MyGroupsListView(generics.ListAPIView):
     serializer_class = GroupSerializer
     # Użyj odpowiedniej klasy authentykacji JWT, której używasz w projekcie
     # Przykład dla Djoser:
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated] 
 
     def get_queryset(self):
@@ -384,7 +393,7 @@ class MyGroupsListView(generics.ListAPIView):
 
 # View for admins – group detail view
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsGroupAdminOrMemberReadOnly] 
     serializer_class = GroupSerializer # Twój GroupSerializer
 
@@ -401,7 +410,7 @@ class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 # View for admins – create a new group
 class GroupCreateView(generics.CreateAPIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
@@ -412,7 +421,7 @@ class GroupCreateView(generics.CreateAPIView):
         group.admins.add(self.request.user)     
 
 class InvitationCreateView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -479,7 +488,7 @@ class InvitationCreateView(APIView):
 
 
 class AcceptInvitationView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -723,7 +732,7 @@ class PasswordResetConfirmView(APIView):
 User = get_user_model() # Upewnij się, że User jest zdefiniowany
 
 class ManageGroupMemberView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsGroupAdmin] # Tylko admin grupy może zarządzać
 
     @swagger_auto_schema(
@@ -758,7 +767,7 @@ class ManageGroupMemberView(APIView):
 
 
 class ManageGroupAdminView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsGroupAdmin] # Tylko admin grupy może zarządzać innymi adminami
 
     @swagger_auto_schema(
@@ -818,7 +827,7 @@ class ManageGroupAdminView(APIView):
         return Response({"message": f"Administrator {admin_to_demote.username} demoted to member in group {group.name}."}, status=status.HTTP_200_OK)
 
 class ChangePasswordView(generics.GenericAPIView): # Użycie GenericAPIView dla łatwiejszego dostępu do serializera
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     serializer_class = ChangePasswordSerializer
     authentication_classes = [JWTAuthentication] # Upewnij się, że jest zgodne
 
@@ -879,7 +888,7 @@ class LeaveGroupView(APIView):
     """
     Pozwala uwierzytelnionemu użytkownikowi opuścić grupę, której jest członkiem.
     """
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated] # Użytkownik musi być zalogowany
 
     @swagger_auto_schema(
