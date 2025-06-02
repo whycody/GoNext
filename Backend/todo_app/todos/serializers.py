@@ -3,8 +3,10 @@ from rest_framework.validators import UniqueValidator
 from django.contrib.auth import get_user_model
 from .models import ToDo, Group
 from django.contrib.auth.password_validation import validate_password
-
+from django.core.exceptions import ValidationError as DjangoValidationError 
 User = get_user_model()  # Pobieramy nasz niestandardowy model użytkownika
+
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 class ToDoSerializer(serializers.ModelSerializer):
     group_id = serializers.PrimaryKeyRelatedField(
@@ -62,6 +64,22 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True, 'style': {'input_type': 'password'}}
+        }
+
+    def validate_password(self, value):
+        # Ta metoda jest automatycznie wywoływana dla pola 'password'
+        # Tutaj wywołujemy skonfigurowane globalnie walidatory
+        try:
+            validate_password(value, user=None) # Dla nowo tworzonego użytkownika, user=None jest OK
+                                                # (UserAttributeSimilarityValidator nie zadziała bez obiektu user)
+                                                # Można by przekazać tymczasowy obiekt User z danymi z validated_data
+                                                # aby UserAttributeSimilarityValidator miał co porównywać, ale to bardziej zaawansowane.
+                                                # Dla prostoty, user=None.
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(list(e.messages))
+        return value
 
     def create(self, validated_data):
         # Można tu wstawić dodatkową logikę np. walidację siły hasła
@@ -132,8 +150,8 @@ class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
-    new_password = serializers.CharField(min_length=8)
-    re_new_password = serializers.CharField(min_length=8)
+    new_password = serializers.CharField(write_only=True, required=True, min_length=8, style={'input_type': 'password'})
+    re_new_password = serializers.CharField(write_only=True, required=True, min_length=8, style={'input_type': 'password'})
 
     def validate(self, data):
         if data['new_password'] != data['re_new_password']:
@@ -143,7 +161,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'})
-    new_password1 = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'})
+    new_password1 = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'}) 
     new_password2 = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'})
     current_device_id = serializers.CharField(
         required=False, 
@@ -153,23 +171,31 @@ class ChangePasswordSerializer(serializers.Serializer):
         help_text="Opcjonalne ID bieżącego urządzenia, aby zachować jego sesję 'zapamiętaj mnie'."
     )
 
+    def validate_old_password(self, value):
+        user = self.context.get('request').user
+        if not user or not user.check_password(value):
+            raise serializers.ValidationError("Podane stare hasło jest nieprawidłowe.")
+        return value
+
+    def validate_new_password1(self, value): # Zmieniono nazwę metody na validate_NAZWA_POLA
+        user = self.context.get('request').user
+        # Sprawdzenie, czy nowe hasło różni się od starego
+        if user and user.check_password(value):
+            raise serializers.ValidationError("Nowe hasło musi być inne niż stare hasło.")
+        
+        # Walidacja siły nowego hasła przy użyciu walidatorów Django
+        if user:
+            try:
+                validate_password(value, user=user)
+            except DjangoValidationError as e:
+                raise serializers.ValidationError(list(e.messages)) # Przekształć na ValidationError z DRF
+        else:
+            # To nie powinno się zdarzyć, jeśli widok ma IsAuthenticated
+            raise drf_exceptions.AuthenticationFailed("Użytkownik nie jest dostępny w kontekście serializatora.")
+        return value
+
     def validate(self, data):
         # Sprawdzenie, czy nowe hasła są zgodne
         if data['new_password1'] != data['new_password2']:
             raise serializers.ValidationError({"new_password2": "Podane nowe hasła nie są identyczne."})
-        
-        # Walidacja siły nowego hasła przy użyciu walidatorów Django
-        # Potrzebujemy obiektu użytkownika, aby przekazać go do validate_password
-        # Pobieramy go z kontekstu, który musi być przekazany przy inicjalizacji serializera
-        user = self.context.get('request').user
-        if user:
-            try:
-                validate_password(data['new_password1'], user=user)
-            except drf_exceptions.ValidationError as e: # Przechwyć ValidationError z Django
-                # Przekształć na ValidationError z DRF (który oczekuje listy lub słownika)
-                raise serializers.ValidationError({"new_password1": list(e.messages)})
-        else:
-            # To nie powinno się zdarzyć, jeśli widok ma IsAuthenticated, ale dla bezpieczeństwa
-            raise drf_exceptions.AuthenticationFailed("Użytkownik nie jest dostępny w kontekście serializatora.")
-            
         return data

@@ -33,4 +33,5 @@ urlpatterns = [
     path('groups/<int:group_id>/admins/<int:user_id>/', ManageGroupAdminView.as_view(), name='group-manage-admin'),    # POST to promote, DELETE to demote
     path('password/change/', ChangePasswordView.as_view(), name='auth-password-change'),
     path('groups/<int:group_id>/leave/', LeaveGroupView.as_view(), name='group-leave'),
+    path('reset-password/<str:uidb64>/<str:token>/', password_reset_form_render_view, name='password_reset_form_page'),
 ]

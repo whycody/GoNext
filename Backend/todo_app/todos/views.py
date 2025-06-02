@@ -5,7 +5,8 @@ from django.contrib.auth import get_user_model, authenticate, update_session_aut
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_str, force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -32,6 +33,9 @@ from .permissions import IsGroupAdmin, IsGroupAdminOrMemberReadOnly, IsTaskOwner
 from django.db.models import Q
 
 from rest_framework.exceptions import PermissionDenied
+
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 # Endpoint user-info
 class UserInfoView(APIView):
@@ -676,13 +680,33 @@ class PasswordResetRequestView(APIView):
 
         token = default_token_generator.make_token(user)
         uidb64 = urlsafe_base64_encode(force_bytes(user.id))
-        reset_url = f"{settings.FRONTEND_URL}/password-reset-confirm/{uidb64}/{token}/"
+        relative_url_path = reverse('password_reset_form_page', kwargs={'uidb64': uidb64, 'token': token})
+        reset_url = request.build_absolute_uri(relative_url_path)
 
-        subject = "Reset hasła"
-        message = f"Clique w link, aby zresetować hasło: {reset_url}"
-        send_mail(subject, message, EMAIL_HOST_USER, [email], fail_silently=False)
+        subject = "Resetowanie Hasła dla Twojego Konta"
+        # Możesz użyć Django templates do renderowania treści emaila dla lepszego formatowania
+        message = (
+            f"Witaj {user.username},\n\n"
+            f"Otrzymaliśmy prośbę o zresetowanie hasła dla Twojego konta w naszej aplikacji.\n"
+            f"Aby ustawić nowe hasło, kliknij w poniższy link:\n\n"
+            f"{reset_url}\n\n"
+            f"Jeśli to nie Ty prosiłeś/aś o zresetowanie hasła, zignoruj tę wiadomość. Twoje hasło pozostanie niezmienione.\n\n"
+            f"Link będzie aktywny przez określony czas .\n\n"
+            f"Pozdrawiamy,\nZespół Aplikacji GoNext"
+        )
 
-        return Response({"message": "Link do resetu hasła został wysłany."}, status=status.HTTP_200_OK)
+        try:
+            send_mail(subject, message, EMAIL_HOST_USER, [email], fail_silently=False)
+        except Exception as e:
+            # Logowanie błędu wysyłki emaila
+            logger = logging.getLogger(__name__) # Na górze pliku: import logging
+            logger.error(f"Nie udało się wysłać emaila resetującego hasło do {email}: {e}")
+            # Możesz zwrócić generyczny błąd lub ten sam komunikat co przy sukcesie, aby nie ujawniać problemów
+            return Response({"message": "Jeśli konto powiązane z tym adresem email istnieje i jest aktywne, otrzymasz wiadomość e-mail z instrukcjami dotyczącymi resetowania hasła."}, status=status.HTTP_200_OK)
+
+
+        return Response({"message": "Link do resetu hasła został wysłany na Twój adres email (jeśli konto istnieje i jest aktywne)."}, status=status.HTTP_200_OK)
+
 
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
@@ -711,8 +735,9 @@ class PasswordResetConfirmView(APIView):
             'token': token,
             **request.data
         }
-        serializer = PasswordResetConfirmSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
+        serializer = PasswordResetConfirmSerializer(data=request.data) 
+        if not serializer.is_valid(): # Zmieniono na if not is_valid
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         new_password = serializer.validated_data['new_password']
 
@@ -725,8 +750,14 @@ class PasswordResetConfirmView(APIView):
         if not default_token_generator.check_token(user, token):
             return Response({"error": "Token jest nieprawidłowy lub wygasł."}, status=status.HTTP_400_BAD_REQUEST)
 
+        try:
+            validate_password(new_password, user=user) # WALIDACJA HASŁA NA BACKENDZIE
+        except DjangoValidationError as e:
+            return Response({"new_password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
         user.set_password(new_password)
         user.save()
+        update_session_auth_hash(request, user) # Jeśli potrzebne
         return Response({"message": "Hasło zostało zmienione pomyślnie."}, status=status.HTTP_200_OK)
     
 User = get_user_model() # Upewnij się, że User jest zdefiniowany
@@ -827,9 +858,9 @@ class ManageGroupAdminView(APIView):
         return Response({"message": f"Administrator {admin_to_demote.username} demoted to member in group {group.name}."}, status=status.HTTP_200_OK)
 
 class ChangePasswordView(generics.GenericAPIView): # Użycie GenericAPIView dla łatwiejszego dostępu do serializera
-    #permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     serializer_class = ChangePasswordSerializer
-    authentication_classes = [JWTAuthentication] # Upewnij się, że jest zgodne
+    #authentication_classes = [JWTAuthentication] # Upewnij się, że jest zgodne
 
     @swagger_auto_schema(
         operation_description=(
@@ -852,17 +883,8 @@ class ChangePasswordView(generics.GenericAPIView): # Użycie GenericAPIView dla 
         serializer = self.get_serializer(data=request.data, context={'request': request}) 
         serializer.is_valid(raise_exception=True)
 
-        old_password = serializer.validated_data.get('old_password')
-        new_password = serializer.validated_data.get('new_password1') # new_password2 jest już sprawdzone w serializatorze
+        new_password = serializer.validated_data.get('new_password1')
         current_device_id = serializer.validated_data.get('current_device_id')
-
-        # Sprawdzenie starego hasła
-        if not user.check_password(old_password):
-            return Response({"old_password": ["Podane stare hasło jest nieprawidłowe."]}, status=status.HTTP_400_BAD_REQUEST)
-        
-        #Sprawdzenie, czy nowe hasło różni się od starego
-        if user.check_password(new_password):
-            return Response({"new_password1": ["Nowe hasło musi być inne niż stare hasło."]}, status=status.HTTP_400_BAD_REQUEST)
 
         # Ustawienie nowego hasła
         user.set_password(new_password)
@@ -931,3 +953,29 @@ class LeaveGroupView(APIView):
             {"message": f"Pomyślnie opuściłeś grupę '{group.name}'."},
             status=status.HTTP_200_OK
         )
+
+def password_reset_form_render_view(request, uidb64=None, token=None):
+    User = get_user_model()
+    error_message = None
+    user = None # Inicjalizacja user
+
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        # User.DoesNotExist jest już w except, więc nie trzeba go osobno łapać,
+        # ale zostawienie dla jasności nie szkodzi.
+        error_message = "Link do resetowania hasła jest nieprawidłowy lub użytkownik nie istnieje."
+        user = None # Upewnij się, że user jest None, jeśli wystąpił błąd
+
+    # Sprawdź token tylko jeśli użytkownik został znaleziony
+    if user is not None and not default_token_generator.check_token(user, token):
+        error_message = "Link do resetowania hasła jest nieprawidłowy lub wygasł. Spróbuj ponownie poprosić o reset."
+        # Nie zeruj user, bo może być potrzebny w logice szablonu, ale error_message to zasygnalizuje
+
+    context = {
+        'uidb64': uidb64,
+        'token': token,
+        'error_message': error_message  # Będzie None jeśli link jest wstępnie OK
+    }
+    return render(request, 'todos/password_reset_form_page.html', context)
