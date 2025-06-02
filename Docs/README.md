@@ -138,10 +138,14 @@ Creating Groups/Managing Groups:
 ![User Story 6](imgs/US6_1.JPG)
 
 ### User Story 7
-![User Story 6](imgs/US7_1.JPG)
+![User Story 7](imgs/US7_1.JPG)
 
 ### User Story 8
-![User Story 6](imgs/US8_1.JPG)
+![User Story 8](imgs/US8_1.JPG)
+![User Story 8](imgs/US8_2.JPG)
+
+### User Story 9
+![User Story 9](imgs/US9_1.JPG)
 
 ### User Story 10
 ![User Story 6](imgs/US10_1.JPG)
