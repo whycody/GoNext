@@ -104,8 +104,9 @@ Creating Groups/Managing Groups:
 - User story 5(Creating tasks): As a user, I want to create tasks, so that I keep track on my personal objectives.
 - User story 6(Managing tasks): As a user, I want to assign a priority level to a task, edit it, or delete it so that I have a clear overview of all task details.
 - User story 7(Creating groups): As a user, I want to create a group so that I can collaborate on tasks with other group members.
-- User story 8(Initing members): As a group admin, I want to invite users to a created group, so that we can share common tasks.
+- User story 8(Inviting members): As a group admin, I want to invite users to a created group, so that we can share common tasks.
 - User story 9(Managing groups): As a group admin, I want to set other members as admins or remove them from the group so that I can maintain proper group management.
+- User story 10(Logging out): As a user, I want to log out, so that I can get back to using the application later without idle state.
 
 ***
 
@@ -312,7 +313,7 @@ Because the configuration of cloud services on Azure required time in the beginn
     - Logging in
     - Creating tasks
     - Managing tasks
-- Date: 16.04
+- Date: 20.04
 - Release: V1.0
 
 ***
@@ -339,11 +340,7 @@ Because the configuration of cloud services on Azure required time in the beginn
 - To do:
     - US1: Registration
     - US2: Logging in
-    - US3
-
-#### Sprint Analysis
-
-- Analysis: Task creation finished with great success, nonetheless, the team is currently struggling with setting up the registration process and API configuration.
+    - US5: Creating tasks
 
 - Version: 0.1
 
@@ -353,98 +350,114 @@ Because the configuration of cloud services on Azure required time in the beginn
 
 - Goal: Registration, email verification, group creation.
 
-- Date: from 05.04 to 22.04, 2 weeks
+- Date: from 07.04 to 13.04, 2 weeks
 
 - To do:
-    - US1: Registration/Logging in
+    - US1: Registration
+    - US2: Loggin in
     - US4: Creating groups
 
-#### Sprint Analysis
-
-- Analysis: 
-- Version: 1.0
+- Version: 0.2
 
 ### Sprint 3
 
 #### Sprint Plan
 
-- Goal: Registration, email verification, group creation.
+- Goal: Fix previous sprint issues.
 
-- Date: from 23.04 to 07.05, 2 weeks
+- Date: from 14.04 to 20.04, 1 week
 
 - To do:
-    - US1: Registration/Logging in
+    - US1: Registration
+    - US2: Logging in
     - US4: Creating groups
 
-#### Sprint Analysis
-
-- Analysis: 
-- Version: 1.1
+- Version: 1.0
 
 ### Sprint 4
 
 #### Sprint Plan
 
-- Goal: Registration, email verification, group creation.
+- Goal: Group creation, backend security.
 
-- Date: from 08.05 to 15.05, 1 week
+- Date: from 21.04 to 27.04, 1 week
 
 - To do:
-    - US1: Registration/Logging in
+    - US1: Registration
     - US4: Creating groups
 
-#### Sprint Analysis
-
-- Analysis: 
-- Version: 1.2
+- Version: 1.1
 
 ### Sprint 5
 
 #### Sprint Plan
 
-- Goal: Registration, email verification, group creation.
+- Goal: API setting, settings, group invitation, email verification.
 
-- Date: from 16.05 to 21.05, 5 days
+- Date: from 28.04 to 04.05, 1 week
 
 - To do:
-    - US1: Registration/Logging in
-    - US4: Creating groups
+    - US1: Registration
+    - US2: Logging in
+    - US6: Managing tasks
+    - US8: Inviting members
 
-#### Sprint Analysis
-
-- Analysis: 
-- Version: 1.3
+- Version: 1.2
 
 ### Sprint 6
 
 #### Sprint Plan
 
-- Goal: Registration, email verification, group creation.
+- Goal: Security improvments, password change, documentation.
 
-- Date: from 22.05 to 27.05, 5 days
+- Date: from 5.05 to 11.05, 1 week
 
 - To do:
-    - US1: Registration/Logging in
-    - US4: Creating groups
+    - US3: Forgot password
+    - US4: Change password
 
-#### Sprint Analysis
-
-- Analysis: 
-- Version: 1.4
+- Version: 1.3
 
 ### Sprint 7
 
 #### Sprint Plan
 
-- Goal: Registration, email verification, group creation.
+- Goal: Documenation, reset password, API testing, settings.
 
-- Date: from 28.05 to 02.06, 2 weeks
+- Date: from 12.05 to 18.05, 1 week
 
 - To do:
-    - US1: Registration/Logging in
-    - US4: Creating groups
+    - US3: Forgot password
+    - US6: Managing tasks
+    - US8: Intviting members
+    - US10: Logging out
 
-#### Sprint Analysis
+- Version: 1.4
 
-- Analysis: 
+### Sprint 8
+
+#### Sprint Plan
+
+- Goal: Managing groups, backend security.
+
+- Date: from 19.05 to 25.05, 1 week
+
+- To do:
+    - US9: Managing groups
+
+- Version: 1.5
+
+### Sprint 9
+
+#### Sprint Plan
+
+- Goal: Group creation UI, security, documentation.
+
+- Date: from 26.05 to 02.06, 1 week
+
+- To do:
+    - US4: Change password
+    - US7: Creating groups
+    - Inner fixs
+
 - Version: 2.0
