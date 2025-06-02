@@ -52,7 +52,7 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
       <ResetPasswordBottomSheet ref={resetPasswordBottomSheetRef} />
       <View style={{ flex: 0.4 }}/>
       <View style={{ justifyContent: 'center' }}>
-        <Text style={styles.header}>GoNext new</Text>
+        <Text style={styles.header}>GoNext</Text>
         <Text style={styles.subheader}>Realize your tasks in a better way</Text>
       </View>
       <View style={styles.inputsContainer}>
