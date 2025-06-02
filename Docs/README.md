@@ -113,42 +113,43 @@ Creating Groups/Managing Groups:
 ## App usage demonstrations
 
 ### User Story 1
-<!--![User Story 1](imgs/1_updated.png) - GIF filmik US1-->
-<img src="imgs/US1_1.JPG" alt="User Story 1" width="200"/>
+<!--<img src="imgs/1_updated.png" alt="User Story 1 GIF" width="300"/>-->
+<img src="imgs/US1_1.JPG" alt="User Story 1" width="300"/>
 
 ### User Story 2 
-![User Story 2](imgs/US2_1.JPG)
-![User Story 2](imgs/US2_2.JPG)
-<!--![User Story 2](imgs/2_updated.png) - GIF filmik US2-->
+<img src="imgs/US2_1.JPG" alt="User Story 2 - 1" width="300"/>
+<img src="imgs/US2_2.JPG" alt="User Story 2 - 2" width="300"/>
+<!--<img src="imgs/2_updated.png" alt="User Story 2 GIF" width="300"/>-->
 
 ### User Story 3 
-![User Story 3](imgs/US3_1.JPG)
-![User Story 3](imgs/US3_2.JPG)
-![User Story 3](imgs/US3_3.JPG)
-![User Story 3](imgs/US3_4.JPG)
-![User Story 3](imgs/US3_5.JPG)
+<img src="imgs/US3_1.JPG" alt="User Story 3 - 1" width="300"/>
+<img src="imgs/US3_2.JPG" alt="User Story 3 - 2" width="300"/>
+<img src="imgs/US3_3.JPG" alt="User Story 3 - 3" width="300"/>
+<img src="imgs/US3_4.JPG" alt="User Story 3 - 4" width="300"/>
+<img src="imgs/US3_5.JPG" alt="User Story 3 - 5" width="300"/>
 
 ### User Story 4 
-![User Story 4](imgs/US4_1.JPG)
+<img src="imgs/US4_1.JPG" alt="User Story 4" width="300"/>
 
 ### User Story 5
-![User Story 5](imgs/US5_1.JPG)
+<img src="imgs/US5_1.JPG" alt="User Story 5" width="300"/>
 
 ### User Story 6
-![User Story 6](imgs/US6_1.JPG)
+<img src="imgs/US6_1.JPG" alt="User Story 6" width="300"/>
 
 ### User Story 7
-![User Story 7](imgs/US7_1.JPG)
+<img src="imgs/US7_1.JPG" alt="User Story 7" width="300"/>
 
 ### User Story 8
-![User Story 8](imgs/US8_1.JPG)
-![User Story 8](imgs/US8_2.JPG)
+<img src="imgs/US8_1.JPG" alt="User Story 8 - 1" width="300"/>
+<img src="imgs/US8_2.JPG" alt="User Story 8 - 2" width="300"/>
 
 ### User Story 9
-![User Story 9](imgs/US9_1.JPG)
+<img src="imgs/US9_1.JPG" alt="User Story 9" width="300"/>
 
 ### User Story 10
-![User Story 6](imgs/US10_1.JPG)
+<img src="imgs/US10_1.JPG" alt="User Story 10" width="300"/>
+
 
 ***
 
