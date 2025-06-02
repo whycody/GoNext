@@ -1,13 +1,11 @@
-import { View, Text, StyleSheet, KeyboardAvoidingView, ActivityIndicator, Pressable } from "react-native";
+import { View, Text, StyleSheet, KeyboardAvoidingView, ActivityIndicator } from "react-native";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { MARGIN_HORIZONTAL } from "../src/constants";
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import AuthTextInput from "../components/AuthTextInput";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import ResetPasswordBottomSheet from "../sheets/ResetPasswordBottomSheet";
 
 type LoginProps = {
-  login: (username: string, password: string, rememberMe: boolean) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   authError: string | null;
 }
 
@@ -15,11 +13,9 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
 
-  const resetPasswordBottomSheetRef = useRef<BottomSheetModal>(null);
   const [warning, setWarning] = useState<string | null>(null);
-  const [username, setUsername] = useState<string>('nowy');
-  const [password, setPassword] = useState<string>('haslo123A?');
-  const [rememberMe, setRememberMe] = useState<boolean>(true);
+  const [username, setUsername] = useState<string>('admin');
+  const [password, setPassword] = useState<string>('haslo123');
   const [loading, setLoading] = useState<boolean>(false);
   const filled = username.length > 0 && password.length > 0;
   const nav = useNavigation();
@@ -27,7 +23,7 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
   const handleLoginPress = async () => {
     if (!filled || loading) return;
     setLoading(true);
-    await login(username, password, rememberMe);
+    await login(username, password);
     setLoading(false);
   }
 
@@ -39,17 +35,8 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
     setWarning(null);
   }, [username, password]);
 
-  const handleResetPress = () => {
-    resetPasswordBottomSheetRef?.current?.present();
-  }
-
-  const handlePasswordReset = (newPassword: string) => {
-
-  }
-
   return (
     <KeyboardAvoidingView style={styles.root}>
-      <ResetPasswordBottomSheet ref={resetPasswordBottomSheetRef} />
       <View style={{ flex: 0.4 }}/>
       <View style={{ justifyContent: 'center' }}>
         <Text style={styles.header}>GoNext</Text>
@@ -70,27 +57,9 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
           style={{ marginTop: 10 }}
           textContentType={'password'}
         />
-        <Pressable
-          style={styles.checkboxContainer}
-          onPress={() => setRememberMe((prev) => !prev)}
-          disabled={loading}
-        >
-          <View style={[
-            styles.checkbox,
-            rememberMe && { backgroundColor: colors.primary, borderColor: colors.primary }
-          ]}>
-            {rememberMe && <Text style={styles.checkboxTick}>✓</Text>}
-          </View>
-          <Text style={styles.checkboxLabel}>Remember me</Text>
-        </Pressable>
-        {warning &&
-          <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 10 }}>
-            {warning + '. '}
-            <Text style={{ textDecorationLine: 'underline', textDecorationStyle: 'dotted' }} onPress={handleResetPress}>
-              Reset your password if you forgot it.
-            </Text>
-          </Text>
-        }
+        <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 10 }}>
+          {warning}
+        </Text>
       </View>
       <View style={{ flex: 1 }}/>
       <View style={{ flex: 0 }}>
@@ -127,33 +96,6 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   inputsContainer: {
     marginTop: 40,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 4,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-    backgroundColor: 'transparent',
-  },
-  checkboxTick: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 12,
-    lineHeight: 15,
-  },
-  checkboxLabel: {
-    fontSize: 13,
-    color: colors.text,
   },
   label: {
     fontSize: 13,
