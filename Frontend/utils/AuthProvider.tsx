@@ -94,10 +94,10 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, logout }}>
-      {isAuthenticated ? user.verified ?
+      {isAuthenticated ? (user?.status !== 'verified' ?
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
             <Text style={{ color: colors.text, fontSize: 18 }}>Please verify your e-mail first</Text>
-          </View> : children :
+          </View> : children) :
         <Stack.Navigator
           initialRouteName="Login"
           screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.card } }}
