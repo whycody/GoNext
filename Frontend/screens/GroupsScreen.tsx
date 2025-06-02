@@ -1,15 +1,15 @@
-import { FlatList, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { FlatList, RefreshControl, ScrollView, StyleSheet, View, Alert } from "react-native";
 import GroupsHeader from "../components/GroupsHeader";
 import GroupsView from "../components/GroupsView";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
-import InviteUserBottomSheet from "../sheets/InviteUserBottomSheet";
 import { useState, useRef } from "react";
-import { createGroup } from "../hooks/useApi";
+import { createGroup, acceptGroupInvitation } from "../hooks/useApi";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useGroupsContext } from "../store/GroupsContext";
 import { useTaskItemsContext } from "../store/TaskItemsContext";
+import AcceptInvitationBottomSheet from "../sheets/AcceptInvitationBottomSheet";
 
 const GroupsScreen = () => {
   const { tasks } = useTaskItemsContext();
@@ -19,10 +19,9 @@ const GroupsScreen = () => {
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [selectedGroupName, setSelectedGroupName] = useState<string | null>(null);
 
   const handleGroupBottomSheetRef = useRef<BottomSheetModal>(null);
-  const inviteUserBottomSheetRef = useRef<BottomSheetModal>(null);
+  const acceptInvitationBottomSheetRef = useRef<BottomSheetModal>(null);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -40,15 +39,25 @@ const GroupsScreen = () => {
     console.log("Group edited:", { id, name, icon, color, members });
   };
 
-  const handleSendInvitation = (email: string) => {
-    console.log(`Invitation sent to ${email} for group ID: ${selectedGroupId}`);
+  const handleJoiningGroupPress = () => {
+    acceptInvitationBottomSheetRef.current?.present();
   };
 
-  const handleGroupLongPress = (id: number) => {
-    const group = groups.find((g) => g.id === id);
-    setSelectedGroupId(id);
-    setSelectedGroupName(group?.name || null);
-    inviteUserBottomSheetRef.current?.present();
+  
+  const handleInvitationAccepted = async (token: string) => {
+    try {
+      const response = await acceptGroupInvitation(token);
+      if (response?.message) {
+        Alert.alert("Success", response.message);
+      } else if (response?.error) {
+        Alert.alert("Error", response.error);
+      } else {
+        Alert.alert("Error", "Unknown response from server.");
+      }
+      await syncGroups();
+    } catch (e) {
+      Alert.alert("Error", "Failed to accept invitation.");
+    }
   };
 
   const handleFABPress = () => {
@@ -80,13 +89,19 @@ const GroupsScreen = () => {
               taskCount={tasks.filter((task) => task.groupId == item.id).length}
               memberCount={item.members.length}
               onGroupPress={() => navigation.navigate("GroupDetails", { groupId: item.id })}
-              onLongPress={() => handleGroupLongPress(item.id)}
             />
           )}
           ItemSeparatorComponent={() => <View style={styles.separator}/>}
         />
 
       </ScrollView>
+      <FAB
+        style={{ position: "absolute", zIndex: 20, right: 29, bottom: 90, backgroundColor: colors.background }}
+        icon="account-multiple-plus-outline"
+        color={colors.primary}
+        onPress={handleJoiningGroupPress}
+        size="small"
+      />
       <FAB
         style={styles.fab}
         icon="plus"
@@ -99,11 +114,9 @@ const GroupsScreen = () => {
         onGroupAdd={handleGroupAdd}
         onGroupEdit={handleGroupEdit}
       />
-      <InviteUserBottomSheet
-        ref={inviteUserBottomSheetRef}
-        onSendInvitation={handleSendInvitation}
-        groupName={selectedGroupName}
-        groupId={selectedGroupId}
+      <AcceptInvitationBottomSheet
+        ref={acceptInvitationBottomSheetRef}
+        onAccept={handleInvitationAccepted}
       />
     </View>
   );

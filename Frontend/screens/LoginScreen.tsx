@@ -1,8 +1,10 @@
 import { View, Text, StyleSheet, KeyboardAvoidingView, ActivityIndicator, Pressable } from "react-native";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { MARGIN_HORIZONTAL } from "../src/constants";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import AuthTextInput from "../components/AuthTextInput";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import ResetPasswordBottomSheet from "../sheets/ResetPasswordBottomSheet";
 
 type LoginProps = {
   login: (username: string, password: string, rememberMe: boolean) => Promise<void>;
@@ -13,6 +15,7 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
 
+  const resetPasswordBottomSheetRef = useRef<BottomSheetModal>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [username, setUsername] = useState<string>('nowy');
   const [password, setPassword] = useState<string>('haslo123A?');
@@ -36,8 +39,17 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
     setWarning(null);
   }, [username, password]);
 
+  const handleResetPress = () => {
+    resetPasswordBottomSheetRef?.current?.present();
+  }
+
+  const handlePasswordReset = (newPassword: string) => {
+
+  }
+
   return (
     <KeyboardAvoidingView style={styles.root}>
+      <ResetPasswordBottomSheet ref={resetPasswordBottomSheetRef} />
       <View style={{ flex: 0.4 }}/>
       <View style={{ justifyContent: 'center' }}>
         <Text style={styles.header}>GoNext</Text>
@@ -71,9 +83,14 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
           </View>
           <Text style={styles.checkboxLabel}>Remember me</Text>
         </Pressable>
-        <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 10 }}>
-          {warning}
-        </Text>
+        {warning &&
+          <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 10 }}>
+            {warning + '. '}
+            <Text style={{ textDecorationLine: 'underline', textDecorationStyle: 'dotted' }} onPress={handleResetPress}>
+              Reset your password if you forgot it.
+            </Text>
+          </Text>
+        }
       </View>
       <View style={{ flex: 1 }}/>
       <View style={{ flex: 0 }}>

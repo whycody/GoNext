@@ -1,9 +1,12 @@
+import logging
+import random
 import uuid
 from django.contrib.auth import get_user_model, authenticate, update_session_auth_hash 
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_str, force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -28,6 +31,11 @@ from axes.helpers import get_client_username, get_client_ip_address
 from todos.utils import lockout_response 
 from .permissions import IsGroupAdmin, IsGroupAdminOrMemberReadOnly, IsTaskOwnerOrGroupMember 
 from django.db.models import Q
+
+from rest_framework.exceptions import PermissionDenied
+
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 # Endpoint user-info
 class UserInfoView(APIView):
@@ -148,15 +156,21 @@ class LoginView(APIView):
 
         user = authenticate(request=request, username=username, password=password)
         if user:
+            if user.is_superuser:
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Superuser '{user.username}' attempt to login via API blocked.")
+                raise PermissionDenied(
+                    ("Superadministratorzy mogą logować się tylko przez panel administracyjny Django.")
+                )
             # RESETUJ blokady dla tego requestu
-            username = get_client_username(request, credentials={'username': username})
+            username_for_axes = get_client_username(request, credentials={'username': username})
             ip_address = get_client_ip_address(request)
 
             # Reset prób logowania
             handler = AxesProxyHandler()
             handler.reset_attempts(
                 ip_address=ip_address,
-                username=username,
+                username=username_for_axes,
             )
             # Generowanie tokenów przy użyciu dedykowanej funkcji
             refresh, access_token = create_new_tokens(user, remember_me)
@@ -236,7 +250,7 @@ def get_filtered_todos(request, requesting_user=None):
     return base_queryset
 
 class ToDoByUserView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -247,7 +261,7 @@ class ToDoByUserView(APIView):
 
 # Returning tasks assigned to the user, grouped by their respective groups
 class ToDoByGroupView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -287,7 +301,7 @@ class ToDoByGroupView(APIView):
 
 # Task detail view – allows updating and deleting a task
 class ToDoDetailView(generics.RetrieveUpdateDestroyAPIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsTaskOwnerOrGroupMember] 
     serializer_class = ToDoSerializer # Używasz swojego oryginalnego ToDoSerializer
 
@@ -303,7 +317,7 @@ class ToDoDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 # User creates a task only for themselves (no group assignment)
 class ToDoListCreateView(generics.ListCreateAPIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = ToDoSerializer # Używasz swojego oryginalnego ToDoSerializer
 
@@ -354,7 +368,7 @@ class ToDoListCreateView(generics.ListCreateAPIView):
 
 # View for admins – list of groups
 class GroupListView(generics.ListAPIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminUser]
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
@@ -367,7 +381,7 @@ class MyGroupsListView(generics.ListAPIView):
     serializer_class = GroupSerializer
     # Użyj odpowiedniej klasy authentykacji JWT, której używasz w projekcie
     # Przykład dla Djoser:
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated] 
 
     def get_queryset(self):
@@ -383,7 +397,7 @@ class MyGroupsListView(generics.ListAPIView):
 
 # View for admins – group detail view
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsGroupAdminOrMemberReadOnly] 
     serializer_class = GroupSerializer # Twój GroupSerializer
 
@@ -400,7 +414,7 @@ class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 # View for admins – create a new group
 class GroupCreateView(generics.CreateAPIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
@@ -411,14 +425,15 @@ class GroupCreateView(generics.CreateAPIView):
         group.admins.add(self.request.user)     
 
 class InvitationCreateView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         request_body=InvitationCreateSerializer,
         responses={
             201: "Invitation created successfully",
-            400: "Bad Request"
+            400: "Bad Request",
+            403: "Forbidden"    
         }
     )
     def post(self, request):
@@ -434,12 +449,11 @@ class InvitationCreateView(APIView):
             except Group.DoesNotExist:
                 return Response({"error": "Group not found"}, status=status.HTTP_400_BAD_REQUEST)
             
-            is_member_or_admin = group.members.filter(id=request.user.id).exists() or \
-                                 group.admins.filter(id=request.user.id).exists()
-            
-            if not (request.user.is_superuser or is_member_or_admin):
+            is_group_admin = group.admins.filter(id=request.user.id).exists()
+
+            if not (request.user.is_superuser or is_group_admin):
                 return Response(
-                    {"error": "You must be a member or admin of this group to create invitations."},
+                    {"error": "Tylko administrator tej grupy lub superużytkownik może tworzyć zaproszenia."},
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -451,35 +465,39 @@ class InvitationCreateView(APIView):
                 max_uses=max_uses
             )
 
-            invite_link = f"{settings.FRONTEND_URL}/invitations/{invitation.token}/accept/"
-
             if email:
                 subject = f"Zaproszenie do grupy: {group.name}"
                 message = (
                     f"Cześć!\n\n"
                     f"{request.user.username} zaprosił(a) Cię do dołączenia do grupy \"{group.name}\".\n\n"
-                    f"Kliknij poniższy link, aby zaakceptować zaproszenie:\n{invite_link}\n\n"
-                    f"Link wygaśnie za {expiration_days} dni.\n"
+                    f"Aby dołączyć, wpisz poniższy kod zaproszenia w aplikacji:\n"
+                    f"{invitation.token}\n\n"  # << Używamy bezpośrednio tokenu (krótkiego kodu)
+                    f"Kod wygaśnie za {expiration_days} dni.\n"
                 )
+                try:
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[email],
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    # Logowanie błędu wysyłki emaila, ale kontynuacja, bo zaproszenie zostało stworzone
+                    logger = logging.getLogger(__name__) 
+                    logger.error(f"Nie udało się wysłać emaila z zaproszeniem do {email} dla grupy {group.name}: {e}")
 
-                send_mail(
-                    subject=subject,
-                    message=message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[email],
-                    fail_silently=False,
-                )
 
             return Response({
                 "message": "Invitation created successfully" + (", email sent" if email else ""),
-                "invite_link": invite_link
+                "token": invitation.token
             }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AcceptInvitationView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -667,13 +685,33 @@ class PasswordResetRequestView(APIView):
 
         token = default_token_generator.make_token(user)
         uidb64 = urlsafe_base64_encode(force_bytes(user.id))
-        reset_url = f"{settings.FRONTEND_URL}/password-reset-confirm/{uidb64}/{token}/"
+        relative_url_path = reverse('password_reset_form_page', kwargs={'uidb64': uidb64, 'token': token})
+        reset_url = request.build_absolute_uri(relative_url_path)
 
-        subject = "Reset hasła"
-        message = f"Clique w link, aby zresetować hasło: {reset_url}"
-        send_mail(subject, message, EMAIL_HOST_USER, [email], fail_silently=False)
+        subject = "Resetowanie Hasła dla Twojego Konta"
+        # Możesz użyć Django templates do renderowania treści emaila dla lepszego formatowania
+        message = (
+            f"Witaj {user.username},\n\n"
+            f"Otrzymaliśmy prośbę o zresetowanie hasła dla Twojego konta w naszej aplikacji.\n"
+            f"Aby ustawić nowe hasło, kliknij w poniższy link:\n\n"
+            f"{reset_url}\n\n"
+            f"Jeśli to nie Ty prosiłeś/aś o zresetowanie hasła, zignoruj tę wiadomość. Twoje hasło pozostanie niezmienione.\n\n"
+            f"Link będzie aktywny przez określony czas .\n\n"
+            f"Pozdrawiamy,\nZespół Aplikacji GoNext"
+        )
 
-        return Response({"message": "Link do resetu hasła został wysłany."}, status=status.HTTP_200_OK)
+        try:
+            send_mail(subject, message, EMAIL_HOST_USER, [email], fail_silently=False)
+        except Exception as e:
+            # Logowanie błędu wysyłki emaila
+            logger = logging.getLogger(__name__) # Na górze pliku: import logging
+            logger.error(f"Nie udało się wysłać emaila resetującego hasło do {email}: {e}")
+            # Możesz zwrócić generyczny błąd lub ten sam komunikat co przy sukcesie, aby nie ujawniać problemów
+            return Response({"message": "Jeśli konto powiązane z tym adresem email istnieje i jest aktywne, otrzymasz wiadomość e-mail z instrukcjami dotyczącymi resetowania hasła."}, status=status.HTTP_200_OK)
+
+
+        return Response({"message": "Link do resetu hasła został wysłany na Twój adres email (jeśli konto istnieje i jest aktywne)."}, status=status.HTTP_200_OK)
+
 
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
@@ -702,7 +740,7 @@ class PasswordResetConfirmView(APIView):
             'token': token,
             **request.data
         }
-        serializer = PasswordResetConfirmSerializer(data=data)
+        serializer = PasswordResetConfirmSerializer(data=request.data) 
         serializer.is_valid(raise_exception=True)
 
         new_password = serializer.validated_data['new_password']
@@ -716,14 +754,20 @@ class PasswordResetConfirmView(APIView):
         if not default_token_generator.check_token(user, token):
             return Response({"error": "Token jest nieprawidłowy lub wygasł."}, status=status.HTTP_400_BAD_REQUEST)
 
+        try:
+            validate_password(new_password, user=user) # WALIDACJA HASŁA NA BACKENDZIE
+        except DjangoValidationError as e:
+            return Response({"new_password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
         user.set_password(new_password)
         user.save()
+        update_session_auth_hash(request, user) # Jeśli potrzebne
         return Response({"message": "Hasło zostało zmienione pomyślnie."}, status=status.HTTP_200_OK)
     
 User = get_user_model() # Upewnij się, że User jest zdefiniowany
 
 class ManageGroupMemberView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsGroupAdmin] # Tylko admin grupy może zarządzać
 
     @swagger_auto_schema(
@@ -758,7 +802,7 @@ class ManageGroupMemberView(APIView):
 
 
 class ManageGroupAdminView(APIView):
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsGroupAdmin] # Tylko admin grupy może zarządzać innymi adminami
 
     @swagger_auto_schema(
@@ -820,7 +864,7 @@ class ManageGroupAdminView(APIView):
 class ChangePasswordView(generics.GenericAPIView): # Użycie GenericAPIView dla łatwiejszego dostępu do serializera
     permission_classes = [IsAuthenticated]
     serializer_class = ChangePasswordSerializer
-    authentication_classes = [JWTAuthentication] # Upewnij się, że jest zgodne
+    #authentication_classes = [JWTAuthentication] # Upewnij się, że jest zgodne
 
     @swagger_auto_schema(
         operation_description=(
@@ -843,17 +887,8 @@ class ChangePasswordView(generics.GenericAPIView): # Użycie GenericAPIView dla 
         serializer = self.get_serializer(data=request.data, context={'request': request}) 
         serializer.is_valid(raise_exception=True)
 
-        old_password = serializer.validated_data.get('old_password')
-        new_password = serializer.validated_data.get('new_password1') # new_password2 jest już sprawdzone w serializatorze
+        new_password = serializer.validated_data.get('new_password1')
         current_device_id = serializer.validated_data.get('current_device_id')
-
-        # Sprawdzenie starego hasła
-        if not user.check_password(old_password):
-            return Response({"old_password": ["Podane stare hasło jest nieprawidłowe."]}, status=status.HTTP_400_BAD_REQUEST)
-        
-        #Sprawdzenie, czy nowe hasło różni się od starego
-        if user.check_password(new_password):
-            return Response({"new_password1": ["Nowe hasło musi być inne niż stare hasło."]}, status=status.HTTP_400_BAD_REQUEST)
 
         # Ustawienie nowego hasła
         user.set_password(new_password)
@@ -879,7 +914,7 @@ class LeaveGroupView(APIView):
     """
     Pozwala uwierzytelnionemu użytkownikowi opuścić grupę, której jest członkiem.
     """
-    authentication_classes = [JWTAuthentication]
+    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated] # Użytkownik musi być zalogowany
 
     @swagger_auto_schema(
@@ -922,3 +957,29 @@ class LeaveGroupView(APIView):
             {"message": f"Pomyślnie opuściłeś grupę '{group.name}'."},
             status=status.HTTP_200_OK
         )
+
+def password_reset_form_render_view(request, uidb64=None, token=None):
+    User = get_user_model()
+    error_message = None
+    user = None # Inicjalizacja user
+
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        # User.DoesNotExist jest już w except, więc nie trzeba go osobno łapać,
+        # ale zostawienie dla jasności nie szkodzi.
+        error_message = "Link do resetowania hasła jest nieprawidłowy lub użytkownik nie istnieje."
+        user = None # Upewnij się, że user jest None, jeśli wystąpił błąd
+
+    # Sprawdź token tylko jeśli użytkownik został znaleziony
+    if user is not None and not default_token_generator.check_token(user, token):
+        error_message = "Link do resetowania hasła jest nieprawidłowy lub wygasł. Spróbuj ponownie poprosić o reset."
+        # Nie zeruj user, bo może być potrzebny w logice szablonu, ale error_message to zasygnalizuje
+
+    context = {
+        'uidb64': uidb64,
+        'token': token,
+        'error_message': error_message  # Będzie None jeśli link jest wstępnie OK
+    }
+    return render(request, 'todos/password_reset_form_page.html', context)

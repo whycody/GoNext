@@ -14,21 +14,21 @@ export default function App() {
     <>
       <StatusBar/>
       <SafeAreaProvider>
-        <GroupsProvider>
-          <TaskItemsProvider>
-            <GestureHandlerRootView>
-              <SafeAreaView style={styles.container}>
-                <BottomSheetModalProvider>
-                  <NavigationContainer>
-                    <AuthProvider>
+        <NavigationContainer>
+          <GestureHandlerRootView>
+            <BottomSheetModalProvider>
+              <AuthProvider>
+                <GroupsProvider>
+                  <TaskItemsProvider>
+                    <SafeAreaView style={styles.container}>
                       <RootNavigation/>
-                    </AuthProvider>
-                  </NavigationContainer>
-                </BottomSheetModalProvider>
-              </SafeAreaView>
-            </GestureHandlerRootView>
-          </TaskItemsProvider>
-        </GroupsProvider>
+                    </SafeAreaView>
+                  </TaskItemsProvider>
+                </GroupsProvider>
+              </AuthProvider>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
+        </NavigationContainer>
       </SafeAreaProvider>
     </>
   );

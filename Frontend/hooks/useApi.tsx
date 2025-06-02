@@ -38,10 +38,11 @@ export const registerToApp = async (username: string, email: string, password: s
 
 export const refreshUserAccessToken = async (refreshToken: string) => {
   try {
+    const deviceId = getDeviceId();
     return await apiCall({
       method: 'POST',
       url: '/token/refresh/',
-      data: { refresh_token: refreshToken, device_id: 'test-device-id-6ba7b810-9dad-11d1-80b4-00c04fd430c8' }
+      data: { refresh_token: refreshToken, device_id: deviceId }
     }, false, true);
   } catch (e) {
     console.error('/token/refresh/', e);
@@ -51,10 +52,11 @@ export const refreshUserAccessToken = async (refreshToken: string) => {
 
 export const logoutFromApp = async (refreshToken: string) => {
   try {
+    const deviceId = getDeviceId();
     return await apiCall({
       method: 'POST',
       url: '/token/logout/',
-      data: { refresh_token: refreshToken, device_id: 'test-device-id-6ba7b810-9dad-11d1-80b4-00c04fd430c8' }
+      data: { refresh_token: refreshToken, device_id: deviceId }
     });
   } catch (e) {
     console.error('/token/logout/', e);
@@ -66,21 +68,20 @@ export const changeUserPassword = async (
   oldPassword: string,
   newPassword1: string,
   newPassword2: string,
-  currentDeviceId?: string 
+  currentDeviceId?: string
 ) => {
   try {
+    const deviceId = getDeviceId();
     const data: any = {
       old_password: oldPassword,
       new_password1: newPassword1,
       new_password2: newPassword2,
+      current_device_id: deviceId,
     };
-    if (currentDeviceId !== undefined) {
-      data.current_device_id = currentDeviceId;
-    }
     return await apiCall({
       method: 'POST',
-      url: '/password/change/', 
-      data: data,               
+      url: '/password/change/',
+      data: data,
     });
   } catch (e) {
     console.error('/password/change/', e);
@@ -97,6 +98,68 @@ export const getInfo = async () => {
   } catch (e) {
     console.error('/info/', e);
     return [];
+  }
+}
+
+export const resetPassword = async (email: string) => {
+  try {
+    return await apiCall({
+      method: 'POST',
+      url: '/password-reset/',
+      data: { email }
+    }, false);
+  } catch (e) {
+    console.error('/password-reset/', e);
+    return [];
+  }
+}
+
+export async function promoteUserToAdmin(groupId: number, userId: number) {
+  try {
+    return await apiCall({
+      method: 'POST',
+      url: `/groups/${groupId}/admins/${userId}/`,
+      data: {},
+    });
+  } catch (e) {
+    console.error(`/groups/${groupId}/admins/${userId}/`, e);
+    throw e;
+  }
+}
+
+export async function demoteUserFromAdmin(groupId: number, userId: number) {
+  try {
+    return await apiCall({
+      method: 'DELETE',
+      url: `/groups/${groupId}/admins/${userId}/`,
+    });
+  } catch (e) {
+    console.error(`/groups/${groupId}/admins/${userId}/`, e);
+    throw e;
+  }
+}
+
+export async function removeUserFromGroup(groupId: number, userId: number) {
+  try {
+    return await apiCall({
+      method: 'DELETE',
+      url: `/groups/${groupId}/members/${userId}/`,
+    });
+  } catch (e) {
+    console.error(`/groups/${groupId}/members/${userId}/`, e);
+    throw e;
+  }
+}
+
+export const acceptGroupInvitation = async (token: string) => {
+  try {
+    return await apiCall({
+      method: 'POST',
+      url: `/invitations/${token}/accept`,
+    });
+  } catch (e) {
+    console.error(`/invitations/${token}/accept`, e);
+    throw e;
   }
 }
 
@@ -161,6 +224,18 @@ export const addUserTodo = async (task: Task) => {
   } catch (e) {
     console.error(`POST /todos/`, e);
     return [];
+  }
+}
+
+export const deleteUserTodo = async (id: number) => {
+  try {
+    return await apiCall({
+      method: 'DELETE',
+      url: `/todos/${id}/`,
+    });
+  } catch (e) {
+    console.error(`DELETE /todos/${id}/`, e);
+    throw e;
   }
 }
 
@@ -242,6 +317,19 @@ export const updateGroup = async (group: Group) => {
     return [];
   }
 }
+
+export const removeGroup = async (groupId: number) => {
+  try {
+    return await apiCall({
+      method: 'DELETE',
+      url: `/groups/${groupId}/`,
+    });
+  } catch (e) {
+    console.error(`DELETE /groups/${groupId}`, e);
+    throw e;
+  }
+};
+
 
 export const leaveGroup = async (groupId: number) => {
   try {

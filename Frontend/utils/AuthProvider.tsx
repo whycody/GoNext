@@ -31,34 +31,34 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const nav = useNavigation();
   const { colors } = useTheme();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        await loadToken();
-        const res = await getInfo();
-        if(res) {
-          setUser(res);
-          setIsAuthenticated(true);
-        } else setIsAuthenticated(false);
-      } catch {
-        setIsAuthenticated(false);
-      }
-    };
+  const checkAuth = async () => {
+    try {
+      await loadToken();
+      const res = await getInfo();
+      if (res.user_id) {
+        setUser(res);
+        setIsAuthenticated(true);
+      } else setIsAuthenticated(false);
+    } catch {
+      setIsAuthenticated(false);
+    }
+  };
 
+  useEffect(() => {
     checkAuth();
   }, []);
 
   const login = async (username: string, password: string, rememberMe: boolean) => {
-  setAuthError(null);
-  const res = await loginToApp(username, password, rememberMe);
-  if (res) {
-    setTokens(res.access, res.refresh);
-    setIsAuthenticated(true);
-  } else {
-    setIsAuthenticated(false);
-    setAuthError('Invalid username or password');
+    setAuthError(null);
+    const res = await loginToApp(username, password, rememberMe);
+    if (res) {
+      await setTokens(res.access, res.refresh);
+      await checkAuth();
+    } else {
+      setIsAuthenticated(false);
+      setAuthError('Invalid username or password');
+    }
   }
-}
 
   const register = async (username: string, email: string, password: string) => {
     setRegisterError(null);
@@ -84,9 +84,9 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     return false;
   }
 
-  const setTokens = (accessToken: string, refreshToken: string) => {
-    setAccessToken(accessToken);
-    setRefreshToken(refreshToken);
+  const setTokens = async (accessToken: string, refreshToken: string) => {
+    await setAccessToken(accessToken);
+    await setRefreshToken(refreshToken);
     setIsAuthenticated(true);
   };
 

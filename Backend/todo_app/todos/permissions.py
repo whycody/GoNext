@@ -10,7 +10,14 @@ class IsGroupAdminOrMemberReadOnly(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
+        # Upewnij się, że użytkownik jest uwierzytelniony (IsAuthenticated powinno to załatwić wcześniej)
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
         if isinstance(obj, Group):
+            # Superużytkownik ma pełne uprawnienia do grup
+            if request.user.is_superuser: 
+                return True
             is_admin = obj.admins.filter(id=request.user.id).exists()
             is_member = obj.members.filter(id=request.user.id).exists()
 
@@ -37,6 +44,14 @@ class IsTaskOwnerOrGroupMember(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # obj to instancja ToDo
         
+        # Sprawdzenie, czy użytkownik jest uwierzytelniony (choć IsAuthenticated powinno to już załatwić)
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        # Superużytkownik ma pełne uprawnienia do wszystkich operacji na obiekcie, który już widzi
+        if request.user.is_superuser:
+            return True
+
         # Uprawnienia do odczytu (GET, HEAD, OPTIONS) są obsługiwane przez get_queryset.
         # Jeśli obiekt został pobrany, użytkownik ma do niego dostęp do odczytu.
         if request.method in permissions.SAFE_METHODS:
