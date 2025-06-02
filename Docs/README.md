@@ -115,6 +115,7 @@ Creating Groups/Managing Groups:
 ### User Story 1
 
 <!--![User Story 1](imgs/1_updated.png) - GIF filmik US1-->
+![User Story 1](Docs/imgs/US1_1.jpg)
 
 ### User Story 2 
 
