@@ -48,6 +48,8 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     checkAuth();
   }, []);
 
+  const baseURL = process.env["API_BASE_URL"] || 'http://localhost:8000';
+
   const login = async (username: string, password: string, rememberMe: boolean) => {
     setAuthError(null);
     const res = await loginToApp(username, password, rememberMe);
@@ -56,7 +58,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       await checkAuth();
     } else {
       setIsAuthenticated(false);
-      setAuthError('Invalid username or password');
+      setAuthError('Invalid username or password' + baseURL);
     }
   }
 
