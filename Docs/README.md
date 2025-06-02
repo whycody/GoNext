@@ -97,11 +97,15 @@ Creating Groups/Managing Groups:
 
 ## User Stories
 
-- User story 1(Registration/Logging in): As a user, I want to register/log in to the application, so that I can use it for my personal purposes.
-- User story 2(Creating tasks): As a user, I want to create tasks, so that I keep track on my personal objectives.
-- User story 3(Managing tasks): As a user, I want to assign a priority level to a task, edit it, or delete it so that I have a clear overview of all task details.
-- User story 4(Creating groups): As a user, I want to create a group so that I can collaborate on tasks with other group members.
-- User story 5(Managing groups): As a group admin, I want to set other members as admins or remove them from the group so that I can maintain proper group management.
+- User story 1(Registration): As a user, I want to register in the application, so that I can use it for my personal purposes.
+- User story 2(Logging in): As a user, I want to log in to the application, so that I can use it for my personal purposes.
+- User story 3(Forgot password): As a user, I want to reset my password in case I forgot it, so that I can continue using the application without creating a new account.
+- User story 4(Change password): As a user, I want to be able to change my password, so that if my logging credentials are leaked, I can change them easily.
+- User story 5(Creating tasks): As a user, I want to create tasks, so that I keep track on my personal objectives.
+- User story 6(Managing tasks): As a user, I want to assign a priority level to a task, edit it, or delete it so that I have a clear overview of all task details.
+- User story 7(Creating groups): As a user, I want to create a group so that I can collaborate on tasks with other group members.
+- User story 8(Initing members): As a group admin, I want to invite users to a created group, so that we can share common tasks.
+- User story 9(Managing groups): As a group admin, I want to set other members as admins or remove them from the group so that I can maintain proper group management.
 
 ***
 
@@ -259,6 +263,18 @@ Risk list contains most probably occurring issues during app development. We int
     - Threat: Insecurely stored or incorrectly verified tokens can be hijacked or forged.
     - Mitigation: We hash tokens and add SALT for propper security.
 
+  - T9 - Refresh token stealth
+    - Threat: Insecurely stored refresh token may be a security vulnerability.
+    - Mitigation: We secured refresh token with deviceID - from now on, refresh token is assigned to a device.
+
+  - T10 - Admin rights access
+    - Threat: Admin logs into the application with their own credentials. If the credentials are stolen, the service is in danger.
+    - Mitigation: Admin operates the application through Django admin.
+
+  - T11 - Non-authorised group members
+    - Threat: Group members could have invited non-autorised users to a group, leading to information leak.
+    - Mitigation: Users can be added to a group only by a group admin.
+
 ***
 ## Migration
 Because the configuration of cloud services on Azure required time in the beginning of the project and there wasn't a lot of time available to work on, the app was developed localy and then migrated to Azure. The process consisted of first configuring a simple postgresql database which the team could connect to while working on the app (with web server running locally). After that a fork was made from the default repository and using github actions we had a working deployment to Azure app service with our backend running there. With the whole setup configured all that was left was to point the frontend URLs to Azure on development setups.
@@ -303,10 +319,10 @@ Because the configuration of cloud services on Azure required time in the beginn
 
 ### Release 2
 
-- Goal: Groups functionality, admin role:<!-- Final release – Developed US2 and US5. The interface is aestheaticaly pleasing and intuitive. -->
+- Goal: Groups functionality, admin role:
     - Creating groups
     - Managing groups
-- Date: 16.05
+- Date: 02.06
 - Release: V2.0
 
 ***
@@ -317,17 +333,13 @@ Because the configuration of cloud services on Azure required time in the beginn
 #### Sprint Plan
 
 - Goal: Create the base architecture of the app and basic interface.
-
-    - Registration
-    - Logging in
-    - In-App navigation
-    - Initial task creation
-
+  
 - Date: from 18.03 to 04.04, 2 weeks
 
 - To do:
-    - US1: Registration/Logging in
-    - US2: Creating tasks
+    - US1: Registration
+    - US2: Logging in
+    - US3
 
 #### Sprint Analysis
 
@@ -341,9 +353,6 @@ Because the configuration of cloud services on Azure required time in the beginn
 
 - Goal: Registration, email verification, group creation.
 
-    - Registration
-    - Group creation
-
 - Date: from 05.04 to 22.04, 2 weeks
 
 - To do:
@@ -353,4 +362,89 @@ Because the configuration of cloud services on Azure required time in the beginn
 #### Sprint Analysis
 
 - Analysis: 
-- Version: 0.2
+- Version: 1.0
+
+### Sprint 3
+
+#### Sprint Plan
+
+- Goal: Registration, email verification, group creation.
+
+- Date: from 23.04 to 07.05, 2 weeks
+
+- To do:
+    - US1: Registration/Logging in
+    - US4: Creating groups
+
+#### Sprint Analysis
+
+- Analysis: 
+- Version: 1.1
+
+### Sprint 4
+
+#### Sprint Plan
+
+- Goal: Registration, email verification, group creation.
+
+- Date: from 08.05 to 15.05, 1 week
+
+- To do:
+    - US1: Registration/Logging in
+    - US4: Creating groups
+
+#### Sprint Analysis
+
+- Analysis: 
+- Version: 1.2
+
+### Sprint 5
+
+#### Sprint Plan
+
+- Goal: Registration, email verification, group creation.
+
+- Date: from 16.05 to 21.05, 5 days
+
+- To do:
+    - US1: Registration/Logging in
+    - US4: Creating groups
+
+#### Sprint Analysis
+
+- Analysis: 
+- Version: 1.3
+
+### Sprint 6
+
+#### Sprint Plan
+
+- Goal: Registration, email verification, group creation.
+
+- Date: from 22.05 to 27.05, 5 days
+
+- To do:
+    - US1: Registration/Logging in
+    - US4: Creating groups
+
+#### Sprint Analysis
+
+- Analysis: 
+- Version: 1.4
+
+### Sprint 7
+
+#### Sprint Plan
+
+- Goal: Registration, email verification, group creation.
+
+- Date: from 28.05 to 02.06, 2 weeks
+
+- To do:
+    - US1: Registration/Logging in
+    - US4: Creating groups
+
+#### Sprint Analysis
+
+- Analysis: 
+- Version: 2.0
