@@ -21,7 +21,7 @@ class CustomUser(AbstractUser):
 
 
 class Group(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, unique=False)
     members = models.ManyToManyField(get_user_model(), related_name='custom_groups')
     icon = models.CharField(max_length=100, blank=True, default='')
     color = models.CharField(max_length=50, blank=True, default='')
