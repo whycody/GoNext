@@ -1,4 +1,5 @@
 # todos/models.py
+import random
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
@@ -58,12 +59,24 @@ class ToDo(models.Model):
 
 
 class Invitation(models.Model):
-    token = models.UUIDField(default=uuid.uuid4, unique=True)  # Unikalny token
+    token = models.CharField(max_length=6, unique=True, blank=True)  # Unikalny token
     group = models.ForeignKey(Group, on_delete=models.CASCADE)  # Grupa, do której zapraszamy
     inviter = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)  # Osoba, która zaprasza
     expiration_date = models.DateTimeField()  # Data wygaśnięcia zaproszenia
     max_uses = models.PositiveIntegerField(default=1)  # Maksymalna liczba użyć zaproszenia
     uses = models.PositiveIntegerField(default=0)  # Liczba użyć zaproszenia
+
+    def _generate_short_token(self):
+        return ''.join(random.choices('0123456789', k=6))
+
+    def save(self, *args, **kwargs):
+        if not self.token: # Generuj token tylko jeśli jeszcze nie istnieje (np. przy pierwszym zapisie)
+            while True:
+                potential_token = self._generate_short_token()
+                if not Invitation.objects.filter(token=potential_token).exists():
+                    self.token = potential_token
+                    break
+        super().save(*args, **kwargs) # Zapisz obiekt (z tokenem)
 
     def is_valid(self):
         """Sprawdza, czy zaproszenie jest ważne (nie wygasło i nie zostało przekroczona liczba użyć)."""

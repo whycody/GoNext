@@ -1,3 +1,4 @@
+import random
 import uuid
 from django.contrib.auth import get_user_model, authenticate, update_session_auth_hash 
 from django.contrib.auth.tokens import default_token_generator
@@ -451,15 +452,14 @@ class InvitationCreateView(APIView):
                 max_uses=max_uses
             )
 
-            invite_link = f"{settings.FRONTEND_URL}/invitations/{invitation.token}/accept/"
-
             if email:
                 subject = f"Zaproszenie do grupy: {group.name}"
                 message = (
                     f"Cześć!\n\n"
                     f"{request.user.username} zaprosił(a) Cię do dołączenia do grupy \"{group.name}\".\n\n"
-                    f"Kliknij poniższy link, aby zaakceptować zaproszenie:\n{invite_link}\n\n"
-                    f"Link wygaśnie za {expiration_days} dni.\n"
+                    f"Aby dołączyć, wpisz poniższy kod zaproszenia w aplikacji:\n"
+                    f"{invitation.token}\n\n"  # << Używamy bezpośrednio tokenu (krótkiego kodu)
+                    f"Kod wygaśnie za {expiration_days} dni.\n"
                 )
 
                 send_mail(
@@ -472,7 +472,7 @@ class InvitationCreateView(APIView):
 
             return Response({
                 "message": "Invitation created successfully" + (", email sent" if email else ""),
-                "invite_link": invite_link
+                "token": invitation.token
             }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
