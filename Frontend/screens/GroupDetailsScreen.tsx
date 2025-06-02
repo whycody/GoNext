@@ -201,7 +201,7 @@ const GroupDetailsScreen = () => {
     <View style={{ flex: 1 }}>
       <HandleGroupBottomSheet
         ref={handleGroupBottomSheetRef}
-        groupId={group.id}
+        group={group}
         onGroupAdd={syncGroups}
         onGroupEdit={onGroupEdit}
       />
