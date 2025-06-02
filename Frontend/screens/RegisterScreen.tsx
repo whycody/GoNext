@@ -16,8 +16,8 @@ const RegisterScreen: FC<RegisterScreenProps> = ({ register, registerError }) =>
   const [warning, setWarning] = useState<string | null>(null);
   const [email, setEmail] = useState<string>('');
   const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('Aa1@123456');
-  const [confirmPassword, setConfirmPassword] = useState<string>('Aa1@123456');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const filled = username.length > 0 && password.length > 0 && confirmPassword.length > 0 && email.length > 0;
   const nav = useNavigation();

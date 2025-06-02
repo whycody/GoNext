@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
-import { Alert, Text } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { getRefreshToken, loadToken, removeTokens, setAccessToken, setRefreshToken } from './ApiHandler';
 import LoginScreen from "../screens/LoginScreen";
 import { getInfo, loginToApp, logoutFromApp, registerToApp } from "../hooks/useApi";
@@ -48,8 +48,6 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     checkAuth();
   }, []);
 
-  const baseURL = process.env["API_BASE_URL"] || 'http://localhost:8000';
-
   const login = async (username: string, password: string, rememberMe: boolean) => {
     setAuthError(null);
     const res = await loginToApp(username, password, rememberMe);
@@ -58,7 +56,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       await checkAuth();
     } else {
       setIsAuthenticated(false);
-      setAuthError('Invalid username or password' + baseURL);
+      setAuthError('Invalid username or password');
     }
   }
 
@@ -96,7 +94,10 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, logout }}>
-      {isAuthenticated ? children :
+      {isAuthenticated ? user.verified ?
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <Text style={{ color: colors.text, fontSize: 18 }}>Please verify your e-mail first</Text>
+          </View> : children :
         <Stack.Navigator
           initialRouteName="Login"
           screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.card } }}

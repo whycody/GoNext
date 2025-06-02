@@ -14,8 +14,8 @@ const LoginScreen: FC<LoginProps> = ({ login, authError }) => {
   const styles = getStyles(colors);
 
   const [warning, setWarning] = useState<string | null>(null);
-  const [username, setUsername] = useState<string>('admin');
-  const [password, setPassword] = useState<string>('haslo123');
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const filled = username.length > 0 && password.length > 0;
   const nav = useNavigation();
