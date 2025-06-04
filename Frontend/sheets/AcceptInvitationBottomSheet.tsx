@@ -1,10 +1,10 @@
-import React, { useState, useCallback, forwardRef } from "react";
+import React, { useState, useCallback, forwardRef, useRef } from "react";
 import { Text, StyleSheet, View, Pressable, Platform, Alert } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
-import SheetText from "../components/SheetTextInput";
+import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import { acceptGroupInvitation } from "../hooks/useApi";
 
 interface AcceptInvitationBottomSheetProps {
@@ -19,20 +19,23 @@ const AcceptInvitationBottomSheet = forwardRef<BottomSheetModal, AcceptInvitatio
 
     const [token, setToken] = useState("");
     const [loading, setLoading] = useState(false);
+    const sheetRef = useRef<SheetTextRef>(null);
 
     const handleAcceptInvitation = async () => {
-      if (!token) {
+      const currentToken = sheetRef?.current?.getWord() || token;
+      if (!currentToken) {
         Alert.alert("Error", "Please enter a valid invitation token.");
         return;
       }
 
       try {
         setLoading(true);
-        const response = await acceptGroupInvitation(token.trim());
+        const response = await acceptGroupInvitation(currentToken.trim());
         if (response && response.message) {
           Alert.alert("Success", response.message);
-          onAccept(token);
+          onAccept(currentToken);
           setToken("");
+          sheetRef?.current?.clearWord();
           (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
         } else if (response && response.error) {
           Alert.alert("Error", response.error);
@@ -73,6 +76,7 @@ const AcceptInvitationBottomSheet = forwardRef<BottomSheetModal, AcceptInvitatio
           </Text>
 
           <SheetText
+            ref={sheetRef}
             placeholder="Enter invitation token"
             value={token}
             onChangeText={setToken}
