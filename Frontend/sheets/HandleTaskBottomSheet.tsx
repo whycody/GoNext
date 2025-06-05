@@ -10,6 +10,7 @@ import { getUserTodo, getUserGroups, deleteUserTodo } from "../hooks/useApi";
 import { Task, TaskModel } from "../types/Task";
 import { Group } from "../types/Group";
 import { useTaskItems } from "../hooks/useTaskItems";
+import { useGroupsContext } from "../store/GroupsContext";
 
 interface HandleTaskBottomSheetProps {
   taskId: number | null,
@@ -38,7 +39,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
     const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
 
     const [selectedGroup, setSelectedGroup] = useState<number | null>(selectedGroupId ?? null);
-    const [groups, setGroups] = useState<Group[]>([]);
+    const { groups } = useGroupsContext();
 
     useEffect(() => {
       console.log(selectedGroup)
@@ -58,8 +59,6 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
 
     useEffect(() => {
       const fetchGroupsAndTask = async () => {
-        const userGroups = await getUserGroups();
-        setGroups(userGroups);
 
         if (taskId) {
           const task: TaskModel | null = await getUserTodo(taskId);
@@ -160,7 +159,7 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
             <Picker
               selectedValue={selectedGroup}
               onValueChange={(itemValue) => {
-                if (itemValue === null || itemValue === undefined) {
+                if (itemValue === -1) {
                   setSelectedGroup(null);
                 } else {
                   setSelectedGroup(itemValue);
@@ -168,9 +167,8 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
               }}
             >
               <Picker.Item
-                label={`Personal (${groups.length + 1})`}
-                value={null}
-                color="gray"
+                label={`Personal`}
+                value={-1}
               />
               {groups.map((group) => (
                 <Picker.Item key={group.id} label={group.name} value={group.id}/>

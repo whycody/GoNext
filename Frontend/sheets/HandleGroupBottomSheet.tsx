@@ -6,6 +6,7 @@ import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import { useGroupsContext } from "../store/GroupsContext";
+import { Group } from "../types/Group";
 
 interface HandleGroupBottomSheetProps {
   group?: Group;
