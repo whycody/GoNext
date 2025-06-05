@@ -1,11 +1,11 @@
-import React, { useState, useCallback, forwardRef } from "react";
+import React, { useState, useCallback, forwardRef, useRef } from "react";
 import { Text, StyleSheet, View, Pressable, Platform, Alert } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
-import { createGroupInvitation } from "../hooks/useApi"; 
+import { createGroupInvitation } from "../hooks/useApi";
 
 interface InviteUserBottomSheetProps {
   onSendInvitation: (email: string) => void;
@@ -21,37 +21,39 @@ const InviteUserBottomSheet = forwardRef<BottomSheetModal, InviteUserBottomSheet
 
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
+    const sheetRef = useRef<SheetTextRef>(null);
 
-    const handleSendInvitation = async () => { 
-        if (!email) {
-          Alert.alert("Error", "Please enter a valid email.");
-          return;
+    const handleSendInvitation = async () => {
+      const currentEmail = sheetRef.current?.getWord() || email;
+      if (!currentEmail) {
+        Alert.alert("Error", "Please enter a valid email.");
+        return;
+      }
+
+      if (!groupId) {
+        Alert.alert("Error", "Group ID is missing.");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await createGroupInvitation(groupId, currentEmail);
+        console.log("Backend response:", response);
+        if (response) {
+          Alert.alert("Success", "Invitation sent successfully!");
+          onSendInvitation(currentEmail);
+          setEmail("");
+          (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
+        } else {
+          Alert.alert("Error", "Failed to send the invitation.");
         }
-  
-        if (!groupId) {
-          Alert.alert("Error", "Group ID is missing.");
-          return;
-        }
-  
-        try {
-          setLoading(true);
-          const response = await createGroupInvitation(groupId, email); 
-          console.log("Backend response:", response); 
-          if (response) {
-            Alert.alert("Success", "Invitation sent successfully!");
-            onSendInvitation(email);
-            setEmail("");
-            (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
-          } else {
-            Alert.alert("Error", "Failed to send the invitation.");
-          }
-        } catch (error) {
-          console.error("Error sending invitation:", error);
-          Alert.alert("Error", "An error occurred while sending the invitation.");
-        } finally {
-          setLoading(false);
-        }
-      };
+      } catch (error) {
+        console.error("Error sending invitation:", error);
+        Alert.alert("Error", "An error occurred while sending the invitation.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
     const renderBackdrop = useCallback(
       (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
@@ -75,10 +77,11 @@ const InviteUserBottomSheet = forwardRef<BottomSheetModal, InviteUserBottomSheet
       >
         <BottomSheetScrollView style={styles.root} scrollEnabled={false}>
           <Text style={{ fontSize: 19, fontWeight: "bold", marginBottom: 16 }}>
-          Invite user to {groupName ? `${groupName}` : "this group"}
+            Invite user to {groupName ? `${groupName}` : "this group"}
           </Text>
 
           <SheetText
+            ref={sheetRef}
             placeholder="Enter email"
             value={email}
             onChangeText={setEmail}
