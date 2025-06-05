@@ -159,7 +159,13 @@ const HandleTaskCardBottomSheet = forwardRef<BottomSheetModal, HandleTaskBottomS
           <View style={{ backgroundColor: "#f0f0f0", borderRadius: 8, overflow: "hidden", marginBottom: 15 }}>
             <Picker
               selectedValue={selectedGroup}
-              onValueChange={(itemValue) => setSelectedGroup(itemValue)}
+              onValueChange={(itemValue) => {
+                if (itemValue === null || itemValue === undefined) {
+                  setSelectedGroup(null);
+                } else {
+                  setSelectedGroup(itemValue);
+                }
+              }}
             >
               <Picker.Item
                 label={`Personal (${groups.length + 1})`}

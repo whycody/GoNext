@@ -31,17 +31,17 @@ const AcceptInvitationBottomSheet = forwardRef<BottomSheetModal, AcceptInvitatio
       try {
         setLoading(true);
         const response = await acceptGroupInvitation(currentToken.trim());
-        if (response && response.message) {
-          Alert.alert("Success", response.message);
+        if (response && response.error)
+        {
+          Alert.alert("Error", response.error);
+        }
+        else if (response) {
+          Alert.alert("Success", "Invitation accepted successfully.");
           onAccept(currentToken);
           setToken("");
           sheetRef?.current?.clearWord();
           (ref as React.RefObject<BottomSheetModal>)?.current?.dismiss();
-        } else if (response && response.error) {
-          Alert.alert("Error", response.error);
-        } else {
-          Alert.alert("Error", "Failed to accept the invitation.");
-        }
+        } 
       } catch (error) {
         console.error("Error accepting invitation:", error);
         Alert.alert("Error", "An error occurred while accepting the invitation.");
