@@ -17,7 +17,7 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
-# Metro
+# Metrooooooooooo
 .metro-health-check*
 
 # debug
@@ -36,6 +36,9 @@ yarn-error.*
 *.tsbuildinfo
 
 *.env
+
+*.pyc
+staticfiles/
 **/__pycache__/
 __pycache__/
 .vscode/settings.json
