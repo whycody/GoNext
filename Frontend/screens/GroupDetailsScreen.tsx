@@ -102,7 +102,7 @@ const GroupDetailsScreen = () => {
   }
 
   const handleLeaveGroupPress = () => {
-    if (numberOfAdmins == 1) {
+    if (numberOfAdmins == 1 && isAdmin) {
       Alert.alert("Leave group", "You cannot leave this group because you are the only admin.", [{
         text: "Cancel",
         style: "cancel"
