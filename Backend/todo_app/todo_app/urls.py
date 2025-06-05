@@ -18,7 +18,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),  # Standard URL for Django admin panel
+    path('admin/', admin.site.urls),  
     path('', include('todos.urls')),  # Includes URLs from the 'todos' app
 
     # Swagger UI and API documentation

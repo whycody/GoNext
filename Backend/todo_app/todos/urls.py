@@ -3,7 +3,6 @@ from .views import *
 
 urlpatterns = [
     path('info/',UserInfoView.as_view(), name='userinfo'),
-    # User registration and login
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('token/refresh/', RefreshTokenView.as_view(), name='token_refresh'),
@@ -17,10 +16,8 @@ urlpatterns = [
     # Task details (view, edit, delete)
     path('todos/<int:pk>/', ToDoDetailView.as_view(), name='todo-detail'),
 
-    # Creating a task only for the user (no group assignment)
     path('todos/', ToDoListCreateView.as_view(), name='todo-list-create'),
 
-    # CRUD for groups – available only for admin
     path('groups/admin/', GroupListView.as_view(), name='admin-group-list'),
     path('groups/', MyGroupsListView.as_view(), name='group-list'),
     path('groups/<int:pk>/', GroupDetailView.as_view(), name='group-detail'),

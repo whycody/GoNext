@@ -7,14 +7,14 @@ from django.utils import timezone
 import uuid
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(unique=True)  # Pole email jako unikalne
+    email = models.EmailField(unique=True) 
 
     is_verified = models.BooleanField(
             default=False,
             help_text='Designates whether the user has verified their email address.'
         )
-    USERNAME_FIELD = 'username'  # Możliwość logowania za pomocą nazwy użytkownika
-    REQUIRED_FIELDS = ['email']  # Email jest wymagany podczas tworzenia użytkownika, ale logować się można także za pomocą username
+    USERNAME_FIELD = 'username'  
+    REQUIRED_FIELDS = ['email']  
 
     def __str__(self):
         return f"{self.username} ({self.email})"
@@ -25,10 +25,10 @@ class Group(models.Model):
     members = models.ManyToManyField(get_user_model(), related_name='custom_groups')
     icon = models.CharField(max_length=100, blank=True, default='')
     color = models.CharField(max_length=50, blank=True, default='')
-    admins = models.ManyToManyField( # Zamiana na ManyToManyField
+    admins = models.ManyToManyField( 
         get_user_model(),
-        related_name='administered_groups', # Nazwa relacji zwrotnej może pozostać
-        blank=True # Pozwala grupie istnieć bez żadnych adminów (opcjonalne, ale często przydatne)
+        related_name='administered_groups', 
+        blank=True 
     )
 
     def __str__(self):
@@ -36,7 +36,7 @@ class Group(models.Model):
 
 
 class ToDo(models.Model):
-    # Pole priority jako IntegerField bez choices
+    
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='todos', null=True, blank=True)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='todos', null=True, blank=True)
 
@@ -59,24 +59,24 @@ class ToDo(models.Model):
 
 
 class Invitation(models.Model):
-    token = models.CharField(max_length=6, unique=True, blank=True)  # Unikalny token
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)  # Grupa, do której zapraszamy
-    inviter = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)  # Osoba, która zaprasza
-    expiration_date = models.DateTimeField()  # Data wygaśnięcia zaproszenia
-    max_uses = models.PositiveIntegerField(default=1)  # Maksymalna liczba użyć zaproszenia
-    uses = models.PositiveIntegerField(default=0)  # Liczba użyć zaproszenia
+    token = models.CharField(max_length=6, unique=True, blank=True)  
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)  
+    inviter = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)  
+    expiration_date = models.DateTimeField()  
+    max_uses = models.PositiveIntegerField(default=1)  
+    uses = models.PositiveIntegerField(default=0)  
 
     def _generate_short_token(self):
         return ''.join(random.choices('0123456789', k=6))
 
     def save(self, *args, **kwargs):
-        if not self.token: # Generuj token tylko jeśli jeszcze nie istnieje (np. przy pierwszym zapisie)
+        if not self.token: 
             while True:
                 potential_token = self._generate_short_token()
                 if not Invitation.objects.filter(token=potential_token).exists():
                     self.token = potential_token
                     break
-        super().save(*args, **kwargs) # Zapisz obiekt (z tokenem)
+        super().save(*args, **kwargs) 
 
     def is_valid(self):
         """Sprawdza, czy zaproszenie jest ważne (nie wygasło i nie zostało przekroczona liczba użyć)."""
@@ -87,8 +87,8 @@ class Invitation(models.Model):
     
 class Device(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    device_id = models.CharField(max_length=255)  # hashed or UUID string
-    refresh_token = models.CharField(max_length=500)  # JWT token string
+    device_id = models.CharField(max_length=255)  
+    refresh_token = models.CharField(max_length=500)  
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()         
     remember_me = models.BooleanField(default=False)

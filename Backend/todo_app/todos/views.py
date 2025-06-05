@@ -16,7 +16,7 @@ from rest_framework import generics, status, exceptions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken as SimpleJWTRefreshToken # Alias needed
+from rest_framework_simplejwt.tokens import RefreshToken as SimpleJWTRefreshToken 
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -37,9 +37,8 @@ from rest_framework.exceptions import PermissionDenied
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 
-# Endpoint user-info
 class UserInfoView(APIView):
-    permission_classes = [AllowAny]  # Dostęp dla wszystkich
+    permission_classes = [AllowAny]  
     @swagger_auto_schema(
         operation_description=(
             "Zwraca nazwę użytkownika (username) oraz status weryfikacji jego adresu email "
@@ -56,14 +55,13 @@ class UserInfoView(APIView):
             }, status=status.HTTP_200_OK)
         return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
 
-# Rozszerzenie modelu użytkownika
 class RegisterView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
 
     def perform_create(self, serializer):
-        user = serializer.save(is_verified=False)  # Domyślnie niezweryfikowany
+        user = serializer.save(is_verified=False)  
         self.send_verification_email(user)
 
     def send_verification_email(self, user):
@@ -76,8 +74,6 @@ class RegisterView(generics.CreateAPIView):
         recipient_list = [user.email]
         send_mail(subject, message, EMAIL_HOST_USER, recipient_list, fail_silently=False)
 
-
-# Endpoint do potwierdzania emaila
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
 
@@ -95,10 +91,8 @@ class VerifyEmailView(APIView):
         else:
             return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-# Login – JWT token generation
 class LoginView(APIView):
-    permission_classes = [AllowAny]  # Allow any user to access this view, even if not authenticated
+    permission_classes = [AllowAny]  
 
     @swagger_auto_schema(
         operation_description="Login and generate JWT tokens.",
@@ -140,18 +134,14 @@ class LoginView(APIView):
         if AxesProxyHandler.is_locked(request):
             return lockout_response(request, credentials={"username": username})
 
-        # Zmienne do przechowywania device_id
         generated_device_id_on_server = None 
         device_id_to_store = None
         
         if remember_me:
             if not device_id_from_client:
-                # Klient chce "remember_me", ale nie dostarczył device_id.
-                # Generujemy je na serwerze.
                 generated_device_id_on_server = str(uuid.uuid4())
                 device_id_to_store = generated_device_id_on_server
             else:
-                # Klient dostarczył device_id
                 device_id_to_store = device_id_from_client
 
         user = authenticate(request=request, username=username, password=password)
@@ -162,17 +152,14 @@ class LoginView(APIView):
                 raise PermissionDenied(
                     ("Superadministratorzy mogą logować się tylko przez panel administracyjny Django.")
                 )
-            # RESETUJ blokady dla tego requestu
             username_for_axes = get_client_username(request, credentials={'username': username})
             ip_address = get_client_ip_address(request)
 
-            # Reset prób logowania
             handler = AxesProxyHandler()
             handler.reset_attempts(
                 ip_address=ip_address,
                 username=username_for_axes,
             )
-            # Generowanie tokenów przy użyciu dedykowanej funkcji
             refresh, access_token = create_new_tokens(user, remember_me)
 
             response_data = {
@@ -181,27 +168,20 @@ class LoginView(APIView):
                             }
 
             if device_id_to_store:
-                 # Ustal czas trwania sesji na podstawie flagi remember_me
-                 # Pobierz skonfigurowany długi czas życia z ustawień (np. 30 dni)
                  refresh_lifetime_setting = settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME', timedelta(days=30))
-                 # Ustaw krótki czas życia dla sesji nietrwałych (np. 1 dzień)
-                 short_lifetime = timedelta(days=1) # Możesz też to wziąć z ustawień, jeśli chcesz
+                 short_lifetime = timedelta(days=1)
 
                  session_duration = refresh_lifetime_setting if remember_me else short_lifetime
 
-                 # Użyj update_or_create, aby stworzyć nowy wpis lub zaktualizować istniejący
-                 # dla tej kombinacji użytkownika i urządzenia
                  Device.objects.update_or_create(
                      user=user,
                      device_id=device_id_to_store,
                      defaults={
                          'refresh_token': str(refresh),
-                         # 'created_at' ustawi się samo dzięki auto_now_add=True w modelu
-                         'expires_at': timezone.now() + session_duration, # Ustaw odpowiedni czas wygaśnięcia
+                         'expires_at': timezone.now() + session_duration,
                          'remember_me': remember_me 
                      }
                  )
-                 # Jeśli serwer wygenerował device_id, dodaj je do odpowiedzi
                  if generated_device_id_on_server:
                     response_data['device_id'] = generated_device_id_on_server
             return Response(response_data, status=status.HTTP_200_OK)
@@ -209,7 +189,6 @@ class LoginView(APIView):
             return Response({'error': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Filtering tasks by user, group, and priority
 def get_filtered_todos(request, requesting_user=None):
     if not requesting_user:
         requesting_user = request.user
@@ -245,33 +224,30 @@ def get_filtered_todos(request, requesting_user=None):
         if ordering_param in allowed_ordering:
             base_queryset = base_queryset.order_by(ordering_param)
     else:
-        base_queryset = base_queryset.order_by('-created_at') # Domyślne sortowanie
+        base_queryset = base_queryset.order_by('-created_at')
 
     return base_queryset
 
 class ToDoByUserView(APIView):
-    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         todos = get_filtered_todos(request)
-        serializer = ToDoSerializer(todos, many=True) # Upewnij się, że masz poprawny import
+        serializer = ToDoSerializer(todos, many=True) 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # Returning tasks assigned to the user, grouped by their respective groups
 class ToDoByGroupView(APIView):
-    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
         todos = ToDo.objects.filter(
             group__members=user, 
-            user__isnull=True # Tylko zadania faktycznie przypisane do grupy
+            user__isnull=True
         ).distinct()
         
-        # Opcjonalne dodatkowe filtrowanie, jeśli potrzebne
         group_id_param = request.query_params.get('group_id')
         if group_id_param:
             try:
@@ -299,11 +275,9 @@ class ToDoByGroupView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# Task detail view – allows updating and deleting a task
 class ToDoDetailView(generics.RetrieveUpdateDestroyAPIView):
-    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsTaskOwnerOrGroupMember] 
-    serializer_class = ToDoSerializer # Używasz swojego oryginalnego ToDoSerializer
+    serializer_class = ToDoSerializer
 
     def get_queryset(self):
         user = self.request.user
@@ -315,11 +289,9 @@ class ToDoDetailView(generics.RetrieveUpdateDestroyAPIView):
             Q(user=user) | (Q(group__members=user) & Q(user__isnull=True))
         ).distinct()
 
-# User creates a task only for themselves (no group assignment)
 class ToDoListCreateView(generics.ListCreateAPIView):
-    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    serializer_class = ToDoSerializer # Używasz swojego oryginalnego ToDoSerializer
+    serializer_class = ToDoSerializer
 
     def get_queryset(self):
         """
@@ -327,9 +299,6 @@ class ToDoListCreateView(generics.ListCreateAPIView):
         Obejmuje zadania osobiste użytkownika oraz zadania współdzielone
         z grup, do których użytkownik należy.
         """
-        # Używamy funkcji get_filtered_todos, która zawiera już poprawną logikę
-        # filtrowania zadań osobistych i grupowych dla danego użytkownika.
-        # Funkcja ta powinna być zdefiniowana w tym samym pliku lub zaimportowana.
         return get_filtered_todos(self.request)
 
     def perform_create(self, serializer):
@@ -339,36 +308,26 @@ class ToDoListCreateView(generics.ListCreateAPIView):
         - W przeciwnym razie tworzy zadanie osobiste dla zalogowanego użytkownika.
         """
         requesting_user = self.request.user
-        
-        # serializer.validated_data['group'] będzie instancją Group lub None
-        # dzięki użyciu source='group' w polu 'group_id' Twojego ToDoSerializer.
+    
         group_instance = serializer.validated_data.get('group') 
 
         final_user_to_assign = None
         final_group_to_assign = None
 
         if group_instance:
-            # Klient podał 'group_id' (przez pole 'group' w validated_data).
-            # Tworzymy zadanie grupowe.
-            # Sprawdzamy uprawnienia: np. czy użytkownik jest członkiem grupy.
             if not group_instance.members.filter(id=requesting_user.id).exists():
                 raise exceptions.PermissionDenied(
                     "Nie należysz do tej grupy lub nie masz uprawnień do tworzenia dla niej zadań."
                 )
             final_group_to_assign = group_instance
-            # final_user_to_assign pozostaje None dla zadania grupowego
         else:
-            # Klient NIE podał 'group_id'. Tworzymy zadanie osobiste.
             final_user_to_assign = requesting_user
-            # final_group_to_assign pozostaje None dla zadania osobistego
 
         serializer.save(user=final_user_to_assign, group=final_group_to_assign)
 
 
 
-# View for admins – list of groups
 class GroupListView(generics.ListAPIView):
-    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminUser]
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
@@ -379,9 +338,6 @@ class MyGroupsListView(generics.ListAPIView):
     aktualnie uwierzytelniony użytkownik (jako członek lub administrator grupy).
     """
     serializer_class = GroupSerializer
-    # Użyj odpowiedniej klasy authentykacji JWT, której używasz w projekcie
-    # Przykład dla Djoser:
-    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated] 
 
     def get_queryset(self):
@@ -391,30 +347,24 @@ class MyGroupsListView(generics.ListAPIView):
         lub administratorem ('admins').
         """
         user = self.request.user
-        if user.is_authenticated: # Dodatkowe sprawdzenie, choć permission_classes już to robi
+        if user.is_authenticated:
             return Group.objects.filter(Q(members=user) | Q(admins=user)).distinct()
-        return Group.objects.none() # Dla nieuwierzytelnionych użytkowników (teoretycznie nie powinno tu dojść)
+        return Group.objects.none()
 
-# View for admins – group detail view
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
-    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsGroupAdminOrMemberReadOnly] 
-    serializer_class = GroupSerializer # Twój GroupSerializer
+    serializer_class = GroupSerializer 
 
     def get_queryset(self):
         user = self.request.user
-        if not user.is_authenticated: # Dodatkowe zabezpieczenie
+        if not user.is_authenticated:
             return Group.objects.none()
             
         if user.is_superuser:
             return Group.objects.all()
-        # Użytkownik widzi grupy, do których należy (jako członek lub admin)
         return Group.objects.filter(Q(members=user) | Q(admins=user)).distinct()
 
-
-# View for admins – create a new group
 class GroupCreateView(generics.CreateAPIView):
-    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
@@ -425,7 +375,6 @@ class GroupCreateView(generics.CreateAPIView):
         group.admins.add(self.request.user)     
 
 class InvitationCreateView(APIView):
-    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -471,7 +420,7 @@ class InvitationCreateView(APIView):
                     f"Cześć!\n\n"
                     f"{request.user.username} zaprosił(a) Cię do dołączenia do grupy \"{group.name}\".\n\n"
                     f"Aby dołączyć, wpisz poniższy kod zaproszenia w aplikacji:\n"
-                    f"{invitation.token}\n\n"  # << Używamy bezpośrednio tokenu (krótkiego kodu)
+                    f"{invitation.token}\n\n" 
                     f"Kod wygaśnie za {expiration_days} dni.\n"
                 )
                 try:
@@ -483,7 +432,6 @@ class InvitationCreateView(APIView):
                         fail_silently=False,
                     )
                 except Exception as e:
-                    # Logowanie błędu wysyłki emaila, ale kontynuacja, bo zaproszenie zostało stworzone
                     logger = logging.getLogger(__name__) 
                     logger.error(f"Nie udało się wysłać emaila z zaproszeniem do {email} dla grupy {group.name}: {e}")
 
@@ -497,7 +445,6 @@ class InvitationCreateView(APIView):
 
 
 class AcceptInvitationView(APIView):
-    #authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -565,14 +512,12 @@ class LogoutView(APIView):
             device.delete()
             return Response({"detail": "Successfully logged out"}, status=status.HTTP_200_OK)
         except Device.DoesNotExist:
-            # Traktujemy brak wpisu jako równoznaczny z wylogowaniem dla sesji nietrwałych
             return Response({"detail": "Successfully logged out (session was not persistent or already ended)."}, status=status.HTTP_200_OK)
 
 
 class RefreshTokenView(APIView):
-     # AllowAny is correct here, authentication comes from the refresh token itself
      permission_classes = [AllowAny]
-     authentication_classes = [] # Explicitly no auth needed beforehand
+     authentication_classes = []
 
      @swagger_auto_schema(
          operation_description="Refreshes the access token using a valid refresh token.",
@@ -597,68 +542,44 @@ class RefreshTokenView(APIView):
              return Response({"detail": "device_id and refresh_token are required"}, status=status.HTTP_400_BAD_REQUEST)
 
          try:
-             # 1. Validate the refresh token and extract user ID
-             # This checks signature and token type, but not expiry yet
              token = SimpleJWTRefreshToken(refresh_token_str)
              user_id = token.get('user_id')
-             user = get_user_model().objects.get(id=user_id) # Find the user
+             user = get_user_model().objects.get(id=user_id) 
 
-             # 2. Find the corresponding Device record in the database
-             # Match user, device_id, AND the submitted token string to ensure it's the correct one
              device = Device.objects.get(user=user, device_id=device_id, refresh_token=refresh_token_str)
 
-             # 3. Check OUR database expiration (sliding window check)
-             # This allows us to enforce expiry even if the token's internal 'exp' is further out
              if device.expires_at < timezone.now():
-                 # Consider blacklisting the token here if using SimpleJWT's blacklist app
-                 # E.g., token.blacklist()
                  return Response({"detail": "Refresh token has expired (session inactive)."}, status=status.HTTP_401_UNAUTHORIZED)
 
-             # --- If token and device are valid and DB expiry is OK ---
-
-             # 4. Implement Sliding Expiration & Rotation
-             # Generate new access and refresh tokens (using remember_me=True logic for persistent sessions)
              new_refresh_token_str, new_access_token_str = create_new_tokens(user, device.remember_me)
 
-            # Update the Device record with the NEW token
              device.refresh_token = new_refresh_token_str
 
-             # Calculate the NEW expiration timestamp for the DB record (sliding window)
-             # E.g., 7 days from now
              if device.remember_me:
                 sliding_window_duration = timedelta(days=settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME', 30))
                 new_db_expires_at = timezone.now() + sliding_window_duration
                 device.expires_at = new_db_expires_at
-             # else: Nie robimy nic z expires_at dla sesji nietrwałych
              
              device.save()
 
-             # 5. Return the new tokens
              return Response({
                  'access': new_access_token_str,
-                 'refresh': new_refresh_token_str, # Return the new refresh token
+                 'refresh': new_refresh_token_str,
              }, status=status.HTTP_200_OK)
 
-         # Handle specific error cases
          except (Device.DoesNotExist):
              return Response({"detail": "Invalid refresh token or device ID association."}, status=status.HTTP_401_UNAUTHORIZED)
          except (get_user_model().DoesNotExist):
-              # Should not happen if token validation worked, but good practice
               return Response({"detail": "User associated with token not found."}, status=status.HTTP_401_UNAUTHORIZED)
          except (TokenError, InvalidToken) as e:
-              # Token is invalid (malformed, expired based on its 'exp' claim, etc.)
               return Response({"detail": f"Refresh token is invalid or expired: {e}"}, status=status.HTTP_401_UNAUTHORIZED)
          except Exception as e:
-              # Log the exception e here for debugging
-              print(f"Unexpected error during token refresh: {e}") # Replace with proper logging
+              print(f"Unexpected error during token refresh: {e}")
               return Response({"detail": "An internal error occurred during token refresh."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 def create_new_tokens(user, remember_me):
-     # Ensure this function sets the appropriate lifetime based on SIMPLE_JWT settings
-     # It already seems to handle remember_me, which is fine for initial login.
-     # For refresh, we might always want the longer lifetime, which is handled by passing remember_me=True above.
-     refresh = SimpleJWTRefreshToken.for_user(user) # Use aliased import
+     refresh = SimpleJWTRefreshToken.for_user(user)
      refresh_lifetime = settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME',timedelta(days=30))
      if remember_me:
          refresh.set_exp(lifetime=refresh_lifetime)
@@ -680,7 +601,6 @@ class PasswordResetRequestView(APIView):
         try:
             user = User.objects.get(email=email, is_active=True, is_verified=True)
         except User.DoesNotExist:
-            # Nie ujawniamy, że e‑mail nie istnieje
             return Response({"message": "Jeśli konto istnieje, otrzymasz wiadomość e‑mail."})
 
         token = default_token_generator.make_token(user)
@@ -689,7 +609,6 @@ class PasswordResetRequestView(APIView):
         reset_url = request.build_absolute_uri(relative_url_path)
 
         subject = "Resetowanie Hasła dla Twojego Konta"
-        # Możesz użyć Django templates do renderowania treści emaila dla lepszego formatowania
         message = (
             f"Witaj {user.username},\n\n"
             f"Otrzymaliśmy prośbę o zresetowanie hasła dla Twojego konta w naszej aplikacji.\n"
@@ -703,10 +622,8 @@ class PasswordResetRequestView(APIView):
         try:
             send_mail(subject, message, EMAIL_HOST_USER, [email], fail_silently=False)
         except Exception as e:
-            # Logowanie błędu wysyłki emaila
-            logger = logging.getLogger(__name__) # Na górze pliku: import logging
+            logger = logging.getLogger(__name__) 
             logger.error(f"Nie udało się wysłać emaila resetującego hasło do {email}: {e}")
-            # Możesz zwrócić generyczny błąd lub ten sam komunikat co przy sukcesie, aby nie ujawniać problemów
             return Response({"message": "Jeśli konto powiązane z tym adresem email istnieje i jest aktywne, otrzymasz wiadomość e-mail z instrukcjami dotyczącymi resetowania hasła."}, status=status.HTTP_200_OK)
 
 
@@ -755,21 +672,19 @@ class PasswordResetConfirmView(APIView):
             return Response({"error": "Token jest nieprawidłowy lub wygasł."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            validate_password(new_password, user=user) # WALIDACJA HASŁA NA BACKENDZIE
+            validate_password(new_password, user=user)
         except DjangoValidationError as e:
             return Response({"new_password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(new_password)
         user.save()
-        update_session_auth_hash(request, user) # Jeśli potrzebne
+        update_session_auth_hash(request, user) 
         return Response({"message": "Hasło zostało zmienione pomyślnie."}, status=status.HTTP_200_OK)
     
-User = get_user_model() # Upewnij się, że User jest zdefiniowany
+User = get_user_model()
 
 class ManageGroupMemberView(APIView):
-    #authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, IsGroupAdmin] # Tylko admin grupy może zarządzać
-
+    permission_classes = [IsAuthenticated, IsGroupAdmin]
     @swagger_auto_schema(
         tags=['Groups Management'],
         operation_description="Remove a member from the group. Group admins cannot remove themselves if they are the last admin.",
@@ -783,17 +698,14 @@ class ManageGroupMemberView(APIView):
         group = get_object_or_404(Group, id=group_id)
         user_to_remove = get_object_or_404(User, id=user_id)
 
-        # Sprawdzenie, czy użytkownik do usunięcia jest członkiem
         if not group.members.filter(id=user_to_remove.id).exists():
             return Response({"error": "User is not a member of this group."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Admin nie może usunąć samego siebie, jeśli jest ostatnim adminem
         if user_to_remove == request.user and group.admins.count() == 1 and group.admins.filter(id=request.user.id).exists():
             return Response({"error": "You cannot remove yourself as the last administrator of the group."}, status=status.HTTP_403_FORBIDDEN)
         
-        # Jeśli usuwany użytkownik jest adminem, a jest ich więcej niż jeden LUB usuwany nie jest żądającym
         if group.admins.filter(id=user_to_remove.id).exists():
-            if group.admins.count() == 1: # Jeśli jest jedynym adminem (i nie jest to request.user, co sprawdziliśmy wyżej)
+            if group.admins.count() == 1: 
                  return Response({"error": "Cannot remove the only administrator of the group. Promote another admin first."}, status=status.HTTP_403_FORBIDDEN)
             group.admins.remove(user_to_remove)
         
@@ -802,8 +714,7 @@ class ManageGroupMemberView(APIView):
 
 
 class ManageGroupAdminView(APIView):
-    #authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, IsGroupAdmin] # Tylko admin grupy może zarządzać innymi adminami
+    permission_classes = [IsAuthenticated, IsGroupAdmin]
 
     @swagger_auto_schema(
         tags=['Groups Management'],
@@ -815,7 +726,7 @@ class ManageGroupAdminView(APIView):
             409: "Conflict - User is already an administrator."
         }
     )
-    def post(self, request, group_id, user_id): # Promowanie na admina
+    def post(self, request, group_id, user_id): 
         group = get_object_or_404(Group, id=group_id)
         user_to_promote = get_object_or_404(User, id=user_id)
 
@@ -826,9 +737,8 @@ class ManageGroupAdminView(APIView):
             return Response({"error": "User is already an administrator of this group."}, status=status.HTTP_409_CONFLICT)
 
         group.admins.add(user_to_promote)
-        # Upewnij się, że jest też członkiem (powinien już być)
         if not group.members.filter(id=user_to_promote.id).exists():
-            group.members.add(user_to_promote) # Dodatkowe zabezpieczenie
+            group.members.add(user_to_promote) 
 
         return Response({"message": f"User {user_to_promote.username} promoted to administrator in group {group.name}."}, status=status.HTTP_200_OK)
 
@@ -841,30 +751,26 @@ class ManageGroupAdminView(APIView):
             404: "Not Found - Group or User not found, or User not an admin."
         }
     )
-    def delete(self, request, group_id, user_id): # Degradacja admina
+    def delete(self, request, group_id, user_id): 
         group = get_object_or_404(Group, id=group_id)
         admin_to_demote = get_object_or_404(User, id=user_id)
 
         if not group.admins.filter(id=admin_to_demote.id).exists():
             return Response({"error": "User is not an administrator of this group."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Admin nie może zdegradować samego siebie, jeśli jest ostatnim adminem
         if admin_to_demote == request.user and group.admins.count() == 1:
             return Response({"error": "You cannot demote yourself as the last administrator. Promote another admin first or delete the group."}, status=status.HTTP_403_FORBIDDEN)
         
-        # Upewnij się, że po degradacji zostanie przynajmniej jeden admin, chyba że to superuser usuwa admina
         if group.admins.count() == 1 and not request.user.is_superuser:
              return Response({"error": "Cannot demote the only administrator of the group unless you are a superuser. Promote another admin first."}, status=status.HTTP_403_FORBIDDEN)
 
 
         group.admins.remove(admin_to_demote)
-        # Użytkownik pozostaje członkiem grupy
         return Response({"message": f"Administrator {admin_to_demote.username} demoted to member in group {group.name}."}, status=status.HTTP_200_OK)
 
-class ChangePasswordView(generics.GenericAPIView): # Użycie GenericAPIView dla łatwiejszego dostępu do serializera
+class ChangePasswordView(generics.GenericAPIView): 
     permission_classes = [IsAuthenticated]
     serializer_class = ChangePasswordSerializer
-    #authentication_classes = [JWTAuthentication] # Upewnij się, że jest zgodne
 
     @swagger_auto_schema(
         operation_description=(
@@ -883,30 +789,22 @@ class ChangePasswordView(generics.GenericAPIView): # Użycie GenericAPIView dla 
     )
     def post(self, request, *args, **kwargs):
         user = request.user
-        # Przekazujemy 'request' do kontekstu serializera, aby miał dostęp do 'user'
         serializer = self.get_serializer(data=request.data, context={'request': request}) 
         serializer.is_valid(raise_exception=True)
 
         new_password = serializer.validated_data.get('new_password1')
         current_device_id = serializer.validated_data.get('current_device_id')
 
-        # Ustawienie nowego hasła
         user.set_password(new_password)
         user.save()
 
-        # Ważne: Aktualizuje hash sesji, aby użytkownik nie został wylogowany
-        # z bieżącej sesji opartej na sesjach Django (np. w panelu admina lub API przeglądarki).
-        # Dla JWT bezpośrednio nie unieważnia tokenów, ale jest dobrą praktyką.
         update_session_auth_hash(request, user)
 
-        # Unieważnienie innych sesji "zapamiętaj mnie" (wpisów Device)
-        # poprzez usunięcie odpowiednich rekordów Device.
         devices_query = Device.objects.filter(user=user)
         if current_device_id:
-            # Zachowaj bieżącą sesję "remember me", jeśli klient podał jej ID
             devices_query = devices_query.exclude(device_id=current_device_id)
         
-        devices_query.delete() # Usuń wszystkie pozostałe (lub wszystkie, jeśli current_device_id nie podano)
+        devices_query.delete()
 
         return Response({"detail": "Hasło zostało pomyślnie zmienione. Wylogowano z pozostałych, zapamiętanych urządzeń."}, status=status.HTTP_200_OK)
 
@@ -914,11 +812,10 @@ class LeaveGroupView(APIView):
     """
     Pozwala uwierzytelnionemu użytkownikowi opuścić grupę, której jest członkiem.
     """
-    #authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated] # Użytkownik musi być zalogowany
+    permission_classes = [IsAuthenticated] 
 
     @swagger_auto_schema(
-        tags=['Groups Management'], # Umieść w odpowiedniej kategorii Swaggera
+        tags=['Groups Management'], 
         operation_id='group_leave',
         operation_description="Pozwala uwierzytelnionemu użytkownikowi opuścić grupę, której jest członkiem.",
         responses={
@@ -931,11 +828,10 @@ class LeaveGroupView(APIView):
         user_to_leave = request.user
         group = get_object_or_404(Group, id=group_id)
 
-        # Sprawdź, czy użytkownik jest członkiem grupy
         if not group.members.filter(id=user_to_leave.id).exists():
             return Response(
                 {"error": "Nie jesteś członkiem tej grupy."},
-                status=status.HTTP_404_NOT_FOUND # Lub status.HTTP_403_FORBIDDEN
+                status=status.HTTP_404_NOT_FOUND
             )
 
         is_admin = group.admins.filter(id=user_to_leave.id).exists()
@@ -947,7 +843,6 @@ class LeaveGroupView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Usuń użytkownika z listy członków grupy
         group.members.remove(user_to_leave)
 
         if is_admin:
@@ -961,25 +856,21 @@ class LeaveGroupView(APIView):
 def password_reset_form_render_view(request, uidb64=None, token=None):
     User = get_user_model()
     error_message = None
-    user = None # Inicjalizacja user
+    user = None 
 
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        # User.DoesNotExist jest już w except, więc nie trzeba go osobno łapać,
-        # ale zostawienie dla jasności nie szkodzi.
         error_message = "Link do resetowania hasła jest nieprawidłowy lub użytkownik nie istnieje."
-        user = None # Upewnij się, że user jest None, jeśli wystąpił błąd
+        user = None 
 
-    # Sprawdź token tylko jeśli użytkownik został znaleziony
     if user is not None and not default_token_generator.check_token(user, token):
         error_message = "Link do resetowania hasła jest nieprawidłowy lub wygasł. Spróbuj ponownie poprosić o reset."
-        # Nie zeruj user, bo może być potrzebny w logice szablonu, ale error_message to zasygnalizuje
 
     context = {
         'uidb64': uidb64,
         'token': token,
-        'error_message': error_message  # Będzie None jeśli link jest wstępnie OK
+        'error_message': error_message 
     }
     return render(request, 'todos/password_reset_form_page.html', context)

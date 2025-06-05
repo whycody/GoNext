@@ -28,8 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -67,11 +66,11 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Security settings
-AXES_FAILURE_LIMIT = 5  # Maximum number of allowed login attempts
-AXES_COOLOFF_TIME = timedelta(minutes=30)  # Lockout duration after reaching failure limit
-AXES_LOCKOUT_CALLABLE = 'todos.utils.lockout_response'  # Optional custom lockout response
-AXES_RESET_ON_SUCCESS = True  # Reset failure counter after successful login
+
+AXES_FAILURE_LIMIT = 5  
+AXES_COOLOFF_TIME = timedelta(minutes=30)  
+AXES_LOCKOUT_CALLABLE = 'todos.utils.lockout_response'  
+AXES_RESET_ON_SUCCESS = True  
 AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]] # Only lock out when the exact combination of username AND IP address exceeds the failure limit
 
 ROOT_URLCONF = 'todo_app.urls'
@@ -130,25 +129,25 @@ SWAGGER_SETTINGS = {
     },
     'DEFAULT_INFO': 'todo_app.urls.api_info',
     'USE_SESSION_AUTH': True,  # Hides the "login via Django session" button
-    'LOGIN_URL': 'admin:login',     # Nazwa URL dla logowania w panelu admina
+    'LOGIN_URL': 'admin:login',     
     'LOGOUT_URL': 'admin:logout',
-    'JSON_EDITOR': True,  # Optional: enables JSON editor in request body
+    'JSON_EDITOR': True,  
 }
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# PostgreSQL database – Supabase
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('DB_NAME'),  # Environment variable
-        'USER': os.getenv('DB_USER'),  # Environment variable
-        'PASSWORD': os.getenv('DB_PASSWORD'),  # Environment variable
-        'HOST': os.getenv('DB_HOST'),  # Environment variable
-        'PORT': os.getenv('DB_PORT', 5432),  # Default value
+        'NAME': os.getenv('DB_NAME'),  
+        'USER': os.getenv('DB_USER'),  
+        'PASSWORD': os.getenv('DB_PASSWORD'),  
+        'HOST': os.getenv('DB_HOST'),  
+        'PORT': os.getenv('DB_PORT', 5432),  
         'OPTIONS': {
-            'sslmode': 'require',  # Enforces SSL connection
+            'sslmode': 'require',  
         },
     }
 }
@@ -163,8 +162,6 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
 PASSWORD_RESET_TIMEOUT = 86400
 
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -197,15 +194,11 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 FRONTEND_URL = 'https://gonext-a7hthre4g0avd7fr.polandcentral-01.azurewebsites.net'
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

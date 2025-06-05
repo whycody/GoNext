@@ -29,7 +29,7 @@ class CustomPasswordValidator:
                 _("Hasło musi zawierać co najmniej jedną cyfrę."),
                 code='password_no_digit',
             )
-        if not re.search(r'[\W_]', password): # \W to znaki niealfanumeryczne, _ jest też OK
+        if not re.search(r'[\W_]', password): 
             raise ValidationError(
                 _("Hasło musi zawierać co najmniej jeden znak specjalny."),
                 code='password_no_special',
