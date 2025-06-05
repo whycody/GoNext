@@ -1,5 +1,5 @@
-import React, { useState, useCallback, forwardRef, useRef } from "react";
-import { Text, StyleSheet, View, Pressable, Platform, Alert } from "react-native";
+import React, { forwardRef, useCallback, useRef, useState } from "react";
+import { Alert, Platform, Pressable, StyleSheet, Text } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";

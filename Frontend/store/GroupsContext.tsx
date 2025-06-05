@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, FC } from "react";
+import React, { createContext, FC, useCallback, useContext, useEffect, useState } from "react";
 import { getUserGroups } from "../hooks/useApi";
 import { Group } from "../types/Group";
 

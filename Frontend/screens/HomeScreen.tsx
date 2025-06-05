@@ -1,4 +1,4 @@
-import { ScrollView, View, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import HomeHeader from "../components/HomeHeader";
 import CategoryItem from "../components/CategoryItem";
 import { useEffect, useRef, useState } from "react";
@@ -9,7 +9,6 @@ import { FAB } from "react-native-paper";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { addUserTodo } from "../hooks/useApi";
-import { useTaskItems } from "../hooks/useTaskItems";
 import TaskItemsList from "../components/TaskItemsList";
 import { useTaskItemsContext } from "../store/TaskItemsContext";
 

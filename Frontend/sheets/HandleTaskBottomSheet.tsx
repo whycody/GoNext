@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useCallback, useRef, forwardRef } from "react";
-import { Text, Platform, StyleSheet, View, Pressable, Alert } from "react-native";
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 import { Picker } from "@react-native-picker/picker";
-import { getUserTodo, getUserGroups, deleteUserTodo } from "../hooks/useApi";
+import { getUserTodo } from "../hooks/useApi";
 import { Task, TaskModel } from "../types/Task";
-import { Group } from "../types/Group";
-import { useTaskItems } from "../hooks/useTaskItems";
 import { useGroupsContext } from "../store/GroupsContext";
 
 interface HandleTaskBottomSheetProps {

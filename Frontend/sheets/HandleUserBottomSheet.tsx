@@ -1,10 +1,9 @@
-import React, { useCallback, forwardRef } from "react";
-import { Text, StyleSheet, View, Pressable, Platform } from "react-native";
+import React, { forwardRef, useCallback } from "react";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
 import { MARGIN_HORIZONTAL } from "../src/constants";
-import { promoteUserToAdmin } from "../hooks/useApi";
 
 
 interface HandleUserBottomSheetProps {

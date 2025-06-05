@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Text, StyleSheet } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import HomeScreen from "../HomeScreen";
 import GroupsScreen from "../GroupsScreen";
 import SettingsScreen from "../SettingsScreen";

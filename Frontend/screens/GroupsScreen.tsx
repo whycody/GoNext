@@ -1,11 +1,11 @@
-import { FlatList, RefreshControl, ScrollView, StyleSheet, View, Alert } from "react-native";
+import { Alert, FlatList, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import GroupsHeader from "../components/GroupsHeader";
 import GroupsView from "../components/GroupsView";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
-import { useState, useRef } from "react";
-import { createGroup, acceptGroupInvitation } from "../hooks/useApi";
+import { useRef, useState } from "react";
+import { acceptGroupInvitation, createGroup } from "../hooks/useApi";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useGroupsContext } from "../store/GroupsContext";
 import { useTaskItemsContext } from "../store/TaskItemsContext";

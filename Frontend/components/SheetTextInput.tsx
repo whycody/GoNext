@@ -1,7 +1,7 @@
-import React, { FC, useEffect, useState, forwardRef, useImperativeHandle, useRef } from "react"; 
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useTheme } from "@react-navigation/native";
-import { View, StyleSheet, Platform, TextInput, FlatList, Pressable, Text } from "react-native"; 
-import { MARGIN_HORIZONTAL } from "../src/constants"; 
+import { FlatList, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { MARGIN_HORIZONTAL } from "../src/constants";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 
 type SheetTextProps = {

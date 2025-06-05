@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, KeyboardAvoidingView, ActivityIndicator, Pressable } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Pressable, StyleSheet, Text, View } from "react-native";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import { MARGIN_HORIZONTAL } from "../src/constants";
 import { FC, useEffect, useRef, useState } from "react";

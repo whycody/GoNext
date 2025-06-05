@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef, forwardRef, useEffect, useMemo } from "react";
-import { Text, StyleSheet, View, Pressable, Platform } from "react-native";
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
@@ -45,12 +45,12 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
     const colorOptions = ["#ff5733", "#33ff57", "#3357ff", "#ff33a8", "#040404", "#9632BF", "#53BFD4"];
 
     useEffect(() => {
-    if (group) {
-      setName(group.name);
-      setSelectedColor(group.color);
-      selectEmoji(group.icon);
-      setMembers(group.membersIds);
-    } else {
+      if (group) {
+        setName(group.name);
+        setSelectedColor(group.color);
+        selectEmoji(group.icon);
+        setMembers(group.membersIds);
+      } else {
         setName("");
         setSelectedColor("#ff5733");
         selectEmoji(emojis[0]);
@@ -62,7 +62,7 @@ const HandleGroupBottomSheet = forwardRef<BottomSheetModal, HandleGroupBottomShe
       if (!nameInputRef.current?.getWord() || !selectedEmoji || !selectedColor) return;
       if (group) {
         onGroupEdit(
-          group.id, 
+          group.id,
           nameInputRef.current?.getWord(),
           selectedEmoji,
           selectedColor,

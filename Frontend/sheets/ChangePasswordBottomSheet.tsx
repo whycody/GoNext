@@ -1,10 +1,10 @@
-import React, { useState, useCallback, useRef, forwardRef } from "react";
-import { Text, StyleSheet, View, Pressable, Platform, Alert } from "react-native";
+import React, { forwardRef, useCallback, useRef, useState } from "react";
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useTheme } from "@react-navigation/native";
 import { FullWindowOverlay } from "react-native-screens";
-import { MARGIN_HORIZONTAL } from "../src/constants"; 
-import SheetText, { SheetTextRef } from "../components/SheetTextInput"; 
+import { MARGIN_HORIZONTAL } from "../src/constants";
+import SheetText, { SheetTextRef } from "../components/SheetTextInput";
 
 interface ChangePasswordBottomSheetProps {
   onPasswordReset: (oldPassword: string, newPassword1: string, newPassword2: string) => void; 

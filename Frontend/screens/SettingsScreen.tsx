@@ -1,5 +1,5 @@
-import { FlatList, View, StyleSheet, Alert } from "react-native"; 
-import React, { useContext, useRef } from "react"; 
+import { Alert, FlatList, StyleSheet, View } from "react-native";
+import React, { useContext, useRef } from "react";
 import { AuthContext } from "../utils/AuthProvider";
 import { useTheme } from "@react-navigation/native";
 import SettingsHeader from "../components/SettingsHeader";

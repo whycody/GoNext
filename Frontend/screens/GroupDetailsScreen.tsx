@@ -1,9 +1,9 @@
-import { useRoute, useTheme, useNavigation } from "@react-navigation/native";
-import { FlatList, Pressable, StyleSheet, Text, View, Alert } from "react-native";
+import { useNavigation, useRoute, useTheme } from "@react-navigation/native";
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import GroupsView from "../components/GroupsView";
 import { useGroupsContext } from "../store/GroupsContext";
 import { useTaskItemsContext } from "../store/TaskItemsContext";
-import { useRef, useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import UserView from "../components/UserView";
 import TaskItemsList from "../components/TaskItemsList";
@@ -12,13 +12,20 @@ import { MARGIN_HORIZONTAL } from "../src/constants";
 import { FAB } from "react-native-paper";
 import HandleGroupBottomSheet from "../sheets/HandleGroupBottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { addUserTodo, updateGroup, leaveGroup, removeGroup } from "../hooks/useApi";
+import {
+  addUserTodo,
+  demoteUserFromAdmin,
+  leaveGroup,
+  promoteUserToAdmin,
+  removeGroup,
+  removeUserFromGroup,
+  updateGroup
+} from "../hooks/useApi";
 import InviteUserBottomSheet from "../sheets/InviteUserBottomSheet";
 import { Task } from "../types/Task";
 import HandleTaskBottomSheet from "../sheets/HandleTaskBottomSheet";
 import { useAuthContext } from "../utils/AuthProvider";
 import HandleUserBottomSheet from "../sheets/HandleUserBottomSheet"
-import { promoteUserToAdmin, demoteUserFromAdmin, removeUserFromGroup } from "../hooks/useApi";
 
 type GroupDetailsProps = {
   groupId: string;

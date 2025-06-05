@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { TextInput, View, Text, TextInputProps, StyleSheet } from 'react-native';
+import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from "@react-navigation/native";
 
